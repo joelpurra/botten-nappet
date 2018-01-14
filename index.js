@@ -1,29 +1,15 @@
-const WebSocket = require('ws');
+const Promise = require("bluebird");
+
+const TwitchConnection = require("./src/twitch-connection");
 
 // TODO: better token/config handling.
-var authToken = process.env['TWITCH_CLIENT_ACCESS_TOKEN'];
+const twitchWebSocketUri = "wss://pubsub-edge.twitch.tv/";
+const twitchClientAccessToken = process.env["TWITCH_CLIENT_ACCESS_TOKEN"];
 
-const ws = new WebSocket('wss://pubsub-edge.twitch.tv/');
+const twitchConnection = new TwitchConnection(twitchWebSocketUri, twitchClientAccessToken);
 
-ws.on('open', function open() {
-	console.log('connected');
-
-	const data = {
-		type: "PING"
-	};
-	const message = JSON.stringify(data);
-
-	ws.send(message);
-});
-
-ws.on('close', function close() {
-	console.log('disconnected');
-});
-
-ws.on('message', function incoming(message) {
-	const data = JSON.parse(message);
-
-	console.log(`Message: ${JSON.stringify(data, null, 2)}`);
-
-	process.exit();
-});
+twitchConnection.connect().then(() => {
+	console.log("Connected.");
+}).then(() => twitchConnection.disconnect().then(() => {
+	console.log("Disconnected.");
+}));
