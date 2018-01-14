@@ -4,9 +4,8 @@ const Promise = require("bluebird");
 const WebSocket = require("ws");
 
 module.exports = class TwitchConnection {
-	constructor(uri, clientAccessToken) {
+	constructor(uri) {
 		this.uri = uri;
-		this.clientAccessToken = clientAccessToken;
 
 		this.ws = null;
 		this.connected = false;
@@ -17,8 +16,6 @@ module.exports = class TwitchConnection {
 
 		return new Promise((resolve, reject) => {
 			const onOpen = () => {
-				console.log("ws", "connected");
-
 				const data = {
 					type: "PING"
 				};
@@ -28,8 +25,6 @@ module.exports = class TwitchConnection {
 			}
 
 			const onError = (e) => {
-				console.error("ws", "error", e);
-
 				this.disconnect();
 
 				unregisterListeners();
@@ -42,13 +37,11 @@ module.exports = class TwitchConnection {
 
 				this.ws = null;
 
-				console.log("ws", "disconnected");
 			}
 
 			const onMessage = (message) => {
+				// TODO: try-catch for bad messages.
 				const data = JSON.parse(message);
-
-				console.log("ws", `Message: ${JSON.stringify(data, null, 2)}`);
 
 				if (data.type === "PONG") {
 					this.connected = true;
@@ -83,6 +76,77 @@ module.exports = class TwitchConnection {
 		return new Promise.try(() => {
 			// TODO: ensure the connection was closed.
 			this.ws.close();
+		});
+	}
+
+	listen(userAccessToken, topics, dataHandler) {
+		assert(this.connected);
+
+		return new Promise((resolve, reject) => {
+			const onMessage = (message) => {
+				console.log("onMessage", message);
+
+				// TODO: try-catch for bad messages.
+				const data = JSON.parse(message);
+
+				if (data.type !== "MESSAGE") {
+					return;
+				}
+
+				if (!topics.includes(data.data.topic)) {
+					return;
+				}
+
+				const messageData = JSON.parse(data.data.message);
+
+				// TODO: try-catch for bad handlers.
+				dataHandler(data.data.topic, messageData);
+			};
+
+			const onListen = (message) => {
+				console.log("onListen", message);
+
+				// TODO: try-catch for bad messages.
+				const data = JSON.parse(message);
+
+				if (data.nonce !== nonce) {
+					// NOTE: skip non-matching messages; they are presumably for other handlers.
+					return;
+				}
+
+				if (typeof data.error === "string" && data.error.length !== 0) {
+					reject(new Error(`Listen error: ${JSON.stringify(data.error)}`));
+				}
+
+				if (data.type !== "RESPONSE") {
+					reject(new Error(`Bad type: ${JSON.stringify(data.type)}`));
+				}
+
+				this.ws.removeListener("message", onListen);
+				this.ws.on("message", onMessage);
+
+				const killSwitch = () => {
+					this.ws.removeListener("message", onMessage);
+				};
+
+				resolve(killSwitch);
+			};
+
+			const nonce = Math.random().toString(10);
+
+			const data = {
+				type: "LISTEN",
+				nonce: nonce,
+				data: {
+					topics: topics,
+					auth_token: userAccessToken
+				}
+			};
+			const message = JSON.stringify(data);
+
+			this.ws.on("message", onListen);
+
+			this.ws.send(message);
 		});
 	}
 }
