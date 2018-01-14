@@ -1,0 +1,31 @@
+{
+  "name": "botten-nappet",
+  "version": "1.0.0",
+  "description": "A Twitch bot and streaming tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "twitch",
+    "bot",
+    "streaming"
+  ],
+  "author": {
+    "name": "Joel Purra",
+    "email": "mig@joelpurra.se",
+    "url": "https://joelpurra.com/"
+  },
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "ws": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joelpurra/botten-nappet.git"
+  },
+  "bugs": {
+    "url": "https://joelpurra.com/support/"
+  },
+  "homepage": "https://joelpurra.com/projects/botten-nappet/",
+}
