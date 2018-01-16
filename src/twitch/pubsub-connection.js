@@ -3,16 +3,16 @@ const Promise = require("bluebird");
 
 const WebSocket = require("ws");
 
-module.exports = class TwitchPubSubConnection {
+module.exports = class PubSubConnection {
 	constructor(uri) {
-		this.uri = uri;
+		this._uri = uri;
 
-		this.ws = null;
-		this.connected = false;
+		this._ws = null;
+		this._connected = false;
 	}
 
 	connect() {
-		assert(!this.connected);
+		assert(!this._connected);
 
 		return new Promise((resolve, reject) => {
 			const onOpen = () => {
@@ -21,7 +21,7 @@ module.exports = class TwitchPubSubConnection {
 				};
 				const message = JSON.stringify(data);
 
-				this.ws.send(message);
+				this._ws.send(message);
 			}
 
 			const onError = (e) => {
@@ -31,11 +31,11 @@ module.exports = class TwitchPubSubConnection {
 			}
 
 			const onClose = () => {
-				this.connected = false;
+				this._connected = false;
 
 				unregisterListeners();
 
-				this.ws = null;
+				this._ws = null;
 
 			}
 
@@ -44,7 +44,7 @@ module.exports = class TwitchPubSubConnection {
 				const data = JSON.parse(message);
 
 				if (data.type === "PONG") {
-					this.connected = true;
+					this._connected = true;
 					resolve();
 				}
 
@@ -52,35 +52,35 @@ module.exports = class TwitchPubSubConnection {
 			}
 
 			const registerListeners = () => {
-				this.ws.once("open", onOpen);
-				this.ws.once("error", onError);
-				this.ws.once("close", onClose);
-				this.ws.once("message", onMessage);
+				this._ws.once("open", onOpen);
+				this._ws.once("error", onError);
+				this._ws.once("close", onClose);
+				this._ws.once("message", onMessage);
 			}
 
 			const unregisterListeners = () => {
-				this.ws.removeListener("open", onOpen);
-				this.ws.removeListener("error", onError);
-				this.ws.removeListener("message", onMessage);
+				this._ws.removeListener("open", onOpen);
+				this._ws.removeListener("error", onError);
+				this._ws.removeListener("message", onMessage);
 			}
 
-			this.ws = new WebSocket(this.uri);
+			this._ws = new WebSocket(this._uri);
 
 			registerListeners();
 		});
 	}
 
 	disconnect() {
-		assert(this.connected);
+		assert(this._connected);
 
 		return new Promise.try(() => {
 			// TODO: ensure the connection was closed.
-			this.ws.close();
+			this._ws.close();
 		});
 	}
 
 	listen(userAccessToken, topics, dataHandler) {
-		assert(this.connected);
+		assert(this._connected);
 
 		return new Promise((resolve, reject) => {
 			const onMessage = (message) => {
@@ -93,7 +93,8 @@ module.exports = class TwitchPubSubConnection {
 
 				if (!topics.includes(data.data.topic)) {
 					return;
-				}w
+				}
+				w
 
 				const messageData = JSON.parse(data.data.message);
 
@@ -118,11 +119,11 @@ module.exports = class TwitchPubSubConnection {
 					reject(new Error(`Bad type: ${JSON.stringify(data.type)}`));
 				}
 
-				this.ws.removeListener("message", onListen);
-				this.ws.on("message", onMessage);
+				this._ws.removeListener("message", onListen);
+				this._ws.on("message", onMessage);
 
 				const killSwitch = () => {
-					this.ws.removeListener("message", onMessage);
+					this._ws.removeListener("message", onMessage);
 				};
 
 				resolve(killSwitch);
@@ -140,9 +141,9 @@ module.exports = class TwitchPubSubConnection {
 			};
 			const message = JSON.stringify(data);
 
-			this.ws.on("message", onListen);
+			this._ws.on("message", onListen);
 
-			this.ws.send(message);
+			this._ws.send(message);
 		});
 	}
 }
