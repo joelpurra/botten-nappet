@@ -3,7 +3,7 @@ const Promise = require("bluebird");
 
 const WebSocket = require("ws");
 
-module.exports = class TwitchConnection {
+module.exports = class TwitchPubSubConnection {
 	constructor(uri) {
 		this.uri = uri;
 
@@ -84,8 +84,6 @@ module.exports = class TwitchConnection {
 
 		return new Promise((resolve, reject) => {
 			const onMessage = (message) => {
-				console.log("onMessage", message);
-
 				// TODO: try-catch for bad messages.
 				const data = JSON.parse(message);
 
@@ -95,7 +93,7 @@ module.exports = class TwitchConnection {
 
 				if (!topics.includes(data.data.topic)) {
 					return;
-				}
+				}w
 
 				const messageData = JSON.parse(data.data.message);
 
@@ -104,8 +102,6 @@ module.exports = class TwitchConnection {
 			};
 
 			const onListen = (message) => {
-				console.log("onListen", message);
-
 				// TODO: try-catch for bad messages.
 				const data = JSON.parse(message);
 
