@@ -1,13 +1,20 @@
+const assert = require("assert");
 const Promise = require("bluebird");
 
 module.exports = class PubSubManager {
-	constructor(pubSubConnection, channelId, userAccessToken) {
+	constructor(pubSubConnection, userId, userAccessToken) {
+		assert.strictEqual(typeof pubSubConnection, "object");
+		assert(!isNaN(userId));
+		assert(userId > 0);
+		assert.strictEqual(typeof userAccessToken, "string");
+		assert(userAccessToken.length > 0);
+
 		this._pubSubConnection = pubSubConnection;
-		this._channelId = channelId;
+		this._userId = userId;
 		this._userAccessToken = userAccessToken;
 
 		// TODO: one class per listen-topic, or one class per concern?
-		this._topics = [`channel-bits-events-v1.${this._channelId}`, `channel-subscribe-events-v1.${this._channelId}`, `channel-commerce-events-v1.${this._channelId}`, `whispers.${this._channelId}`];
+		this._topics = [`channel-bits-events-v1.${this._userId}`, `channel-subscribe-events-v1.${this._userId}`, `channel-commerce-events-v1.${this._userId}`, `whispers.${this._userId}`];
 
 		this._killSwitch = null;
 	}
@@ -33,6 +40,10 @@ module.exports = class PubSubManager {
 
 	_executeKillSwitch() {
 		return Promise.try(() => {
+			if (typeof this._killSwitch !== "function") {
+				return;
+			}
+
 			const killSwitch = this._killSwitch;
 			this._killSwitch = null;
 			killSwitch();

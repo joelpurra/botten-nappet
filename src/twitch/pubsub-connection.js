@@ -5,6 +5,10 @@ const WebSocket = require("ws");
 
 module.exports = class PubSubConnection {
 	constructor(uri) {
+		assert.strictEqual(typeof uri, "string");
+		assert(uri.length > 0);
+		assert(uri.startsWith("wss://"));
+
 		this._uri = uri;
 
 		this._ws = null;
