@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.gitattributes text
+.gitignore text
+LICENSE text
+LICENSE-BANNER text
+*.md text
+*.js text
+*.json text
