@@ -3,7 +3,7 @@ const Promise = require("bluebird");
 
 const WebSocket = require("ws");
 
-module.exports = class PubSubConnection {
+export default class PubSubConnection {
 	constructor(uri) {
 		assert.strictEqual(typeof uri, "string");
 		assert(uri.length > 0);

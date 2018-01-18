@@ -1,7 +1,7 @@
 const assert = require("assert");
 const Promise = require("bluebird");
 
-module.exports = class PubSubManager {
+export default class PubSubManager {
 	constructor(pubSubConnection, userId, userAccessToken) {
 		assert.strictEqual(typeof pubSubConnection, "object");
 		assert(!isNaN(userId));

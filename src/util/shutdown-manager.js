@@ -2,7 +2,7 @@ const assert = require("assert");
 
 const Promise = require("bluebird");
 
-module.exports = class ShutdownManager {
+export default class ShutdownManager {
 	constructor() {
 		this._shutdownHandlers = [];
 
