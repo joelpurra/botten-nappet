@@ -26,9 +26,9 @@ export default class ShutdownManager {
     constructor() {
         this._shutdownHandlers = [];
 
-        this._handleSignal = this._handleSignal.bind(this);
+        this._handleEvent = this._handleEvent.bind(this);
 
-        this.signals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
+        this._shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
 
         this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
             const waitForShutdown = () => {
@@ -45,16 +45,16 @@ export default class ShutdownManager {
 
     start() {
         return Promise.try(() => {
-            this.signals.forEach((signal) => {
-                process.on(signal, this._handleSignal);
+            this._shutdownEvents.forEach((shutdownEvent) => {
+                process.on(shutdownEvent, this._handleEvent);
             });
         });
     }
 
     stop() {
         return Promise.try(() => {
-            this.signals.forEach((signal) => {
-                process.removeListener(signal, this._handleSignal);
+            this._shutdownEvents.forEach((shutdownEvent) => {
+                process.removeListener(shutdownEvent, this._handleEvent);
             });
         });
     }
@@ -85,8 +85,12 @@ export default class ShutdownManager {
         return this._shutdownPromise;
     }
 
-    _handleSignal() {
+    _handleEvent(shutdownEvent) {
         return Promise.try(() => {
+            /* eslint-disable no-console */
+            console.log(`Received shutdown event: ${JSON.stringify(shutdownEvent, null, 2)}`);
+            /* eslint-enable no-console */
+
             this.shutdown();
         });
     }
