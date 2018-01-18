@@ -1,5 +1,6 @@
 const Promise = require("bluebird");
 
+const ShutdownManager = require("./src/util/shutdown-manager");
 const TwitchPubSubConnection = require("./src/twitch/pubsub-connection");
 const TwitchPubSubManager = require("./src/twitch/pubsub-manager");
 
@@ -8,12 +9,12 @@ const twitchWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchAppAccessToken = process.env["TWITCH_APP_ACCESS_TOKEN"];
 const twitchUserAccessToken = process.env["TWITCH_USER_ACCESS_TOKEN"];
 const twitchChannelId = 148460096;
-const MAX_LISTEN_TIME_MILLISECONDS = 5 * 1000;
 
+const shutdownManager = new ShutdownManager();
 const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchChannelId, twitchUserAccessToken);
 
-Promise.resolve().then(() => twitchPubSubConnection.connect()).then(() => {
+Promise.resolve().then(() => shutdownManager.start()).then(() => twitchPubSubConnection.connect()).then(() => {
 	const disconnect = (incomingError) => twitchPubSubConnection.disconnect().then(() => {
 		if (incomingError) {
 			console.error("Disconnected.", incomingError);
@@ -37,15 +38,12 @@ Promise.resolve().then(() => twitchPubSubConnection.connect()).then(() => {
 			return undefined;
 		});
 
-		console.log(`Online for ${MAX_LISTEN_TIME_MILLISECONDS} milliseconds.`);
-
-		// TODO: perform more work here.
-		return Promise.delay(MAX_LISTEN_TIME_MILLISECONDS).then(() => stop(), (error) => stop(error));
+		 return shutdownManager.waitForShutdownSignal().then(() => stop(), (error) => stop(error));
 	}).then(() => disconnect(), (error) => disconnect(error))
-}).then(() => {
-	process.exit();
+}).then(() => shutdownManager.stop()).then(() => {
+	process.exitCode = 0;
 }, (error) => {
 	console.log("Error.", error);
 
-	process.exit(1);
+	process.exitCode = 1;
 });

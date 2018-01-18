@@ -147,6 +147,10 @@ module.exports = class PubSubConnection {
 				this._ws.on("message", onMessage);
 
 				const killSwitch = () => {
+					if (!this._ws) {
+						throw new Error("Websocket does not exist anymore, killSwitch executed too late.");
+					}
+
 					this._ws.removeListener("message", onMessage);
 				};
 
