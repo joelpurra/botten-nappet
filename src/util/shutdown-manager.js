@@ -3,63 +3,63 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class ShutdownManager {
-	constructor() {
-		this._shutdownHandlers = [];
+    constructor() {
+        this._shutdownHandlers = [];
 
-		this._handleSignal = this._handleSignal.bind(this);
+        this._handleSignal = this._handleSignal.bind(this);
 
-		this.signals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
+        this.signals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
 
-		this._shutdownPromise = new Promise((resolve, reject) => {
-			const waitForShutdown = () => {
-				console.warn("Detected shutdown.");
+        this._shutdownPromise = new Promise((resolve, reject) => {
+            const waitForShutdown = () => {
+                console.warn("Detected shutdown.");
 
-				resolve();
-			};
+                resolve();
+            };
 
-			this.register(waitForShutdown);
-		});
-	}
+            this.register(waitForShutdown);
+        });
+    }
 
-	start() {
-		return Promise.try(() => {
-			this.signals.forEach((signal) => {
-				process.on(signal, this._handleSignal);
-			});
-		});
-	}
+    start() {
+        return Promise.try(() => {
+            this.signals.forEach((signal) => {
+                process.on(signal, this._handleSignal);
+            });
+        });
+    }
 
-	stop() {
-		return Promise.try(() => {
-			this.signals.forEach((signal) => {
-				process.removeListener(signal, this._handleSignal);
-			});
-		});
-	}
+    stop() {
+        return Promise.try(() => {
+            this.signals.forEach((signal) => {
+                process.removeListener(signal, this._handleSignal);
+            });
+        });
+    }
 
-	register(shutdownHandler) {
-		assert.strictEqual(typeof shutdownHandler, "function");
+    register(shutdownHandler) {
+        assert.strictEqual(typeof shutdownHandler, "function");
 
-		return Promise.try(() => {
-			this._shutdownHandlers.push(shutdownHandler);
-		});
-	}
+        return Promise.try(() => {
+            this._shutdownHandlers.push(shutdownHandler);
+        });
+    }
 
-	shutdown() {
-		return Promise.map(this._shutdownHandlers, (shutdownHandler) => Promise.resolve(shutdownHandler()).then(() => undefined, (error) => {
-			console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
+    shutdown() {
+        return Promise.map(this._shutdownHandlers, (shutdownHandler) => Promise.resolve(shutdownHandler()).then(() => undefined, (error) => {
+            console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
 
-			return undefined;
-		}));
-	}
+            return undefined;
+        }));
+    }
 
-	waitForShutdownSignal() {
-		return this._shutdownPromise;
-	}
+    waitForShutdownSignal() {
+        return this._shutdownPromise;
+    }
 
-	_handleSignal() {
-		return Promise.try(() => {
-			this.shutdown();
-		});
-	}
+    _handleSignal() {
+        return Promise.try(() => {
+            this.shutdown();
+        });
+    }
 }
