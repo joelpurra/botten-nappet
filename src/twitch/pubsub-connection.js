@@ -9,6 +9,8 @@ module.exports = class PubSubConnection {
 
 		this._ws = null;
 		this._connected = false;
+
+		this.maxDisconnectWaitMilliseconds = 10 * 1000;
 	}
 
 	connect() {
@@ -25,18 +27,11 @@ module.exports = class PubSubConnection {
 			}
 
 			const onError = (e) => {
+				unregisterListeners();
+
 				this.disconnect();
 
-				unregisterListeners();
-			}
-
-			const onClose = () => {
-				this._connected = false;
-
-				unregisterListeners();
-
-				this._ws = null;
-
+				reject(e);
 			}
 
 			const onMessage = (message) => {
@@ -45,17 +40,17 @@ module.exports = class PubSubConnection {
 
 				if (data.type === "PONG") {
 					this._connected = true;
+
+					unregisterListeners();
+
 					resolve();
 				}
-
-				unregisterListeners();
 			}
 
 			const registerListeners = () => {
 				this._ws.once("open", onOpen);
 				this._ws.once("error", onError);
-				this._ws.once("close", onClose);
-				this._ws.once("message", onMessage);
+				this._ws.on("message", onMessage);
 			}
 
 			const unregisterListeners = () => {
@@ -67,15 +62,44 @@ module.exports = class PubSubConnection {
 			this._ws = new WebSocket(this._uri);
 
 			registerListeners();
+		}).then(() => {
+			this._ws.on("close", this._onClose.bind(this));
 		});
 	}
 
-	disconnect() {
-		assert(this._connected);
+	_onClose() {
+		this.disconnect();
+	}
 
+	disconnect() {
 		return new Promise.try(() => {
-			// TODO: ensure the connection was closed.
-			this._ws.close();
+			if (!this._connected) {
+				// console.warn("Already disconnected.");
+				return;
+			}
+
+			this._connected = false;
+
+			return new Promise((resolve, reject) => {
+				const hasClosed = () => {
+					resolve();
+				};
+
+				this._ws.once("close", hasClosed);
+
+				Promise.delay(this.maxDisconnectWaitMilliseconds).then(() => reject());
+
+				this._ws.close();
+			}).catch(() => {
+				console.warn(`Could not disconnect within ${this.maxDisconnectWaitMilliseconds} milliseconds.`);
+
+				// NOTE: fallback for a timed out disconnect.
+				this._ws.terminate();
+
+				return undefined;
+			}).then(() => {
+				this._ws = null;
+			});
 		});
 	}
 

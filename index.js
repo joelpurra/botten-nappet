@@ -14,9 +14,9 @@ const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchChannelId, twitchUserAccessToken);
 
 Promise.resolve().then(() => twitchPubSubConnection.connect()).then(() => {
-	const disconnect = (error) => twitchPubSubConnection.disconnect().then(() => {
-		if (error) {
-			console.error("Disconnected.", error);
+	const disconnect = (incomingError) => twitchPubSubConnection.disconnect().then(() => {
+		if (incomingError) {
+			console.error("Disconnected.", incomingError);
 		} else {
 			console.log("Disconnected.");
 		}
@@ -27,9 +27,9 @@ Promise.resolve().then(() => twitchPubSubConnection.connect()).then(() => {
 	return Promise.resolve().then(() => twitchPubSubManager.start()).then(() => {
 		console.log("Started.");
 
-		const stop = (error) => twitchPubSubManager.stop().then(() => {
-			if (error) {
-				console.error("Stopped.", error);
+		const stop = (incomingError) => twitchPubSubManager.stop().then(() => {
+			if (incomingError) {
+				console.error("Stopped.", incomingError);
 			} else {
 				console.log("Stopped.");
 			}
