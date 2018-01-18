@@ -66,9 +66,12 @@ export default class PubSubConnection {
             this._ws = new WebSocket(this._uri);
 
             registerListeners();
-        }).then(() => {
-            this._ws.on("close", this._onClose.bind(this));
-        });
+        })
+            .then(() => {
+                this._ws.on("close", this._onClose.bind(this));
+
+                return undefined;
+            });
     }
 
     _onClose() {
@@ -76,7 +79,7 @@ export default class PubSubConnection {
     }
 
     disconnect() {
-        return new Promise.try(() => {
+        return Promise.try(() => {
             if (!this._connected) {
                 // console.warn("Already disconnected.");
                 return;
@@ -91,19 +94,28 @@ export default class PubSubConnection {
 
                 this._ws.once("close", hasClosed);
 
-                Promise.delay(this.maxDisconnectWaitMilliseconds).then(() => reject());
+                /* eslint-disable promise/catch-or-return */
+                Promise.delay(this.maxDisconnectWaitMilliseconds)
+                    .then(() => reject(new Error("Disconnect timed out.")));
+                /* eslint-enable promise/catch-or-return */
 
                 this._ws.close();
-            }).catch(() => {
-                console.warn(`Could not disconnect within ${this.maxDisconnectWaitMilliseconds} milliseconds.`);
+            })
+                .catch(() => {
+                    /* eslint-disable no-console */
+                    console.warn(`Could not disconnect within ${this.maxDisconnectWaitMilliseconds} milliseconds.`);
+                    /* eslint-enable no-console */
 
-                // NOTE: fallback for a timed out disconnect.
-                this._ws.terminate();
+                    // NOTE: fallback for a timed out disconnect.
+                    this._ws.terminate();
 
-                return undefined;
-            }).then(() => {
-                this._ws = null;
-            });
+                    return undefined;
+                })
+                .then(() => {
+                    this._ws = null;
+
+                    return undefined;
+                });
         });
     }
 
@@ -121,8 +133,7 @@ export default class PubSubConnection {
 
                 if (!topics.includes(data.data.topic)) {
                     return;
-                }
-                w;
+                };
 
                 const messageData = JSON.parse(data.data.message);
 
@@ -161,7 +172,8 @@ export default class PubSubConnection {
                 resolve(killSwitch);
             };
 
-            const nonce = Math.random().toString(10);
+            const nonce = Math.random()
+                .toString(10);
 
             const data = {
                 type: "LISTEN",

@@ -10,9 +10,11 @@ export default class ShutdownManager {
 
         this.signals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
 
-        this._shutdownPromise = new Promise((resolve, reject) => {
+        this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
             const waitForShutdown = () => {
+                /* eslint-disable no-console */
                 console.warn("Detected shutdown.");
+                /* eslint-enable no-console */
 
                 resolve();
             };
@@ -46,11 +48,17 @@ export default class ShutdownManager {
     }
 
     shutdown() {
-        return Promise.map(this._shutdownHandlers, (shutdownHandler) => Promise.resolve(shutdownHandler()).then(() => undefined, (error) => {
-            console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
+        return Promise.map(
+            this._shutdownHandlers,
+            (shutdownHandler) => Promise.resolve(shutdownHandler())
+                .then(() => undefined, (error) => {
+                    /* eslint-disable no-console */
+                    console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
+                    /* eslint-enable no-console */
 
-            return undefined;
-        }));
+                    return undefined;
+                })
+        );
     }
 
     waitForShutdownSignal() {

@@ -27,38 +27,66 @@ const shutdownManager = new ShutdownManager();
 const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
 
-Promise.resolve().then(() => shutdownManager.start()).then(() => twitchPubSubConnection.connect()).then(() => {
-    console.log("Connected.");
+Promise.resolve()
+    .then(() => shutdownManager.start())
+    .then(() => twitchPubSubConnection.connect())
+    .then(() => {
+        /* eslint-disable no-console */
+        console.log("Connected.");
+        /* eslint-enable no-console */
 
-    const disconnect = (incomingError) => twitchPubSubConnection.disconnect().then(() => {
-        if (incomingError) {
-            console.error("Disconnected.", incomingError);
-        } else {
-            console.log("Disconnected.");
-        }
+        const disconnect = (incomingError) => twitchPubSubConnection.disconnect()
+            .then(() => {
+                if (incomingError) {
+                    /* eslint-disable no-console */
+                    console.error("Disconnected.", incomingError);
+                    /* eslint-enable no-console */
+                } else {
+                    /* eslint-disable no-console */
+                    console.log("Disconnected.");
+                    /* eslint-enable no-console */
+                }
+
+                return undefined;
+            });
+
+        return Promise.resolve()
+            .then(() => twitchPubSubManager.start())
+            .then(() => {
+                /* eslint-disable no-console */
+                console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
+                /* eslint-enable no-console */
+
+                const stop = (incomingError) => twitchPubSubManager.stop()
+                    .then(() => {
+                        if (incomingError) {
+                            /* eslint-disable no-console */
+                            console.error("Stopped.", incomingError);
+                            /* eslint-enable no-console */
+                        } else {
+                            /* eslint-disable no-console */
+                            console.log("Stopped.");
+                            /* eslint-enable no-console */
+                        }
+
+                        return undefined;
+                    });
+
+                return shutdownManager.waitForShutdownSignal()
+                    .then(() => stop(), (error) => stop(error));
+            })
+            .then(() => disconnect(), (error) => disconnect(error));
+    })
+    .then(() => shutdownManager.stop())
+    .then(() => {
+        process.exitCode = 0;
 
         return undefined;
+    })
+    .catch((error) => {
+        /* eslint-disable no-console */
+        console.log("Error.", error);
+        /* eslint-enable no-console */
+
+        process.exitCode = 1;
     });
-
-    return Promise.resolve().then(() => twitchPubSubManager.start()).then(() => {
-        console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
-
-        const stop = (incomingError) => twitchPubSubManager.stop().then(() => {
-            if (incomingError) {
-                console.error("Stopped.", incomingError);
-            } else {
-                console.log("Stopped.");
-            }
-
-            return undefined;
-        });
-
-        return shutdownManager.waitForShutdownSignal().then(() => stop(), (error) => stop(error));
-    }).then(() => disconnect(), (error) => disconnect(error));
-}).then(() => shutdownManager.stop()).then(() => {
-    process.exitCode = 0;
-}, (error) => {
-    console.log("Error.", error);
-
-    process.exitCode = 1;
-});

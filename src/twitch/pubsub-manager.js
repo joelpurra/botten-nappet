@@ -20,9 +20,13 @@ export default class PubSubManager {
     }
 
     start() {
-        return this._pubSubConnection.listen(this._userAccessToken, this._topics, this._dataHandler.bind(this)).then((killSwitch) => {
-            this._killSwitch = killSwitch;
-        }).tapCatch(() => this._executeKillSwitch());
+        return this._pubSubConnection.listen(this._userAccessToken, this._topics, this._dataHandler.bind(this))
+            .then((killSwitch) => {
+                this._killSwitch = killSwitch;
+
+                return undefined;
+            })
+            .tapCatch(() => this._executeKillSwitch());
     }
 
     stop() {
@@ -35,7 +39,9 @@ export default class PubSubManager {
     }
 
     _dataHandler(topic, data) {
+        /* eslint-disable no-console */
         console.log("dataHandler", topic, JSON.stringify(data, null, 2));
+        /* eslint-enable no-console */
     }
 
     _executeKillSwitch() {
