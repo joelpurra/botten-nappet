@@ -30,10 +30,6 @@
     "url": "https://joelpurra.com/"
   },
   "license": "AGPL-3.0",
-  "dependencies": {
-    "bluebird": "^3.5.1",
-    "ws": "^4.0.0"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/joelpurra/botten-nappet.git"
@@ -42,6 +38,10 @@
     "url": "https://joelpurra.com/support/"
   },
   "homepage": "https://joelpurra.com/projects/botten-nappet/",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "ws": "^4.0.0"
+  },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.2.1",
@@ -57,6 +57,7 @@
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
+    "pre-commit": "^1.2.2",
     "rimraf": "^2.6.2",
     "rollup": "^0.54.1",
     "rollup-plugin-babel": "^3.0.3",
