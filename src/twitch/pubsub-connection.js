@@ -32,13 +32,11 @@ export default class PubSubConnection {
         this._uri = uri;
 
         this._ws = null;
-        this._connected = false;
-
         this.maxDisconnectWaitMilliseconds = 10 * 1000;
     }
 
     connect() {
-        assert(!this._connected);
+        assert.strictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
             const onOpen = () => {
@@ -63,8 +61,6 @@ export default class PubSubConnection {
                 const data = JSON.parse(message);
 
                 if (data.type === "PONG") {
-                    this._connected = true;
-
                     unregisterListeners();
 
                     resolve();
@@ -99,13 +95,13 @@ export default class PubSubConnection {
     }
 
     disconnect() {
+        assert.notStrictEqual(this._ws, null);
+
         return Promise.try(() => {
-            if (!this._connected) {
+            if (this._ws.readyState !== WebSocket.OPEN) {
                 // console.warn("Already disconnected.");
                 return;
             }
-
-            this._connected = false;
 
             return new Promise((resolve, reject) => {
                 const hasClosed = () => {
@@ -140,7 +136,7 @@ export default class PubSubConnection {
     }
 
     listen(userAccessToken, topics, dataHandler) {
-        assert(this._connected);
+        assert.notStrictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
             const onMessage = (message) => {
