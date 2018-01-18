@@ -1,9 +1,9 @@
+import ShutdownManager from "./src/util/shutdown-manager";
+import TwitchPubSubConnection from "./src/twitch/pubsub-connection";
+import TwitchPubSubManager from "./src/twitch/pubsub-manager";
+
 const assert = require("assert");
 const Promise = require("bluebird");
-
-const ShutdownManager = require("./src/util/shutdown-manager");
-const TwitchPubSubConnection = require("./src/twitch/pubsub-connection");
-const TwitchPubSubManager = require("./src/twitch/pubsub-manager");
 
 // TODO: better token/config handling.
 const twitchWebSocketUri = "wss://pubsub-edge.twitch.tv/";
@@ -28,37 +28,37 @@ const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
 
 Promise.resolve().then(() => shutdownManager.start()).then(() => twitchPubSubConnection.connect()).then(() => {
-	console.log("Connected.");
+  console.log("Connected.");
 
-	const disconnect = (incomingError) => twitchPubSubConnection.disconnect().then(() => {
-		if (incomingError) {
-			console.error("Disconnected.", incomingError);
-		} else {
-			console.log("Disconnected.");
-		}
+  const disconnect = (incomingError) => twitchPubSubConnection.disconnect().then(() => {
+    if (incomingError) {
+      console.error("Disconnected.", incomingError);
+    } else {
+      console.log("Disconnected.");
+    }
 
-		return undefined;
-	});
+    return undefined;
+  });
 
-	return Promise.resolve().then(() => twitchPubSubManager.start()).then(() => {
-		console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
+  return Promise.resolve().then(() => twitchPubSubManager.start()).then(() => {
+    console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
 
-		const stop = (incomingError) => twitchPubSubManager.stop().then(() => {
-			if (incomingError) {
-				console.error("Stopped.", incomingError);
-			} else {
-				console.log("Stopped.");
-			}
+    const stop = (incomingError) => twitchPubSubManager.stop().then(() => {
+      if (incomingError) {
+        console.error("Stopped.", incomingError);
+      } else {
+        console.log("Stopped.");
+      }
 
-			return undefined;
-		});
+      return undefined;
+    });
 
-		return shutdownManager.waitForShutdownSignal().then(() => stop(), (error) => stop(error));
-	}).then(() => disconnect(), (error) => disconnect(error))
+    return shutdownManager.waitForShutdownSignal().then(() => stop(), (error) => stop(error));
+  }).then(() => disconnect(), (error) => disconnect(error))
 }).then(() => shutdownManager.stop()).then(() => {
-	process.exitCode = 0;
+  process.exitCode = 0;
 }, (error) => {
-	console.log("Error.", error);
+  console.log("Error.", error);
 
-	process.exitCode = 1;
+  process.exitCode = 1;
 });
