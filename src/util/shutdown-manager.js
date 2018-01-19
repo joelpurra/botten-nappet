@@ -27,7 +27,7 @@ export default class ShutdownManager {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof logger, "object");
 
-        this._logger = logger;
+        this._logger = logger.child("ShutdownManager");
 
         this._shutdownHandlers = [];
         this._shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
@@ -80,7 +80,7 @@ export default class ShutdownManager {
             this._shutdownHandlers,
             (shutdownHandler) => Promise.resolve(shutdownHandler())
                 .then(() => undefined, (error) => {
-                    this._logger.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
+                    this._logger.warn(error, `Masking error in shutdownHandler ${shutdownHandler.name}`);
 
                     return undefined;
                 })
@@ -98,7 +98,7 @@ export default class ShutdownManager {
         //assert.strictEqual(arguments.length, 1);
 
         return Promise.try(() => {
-            this._logger.debug(`Received shutdown event: ${JSON.stringify(shutdownEvent, null, 2)}`);
+            this._logger.debug(shutdownEvent, "Received shutdown event");
 
             this.shutdown();
         });

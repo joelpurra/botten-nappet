@@ -23,11 +23,13 @@ import ShutdownManager from "./src/util/shutdown-manager";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
 import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
-import TwitchIrcManager from "./src/twitch/irc/irc-manager";
-import TwitchIrcPingManager from "./src/twitch/irc/commands/ping";
+import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
+import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
 
 const assert = require("assert");
 const Promise = require("bluebird");
+
+const pino = require("pino");
 
 const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
 
@@ -59,13 +61,20 @@ const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
 const twitchChannelName = `#${twitchUserName}`;
 
 const applicationName = "botten-nappet";
-const rootLogger = new PinoLogger(applicationName, loggingLevel);
+
+const rootPinoLogger = pino({
+    name: applicationName,
+    level: loggingLevel,
+});
+
+const rootLogger = new PinoLogger(rootPinoLogger);
+const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(rootLogger, twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
 const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
-const twitchIrcManager = new TwitchIrcManager(rootLogger, twitchIrcConnection);
-const twitchIrcPingManager = new TwitchIrcPingManager(rootLogger, twitchIrcConnection);
+const twitchIrcManager = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcPingManager = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
@@ -74,7 +83,7 @@ Promise.resolve()
         twitchIrcConnection.connect(),
     ]))
     .then(() => {
-        rootLogger.info("Connected.");
+        indexLogger.info("Connected.");
 
         const disconnect = (incomingError) => Promise.all([
             twitchPubSubConnection.disconnect(),
@@ -82,9 +91,9 @@ Promise.resolve()
         ])
             .then(() => {
                 if (incomingError) {
-                    rootLogger.error("Disconnected.", incomingError);
+                    indexLogger.error("Disconnected.", incomingError);
                 } else {
-                    rootLogger.info("Disconnected.");
+                    indexLogger.info("Disconnected.");
                 }
 
                 return undefined;
@@ -97,7 +106,7 @@ Promise.resolve()
                 twitchIrcPingManager.start(),
             ]))
             .then(() => {
-                rootLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
+                indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
 
                 const stop = (incomingError) => Promise.all([
                     twitchPubSubManager.stop(),
@@ -106,9 +115,9 @@ Promise.resolve()
                 ])
                     .then(() => {
                         if (incomingError) {
-                            rootLogger.error("Stopped.", incomingError);
+                            indexLogger.error("Stopped.", incomingError);
                         } else {
-                            rootLogger.info("Stopped.");
+                            indexLogger.info("Stopped.");
                         }
 
                         return undefined;
@@ -126,7 +135,9 @@ Promise.resolve()
         return undefined;
     })
     .catch((error) => {
-        rootLogger.info("Error.", error);
+        /* eslint-disable no-console */
+        console.error("Error.", error);
+        /* eslint-enable no-console */
 
         process.exitCode = 1;
     });

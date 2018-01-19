@@ -31,7 +31,7 @@ export default class PubSubConnection {
         assert(uri.length > 0);
         assert(uri.startsWith("wss://"));
 
-        this._logger = logger;
+        this._logger = logger.child("PubSubConnection");
         this._uri = uri;
 
         this._ws = null;
@@ -47,9 +47,8 @@ export default class PubSubConnection {
                 const data = {
                     type: "PING",
                 };
-                const message = JSON.stringify(data);
 
-                this._send(message);
+                this._send(data);
             };
 
             const onError = (e) => {
@@ -96,24 +95,31 @@ export default class PubSubConnection {
             });
     }
 
-    _send(message) {
+    _send(data) {
         assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof message, "string");
-        assert(message.length > 0);
+        assert(data !== undefined && data !== null);
 
         return Promise.try(() => {
-            this._logger.debug("_send", message.length, message);
+            let message = null;
+
+            if (typeof data === "string") {
+                message = data;
+            } else {
+                message = JSON.stringify(data);
+            }
+
+            this._logger.debug(data, message.length, "_send");
 
             this._ws.send(message);
         });
     }
 
     _onError(error) {
-        this._logger.error("_onError", error);
+        this._logger.error(error, "_onError");
     }
 
     _onUnexpectedResponse(error) {
-        this._logger.error("_onUnexpectedResponse", error);
+        this._logger.error(error, "_onUnexpectedResponse");
     }
 
     _onClose() {
@@ -199,11 +205,19 @@ export default class PubSubConnection {
                 }
 
                 if (typeof data.error === "string" && data.error.length !== 0) {
-                    reject(new Error(`Listen error: ${JSON.stringify(data.error)}`));
+                    const listenError = new Error(`Listen error: ${JSON.stringify(data.error)}`);
+
+                    this._logger.error(listenError, data, "Listen error");
+
+                    reject(listenError);
                 }
 
                 if (data.type !== "RESPONSE") {
-                    reject(new Error(`Bad type: ${JSON.stringify(data.type)}`));
+                    const badTypeError = new Error(`Bad type: ${JSON.stringify(data.type)}`);
+
+                    this._logger.error(badTypeError, data, "Bad type");
+
+                    reject(badTypeError);
                 }
 
                 this._ws.removeListener("message", onListen);
@@ -231,11 +245,10 @@ export default class PubSubConnection {
                     auth_token: userAccessToken,
                 },
             };
-            const message = JSON.stringify(data);
 
             this._ws.on("message", onListen);
 
-            this._send(message);
+            this._send(data);
         });
     }
 }

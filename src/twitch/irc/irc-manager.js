@@ -27,7 +27,7 @@ export default class IrcManager {
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
 
-        this._logger = logger;
+        this._logger = logger.child("IrcManager");
         this._ircConnection = ircConnection;
 
         this._killSwitch = null;
@@ -56,19 +56,12 @@ export default class IrcManager {
         });
     }
 
-    _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
-
-        this._logger.debug("_dataHandler", JSON.stringify(data, null, 2));
+    _dataHandler(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+        assert.fail("Method should be overwritten.");
     }
 
-    _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
-
-        // TODO: add a real filter.
-        return Promise.resolve(true);
+    _filter(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+        assert.fail("Method should be overwritten.");
     }
 
     _executeKillSwitch() {

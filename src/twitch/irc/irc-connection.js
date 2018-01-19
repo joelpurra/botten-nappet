@@ -50,7 +50,7 @@ export default class IrcConnection {
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
 
-        this._logger = logger;
+        this._logger = logger.child("IrcConnection");
         this._uri = uri;
         this._channel = channel;
         this._username = username;
@@ -112,24 +112,31 @@ export default class IrcConnection {
         });
     }
 
-    _send(message) {
+    _send(data) {
         assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof message, "string");
-        assert(message.length > 0);
+        assert(data !== undefined && data !== null);
 
         return Promise.try(() => {
-            this._logger.debug("_send", message.length, message);
+            let message = null;
+
+            if (typeof data === "string") {
+                message = data;
+            } else {
+                message = JSON.stringify(data);
+            }
+
+            this._logger.debug(data, message.length, "_send");
 
             this._ws.send(message);
         });
     }
 
     _onError(error) {
-        this._logger.error("_onError", error);
+        this._logger.error(error, "_onError");
     }
 
     _onUnexpectedResponse(error) {
-        this._logger.error("_onUnexpectedResponse", error);
+        this._logger.error(error, "_onUnexpectedResponse");
     }
 
     _onClose() {
@@ -237,7 +244,7 @@ export default class IrcConnection {
                     return Promise.resolve(dataHandler.handler(data));
                 })
                 .then(() => undefined, (error) => {
-                    this._logger.warn(`Masking error in dataHandler ${dataHandler.handler.name}`, error);
+                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
 
                     return undefined;
                 })

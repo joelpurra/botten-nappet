@@ -23,29 +23,28 @@ import IrcManager from "../irc-manager";
 const assert = require("assert");
 const Promise = require("bluebird");
 
-export default class PingIrcManager extends IrcManager {
+export default class LoggingIrcHandler extends IrcManager {
     constructor(logger, ircConnection) {
         super(logger, ircConnection);
 
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
+
+        this._logger = logger.child("LoggingIrcHandler");
     }
 
     _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("_dataHandler", "Responding to PING.");
-
-        this._ircConnection._send("PONG :" + data.message);
+        this._logger.trace(data, "_dataHandler");
     }
 
     _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        // TODO: add a real filter.
-        return Promise.resolve(data.command === "PING");
+        return Promise.resolve(true);
     }
 }

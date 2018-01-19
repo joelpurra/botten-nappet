@@ -31,7 +31,7 @@ export default class PubSubManager {
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
 
-        this._logger = logger;
+        this._logger = logger.child("PubSubManager");
         this._pubSubConnection = pubSubConnection;
         this._userId = userId;
         this._userAccessToken = userAccessToken;
@@ -71,7 +71,7 @@ export default class PubSubManager {
         assert(topic.length > 0);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.debug("dataHandler", topic, JSON.stringify(data, null, 2));
+        this._logger.debug(data, topic, "dataHandler");
     }
 
     _executeKillSwitch() {

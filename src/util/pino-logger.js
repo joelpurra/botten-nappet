@@ -22,18 +22,12 @@ const assert = require("assert");
 
 // const Promise = require("bluebird");
 
-const pino = require("pino");
-
 export default class PinoLogger {
-    constructor(name, level) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof name, "string");
-        assert(name.length > 0);
-        assert.strictEqual(typeof level, "string");
-        assert(level.length > 0);
+    constructor(parentPinoLogger) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof parentPinoLogger, "object");
 
-        this._name = name;
-        this._level = level;
+        this._parentPinoLogger = parentPinoLogger;
 
         this._loggingMethods = [
             "fatal",
@@ -44,21 +38,28 @@ export default class PinoLogger {
             "trace",
         ];
 
-        this._loggingLevels = [
-            "silent",
-        ].concat(this._loggingMethods);
-
-        assert(this._loggingLevels.includes(this._level));
-
-        this._pino = pino({
-            name: this._name,
-            level: this._level,
-        });
-
         this._loggingMethods.forEach(
             (loggingMethod) => {
-                this[loggingMethod] = (...args) => this._pino[loggingMethod](...args);
+                this[loggingMethod] = (...args) => this._parentPinoLogger[loggingMethod]({
+                    args: args,
+                });
             }
         );
+    }
+
+    child(childName) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof childName, "string");
+        assert(childName.length > 0);
+
+        const childBindings = {
+            childName: childName,
+        };
+
+        const pinoLogger = this._parentPinoLogger.child(childBindings);
+
+        const childLogger = new PinoLogger(pinoLogger);
+
+        return childLogger;
     }
 }
