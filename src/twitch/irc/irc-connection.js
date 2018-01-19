@@ -68,13 +68,13 @@ export default class IrcConnection {
                 unregisterListeners();
 
                 // TODO: verify requirements.
-                this._ws.send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+                this._send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
 
                 // NOTE: the user access token needs to have an "oauth:" prefix.
-                this._ws.send(`PASS oauth:${this._userAccessToken}`);
+                this._send(`PASS oauth:${this._userAccessToken}`);
 
-                this._ws.send(`NICK ${this._username}`);
-                this._ws.send(`JOIN ${this._channel}`);
+                this._send(`NICK ${this._username}`);
+                this._send(`JOIN ${this._channel}`);
 
                 resolve();
             };
@@ -101,11 +101,39 @@ export default class IrcConnection {
 
             registerListeners();
         }).then(() => {
+            this._ws.on("error", this._onError.bind(this));
+            this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
             this._ws.on("close", this._onClose.bind(this));
             this._ws.on("message", this._onMessage.bind(this));
 
             return undefined;
         });
+    }
+
+    _send(message) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof message, "string");
+        assert(message.length > 0);
+
+        return Promise.try(() => {
+            /* eslint-disable no-console */
+            console.log("_send", message.length, message);
+            /* eslint-enable no-console */
+
+            this._ws.send(message);
+        });
+    }
+
+    _onError(error) {
+        /* eslint-disable no-console */
+        console.error("_onError", error);
+        /* eslint-enable no-console */
+    }
+
+    _onUnexpectedResponse(error) {
+        /* eslint-disable no-console */
+        console.error("_onUnexpectedResponse", error);
+        /* eslint-enable no-console */
     }
 
     _onClose() {

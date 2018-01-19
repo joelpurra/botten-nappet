@@ -47,7 +47,7 @@ export default class PubSubConnection {
                 };
                 const message = JSON.stringify(data);
 
-                this._ws.send(message);
+                this._send(message);
             };
 
             const onError = (e) => {
@@ -86,10 +86,38 @@ export default class PubSubConnection {
             registerListeners();
         })
             .then(() => {
+                this._ws.on("error", this._onError.bind(this));
+                this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
                 this._ws.on("close", this._onClose.bind(this));
 
                 return undefined;
             });
+    }
+
+    _send(message) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof message, "string");
+        assert(message.length > 0);
+
+        return Promise.try(() => {
+            /* eslint-disable no-console */
+            console.log("_send", message.length, message);
+            /* eslint-enable no-console */
+
+            this._ws.send(message);
+        });
+    }
+
+    _onError(error) {
+        /* eslint-disable no-console */
+        console.error("_onError", error);
+        /* eslint-enable no-console */
+    }
+
+    _onUnexpectedResponse(error) {
+        /* eslint-disable no-console */
+        console.error("_onUnexpectedResponse", error);
+        /* eslint-enable no-console */
     }
 
     _onClose() {
@@ -213,7 +241,7 @@ export default class PubSubConnection {
 
             this._ws.on("message", onListen);
 
-            this._ws.send(message);
+            this._send(message);
         });
     }
 }

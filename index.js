@@ -19,10 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import ShutdownManager from "./src/util/shutdown-manager";
-import TwitchPubSubConnection from "./src/twitch/pubsub-connection";
-import TwitchPubSubManager from "./src/twitch/pubsub-manager";
-import TwitchIrcConnection from "./src/twitch/irc-connection";
-import TwitchIrcManager from "./src/twitch/irc-manager";
+import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
+import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
+import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
+import TwitchIrcManager from "./src/twitch/irc/irc-manager";
+import TwitchIrcPingManager from "./src/twitch/irc/commands/ping";
 
 const assert = require("assert");
 const Promise = require("bluebird");
@@ -56,6 +57,7 @@ const twitchPubSubConnection = new TwitchPubSubConnection(twitchPubSubWebSocketU
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
 const twitchIrcConnection = new TwitchIrcConnection(twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
 const twitchIrcManager = new TwitchIrcManager(twitchIrcConnection);
+const twitchIrcPingManager = new TwitchIrcPingManager(twitchIrcConnection);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
@@ -90,6 +92,7 @@ Promise.resolve()
             .then(() => Promise.all([
                 twitchPubSubManager.start(),
                 twitchIrcManager.start(),
+                twitchIrcPingManager.start(),
             ]))
             .then(() => {
                 /* eslint-disable no-console */
@@ -99,6 +102,7 @@ Promise.resolve()
                 const stop = (incomingError) => Promise.all([
                     twitchPubSubManager.stop(),
                     twitchIrcManager.stop(),
+                    twitchIrcPingManager.stop(),
                 ])
                     .then(() => {
                         if (incomingError) {
