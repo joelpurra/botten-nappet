@@ -34,14 +34,15 @@ const twitchUserName = process.env.TWITCH_USER_NAME;
 // NOTE: use a twitch api lookup to get the id from twitchUserName.
 const twitchUserId = parseInt(process.env.TWITCH_USER_ID, 10);
 
-assert.strictEqual(typeof twitchAppAccessToken, "string");
-assert(twitchAppAccessToken.length > 0);
-assert.strictEqual(typeof twitchUserAccessToken, "string");
-assert(twitchUserAccessToken.length > 0);
-assert.strictEqual(typeof twitchUserName, "string");
-assert(twitchUserName.length > 0);
-assert(!isNaN(twitchUserId));
-assert(twitchUserId > 0);
+// TODO: simplify validation and validation error messages.
+assert.strictEqual(typeof twitchAppAccessToken, "string", "TWITCH_APP_ACCESS_TOKEN");
+assert(twitchAppAccessToken.length > 0, "TWITCH_APP_ACCESS_TOKEN");
+assert.strictEqual(typeof twitchUserAccessToken, "string", "TWITCH_USER_ACCESS_TOKEN");
+assert(twitchUserAccessToken.length > 0, "TWITCH_USER_ACCESS_TOKEN");
+assert.strictEqual(typeof twitchUserName, "string", "TWITCH_USER_NAME");
+assert(twitchUserName.length > 0, "TWITCH_USER_NAME");
+assert(!isNaN(twitchUserId), "TWITCH_USER_ID");
+assert(twitchUserId > 0, "TWITCH_USER_ID");
 
 const shutdownManager = new ShutdownManager();
 const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
