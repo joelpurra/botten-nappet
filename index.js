@@ -21,12 +21,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import ShutdownManager from "./src/util/shutdown-manager";
 import TwitchPubSubConnection from "./src/twitch/pubsub-connection";
 import TwitchPubSubManager from "./src/twitch/pubsub-manager";
+import TwitchIrcConnection from "./src/twitch/irc-connection";
+import TwitchIrcManager from "./src/twitch/irc-manager";
 
 const assert = require("assert");
 const Promise = require("bluebird");
 
 // TODO: better token/config handling.
-const twitchWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchAppAccessToken = process.env.TWITCH_APP_ACCESS_TOKEN;
 const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
 const twitchUserName = process.env.TWITCH_USER_NAME;
@@ -44,19 +45,33 @@ assert(twitchUserName.length > 0, "TWITCH_USER_NAME");
 assert(!isNaN(twitchUserId), "TWITCH_USER_ID");
 assert(twitchUserId > 0, "TWITCH_USER_ID");
 
+const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
+const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
+
+// NOTE: assuming that the user only joins their own channel, with a "#" prefix.
+const twitchChannelName = `#${twitchUserName}`;
+
 const shutdownManager = new ShutdownManager();
-const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
+const twitchPubSubConnection = new TwitchPubSubConnection(twitchPubSubWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
+const twitchIrcConnection = new TwitchIrcConnection(twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
+const twitchIrcManager = new TwitchIrcManager(twitchIrcConnection);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
-    .then(() => twitchPubSubConnection.connect())
+    .then(() => Promise.all([
+        twitchPubSubConnection.connect(),
+        twitchIrcConnection.connect(),
+    ]))
     .then(() => {
         /* eslint-disable no-console */
         console.log("Connected.");
         /* eslint-enable no-console */
 
-        const disconnect = (incomingError) => twitchPubSubConnection.disconnect()
+        const disconnect = (incomingError) => Promise.all([
+            twitchPubSubConnection.disconnect(),
+            twitchIrcConnection.disconnect(),
+        ])
             .then(() => {
                 if (incomingError) {
                     /* eslint-disable no-console */
@@ -72,13 +87,19 @@ Promise.resolve()
             });
 
         return Promise.resolve()
-            .then(() => twitchPubSubManager.start())
+            .then(() => Promise.all([
+                twitchPubSubManager.start(),
+                twitchIrcManager.start(),
+            ]))
             .then(() => {
                 /* eslint-disable no-console */
                 console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
                 /* eslint-enable no-console */
 
-                const stop = (incomingError) => twitchPubSubManager.stop()
+                const stop = (incomingError) => Promise.all([
+                    twitchPubSubManager.stop(),
+                    twitchIrcManager.stop(),
+                ])
                     .then(() => {
                         if (incomingError) {
                             /* eslint-disable no-console */

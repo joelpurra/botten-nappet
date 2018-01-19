@@ -21,21 +21,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("assert");
 const Promise = require("bluebird");
 
-export default class PubSubManager {
-    constructor(pubSubConnection, userId, userAccessToken) {
-        assert.strictEqual(arguments.length, 3);
-        assert.strictEqual(typeof pubSubConnection, "object");
-        assert(!isNaN(userId));
-        assert(userId > 0);
-        assert.strictEqual(typeof userAccessToken, "string");
-        assert(userAccessToken.length > 0);
+export default class IrcManager {
+    constructor(ircConnection) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof ircConnection, "object");
 
-        this._pubSubConnection = pubSubConnection;
-        this._userId = userId;
-        this._userAccessToken = userAccessToken;
-
-        // TODO: one class per listen-topic, or one class per concern?
-        this._topics = [`channel-bits-events-v1.${this._userId}`, `channel-subscribe-events-v1.${this._userId}`, `channel-commerce-events-v1.${this._userId}`, `whispers.${this._userId}`];
+        this._ircConnection = ircConnection;
 
         this._killSwitch = null;
     }
@@ -43,7 +34,7 @@ export default class PubSubManager {
     start() {
         assert.strictEqual(arguments.length, 0);
 
-        return this._pubSubConnection.listen(this._userAccessToken, this._topics, this._dataHandler.bind(this))
+        return this._ircConnection.listen(this._dataHandler.bind(this), this._filter.bind(this))
             .then((killSwitch) => {
                 this._killSwitch = killSwitch;
 
@@ -63,15 +54,21 @@ export default class PubSubManager {
         });
     }
 
-    _dataHandler(topic, data) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof topic, "string");
-        assert(topic.length > 0);
+    _dataHandler(data) {
+        assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
         /* eslint-disable no-console */
-        console.log("dataHandler", topic, JSON.stringify(data, null, 2));
-    /* eslint-enable no-console */
+        console.log("_dataHandler", JSON.stringify(data, null, 2));
+        /* eslint-enable no-console */
+    }
+
+    _filter(data) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof data, "object");
+
+        // TODO: add a real filter.
+        return Promise.resolve(true);
     }
 
     _executeKillSwitch() {

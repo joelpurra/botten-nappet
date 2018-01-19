@@ -25,6 +25,7 @@ const WebSocket = require("ws");
 
 export default class PubSubConnection {
     constructor(uri) {
+        assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("wss://"));
@@ -32,10 +33,11 @@ export default class PubSubConnection {
         this._uri = uri;
 
         this._ws = null;
-        this.maxDisconnectWaitMilliseconds = 10 * 1000;
+        this._maxDisconnectWaitMilliseconds = 10 * 1000;
     }
 
     connect() {
+        assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
@@ -95,6 +97,7 @@ export default class PubSubConnection {
     }
 
     disconnect() {
+        assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
         return Promise.try(() => {
@@ -111,7 +114,7 @@ export default class PubSubConnection {
                 this._ws.once("close", hasClosed);
 
                 /* eslint-disable promise/catch-or-return */
-                Promise.delay(this.maxDisconnectWaitMilliseconds)
+                Promise.delay(this._maxDisconnectWaitMilliseconds)
                     .then(() => reject(new Error("Disconnect timed out.")));
                 /* eslint-enable promise/catch-or-return */
 
@@ -119,7 +122,7 @@ export default class PubSubConnection {
             })
                 .catch(() => {
                     /* eslint-disable no-console */
-                    console.warn(`Could not disconnect within ${this.maxDisconnectWaitMilliseconds} milliseconds.`);
+                    console.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
                     /* eslint-enable no-console */
 
                     // NOTE: fallback for a timed out disconnect.
@@ -136,6 +139,13 @@ export default class PubSubConnection {
     }
 
     listen(userAccessToken, topics, dataHandler) {
+        assert.strictEqual(arguments.length, 3);
+        assert.strictEqual(typeof userAccessToken, "string");
+        assert(userAccessToken.length > 0);
+        assert(Array.isArray(topics));
+        assert(topics.length > 0);
+        assert.strictEqual(typeof dataHandler, "function");
+
         assert.notStrictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
