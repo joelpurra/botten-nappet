@@ -23,20 +23,19 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class ShutdownManager {
-    constructor() {
-        assert.strictEqual(arguments.length, 0);
+    constructor(logger) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof logger, "object");
+
+        this._logger = logger;
 
         this._shutdownHandlers = [];
-
-        this._handleEvent = this._handleEvent.bind(this);
-
         this._shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
+        this._handleEvent = this._handleEvent.bind(this);
 
         this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
             const waitForShutdown = () => {
-                /* eslint-disable no-console */
-                console.warn("Detected shutdown.");
-                /* eslint-enable no-console */
+                this._logger.warn("Detected shutdown.");
 
                 resolve();
             };
@@ -81,9 +80,7 @@ export default class ShutdownManager {
             this._shutdownHandlers,
             (shutdownHandler) => Promise.resolve(shutdownHandler())
                 .then(() => undefined, (error) => {
-                    /* eslint-disable no-console */
-                    console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
-                    /* eslint-enable no-console */
+                    this._logger.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
 
                     return undefined;
                 })
@@ -101,9 +98,7 @@ export default class ShutdownManager {
         //assert.strictEqual(arguments.length, 1);
 
         return Promise.try(() => {
-            /* eslint-disable no-console */
-            console.log(`Received shutdown event: ${JSON.stringify(shutdownEvent, null, 2)}`);
-            /* eslint-enable no-console */
+            this._logger.debug(`Received shutdown event: ${JSON.stringify(shutdownEvent, null, 2)}`);
 
             this.shutdown();
         });

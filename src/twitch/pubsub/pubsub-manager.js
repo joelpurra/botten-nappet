@@ -22,14 +22,16 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class PubSubManager {
-    constructor(pubSubConnection, userId, userAccessToken) {
-        assert.strictEqual(arguments.length, 3);
+    constructor(logger, pubSubConnection, userId, userAccessToken) {
+        assert.strictEqual(arguments.length, 4);
+        assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof pubSubConnection, "object");
         assert(!isNaN(userId));
         assert(userId > 0);
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
 
+        this._logger = logger;
         this._pubSubConnection = pubSubConnection;
         this._userId = userId;
         this._userAccessToken = userAccessToken;
@@ -69,9 +71,7 @@ export default class PubSubManager {
         assert(topic.length > 0);
         assert.strictEqual(typeof data, "object");
 
-        /* eslint-disable no-console */
-        console.log("dataHandler", topic, JSON.stringify(data, null, 2));
-    /* eslint-enable no-console */
+        this._logger.debug("dataHandler", topic, JSON.stringify(data, null, 2));
     }
 
     _executeKillSwitch() {

@@ -24,13 +24,19 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class PingIrcManager extends IrcManager {
+    constructor(logger, ircConnection) {
+        super(logger, ircConnection);
+
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof logger, "object");
+        assert.strictEqual(typeof ircConnection, "object");
+    }
+
     _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        /* eslint-disable no-console */
-        console.log("_dataHandler", "Responding to PING.");
-        /* eslint-enable no-console */
+        this._logger.trace("_dataHandler", "Responding to PING.");
 
         this._ircConnection._send("PONG :" + data.message);
     }

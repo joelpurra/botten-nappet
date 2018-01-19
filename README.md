@@ -46,13 +46,24 @@ npm run --silent start
 Follow [git-flow](https://danielkummer.github.io/git-flow-cheatsheet/) and use [git-flow-avh](https://github.com/petervanderdoes/gitflow-avh).
 
 ```shell
+# Make sure git-flow is initialized.
 git flow init -d
 
+# Clean, test, build, watch javascript code for changes.
 npm run --silent clean
-
+npm run --silent build
 npm run --silent test
-
 npm run --silent watch
+
+# Set logging parameters.
+export BOTTEN_NAPPET_LOGGING_LEVEL='trace'
+export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
+
+# Pipe log output to file.
+npm run --silent start | tee "$BOTTEN_NAPPET_LOG_FILE"
+
+# New terminal window: watch log file and pretty print.
+tail -f "$BOTTEN_NAPPET_LOG_FILE" | ./node_modules/.bin/pino
 ```
 
 

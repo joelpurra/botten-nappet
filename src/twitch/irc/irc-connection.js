@@ -37,8 +37,9 @@ const Promise = require("bluebird");
 const WebSocket = require("ws");
 
 export default class IrcConnection {
-    constructor(uri, channel, username, userAccessToken) {
-        assert.strictEqual(arguments.length, 4);
+    constructor(logger, uri, channel, username, userAccessToken) {
+        assert.strictEqual(arguments.length, 5);
+        assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("wss://"));
@@ -49,6 +50,7 @@ export default class IrcConnection {
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
 
+        this._logger = logger;
         this._uri = uri;
         this._channel = channel;
         this._username = username;
@@ -116,24 +118,18 @@ export default class IrcConnection {
         assert(message.length > 0);
 
         return Promise.try(() => {
-            /* eslint-disable no-console */
-            console.log("_send", message.length, message);
-            /* eslint-enable no-console */
+            this._logger.debug("_send", message.length, message);
 
             this._ws.send(message);
         });
     }
 
     _onError(error) {
-        /* eslint-disable no-console */
-        console.error("_onError", error);
-        /* eslint-enable no-console */
+        this._logger.error("_onError", error);
     }
 
     _onUnexpectedResponse(error) {
-        /* eslint-disable no-console */
-        console.error("_onUnexpectedResponse", error);
-        /* eslint-enable no-console */
+        this._logger.error("_onUnexpectedResponse", error);
     }
 
     _onClose() {
@@ -145,7 +141,8 @@ export default class IrcConnection {
 
         return Promise.try(() => {
             if (this._ws.readyState !== WebSocket.OPEN) {
-                // console.warn("Already disconnected.");
+                this._logger.trace("Already disconnected.");
+
                 return;
             }
 
@@ -162,9 +159,7 @@ export default class IrcConnection {
 
                 this._ws.close();
             }).catch(() => {
-                /* eslint-disable no-console */
-                console.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
-                /* eslint-enable no-console */
+                this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
 
                 // NOTE: fallback for a timed out disconnect.
                 this._ws.terminate();
@@ -242,9 +237,7 @@ export default class IrcConnection {
                     return Promise.resolve(dataHandler.handler(data));
                 })
                 .then(() => undefined, (error) => {
-                    /* eslint-disable no-console */
-                    console.warn(`Masking error in dataHandler ${dataHandler.handler.name}`, error);
-                    /* eslint-enable no-console */
+                    this._logger.warn(`Masking error in dataHandler ${dataHandler.handler.name}`, error);
 
                     return undefined;
                 })

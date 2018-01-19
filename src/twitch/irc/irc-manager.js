@@ -22,10 +22,12 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class IrcManager {
-    constructor(ircConnection) {
-        assert.strictEqual(arguments.length, 1);
+    constructor(logger, ircConnection) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
 
+        this._logger = logger;
         this._ircConnection = ircConnection;
 
         this._killSwitch = null;
@@ -58,9 +60,7 @@ export default class IrcManager {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        /* eslint-disable no-console */
-        console.log("_dataHandler", JSON.stringify(data, null, 2));
-        /* eslint-enable no-console */
+        this._logger.debug("_dataHandler", JSON.stringify(data, null, 2));
     }
 
     _filter(data) {
