@@ -24,12 +24,12 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class GreetingIrcHandler extends IrcManager {
-    constructor(logger, ircConnection, username) {
-        super(logger, ircConnection);
+    constructor(logger, connection, username) {
+        super(logger, connection);
 
         assert.strictEqual(arguments.length, 3);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof ircConnection, "object");
+        assert.strictEqual(typeof connection, "object");
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
@@ -66,7 +66,7 @@ export default class GreetingIrcHandler extends IrcManager {
             message = `PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`;
         }
 
-        this._ircConnection._send(message);
+        this._connection._send(message);
     }
 
     _filter(data) {
