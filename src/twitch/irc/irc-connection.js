@@ -192,11 +192,12 @@ export default class IrcConnection {
         // :Kappa Keepo Kappa
 
         const parsedMessage = {
-            message: null,
-            tags: null,
-            command: null,
-            original: rawMessage,
             channel: null,
+            command: null,
+            message: null,
+            original: rawMessage,
+            originalTags: null,
+            tags: null,
             username: null,
         };
 
@@ -207,11 +208,28 @@ export default class IrcConnection {
             const channelIndex = rawMessage.indexOf(" ", commandIndex + 1);
             const messageIndex = rawMessage.indexOf(":", channelIndex + 1);
 
-            parsedMessage.tags = rawMessage.slice(0, tagIndex);
+            parsedMessage.originalTags = rawMessage.slice(1, tagIndex);
             parsedMessage.username = rawMessage.slice(tagIndex + 2, rawMessage.indexOf("!"));
             parsedMessage.command = rawMessage.slice(userIndex + 1, commandIndex);
             parsedMessage.channel = rawMessage.slice(commandIndex + 1, channelIndex);
             parsedMessage.message = rawMessage.slice(messageIndex + 1);
+
+            parsedMessage.tags = parsedMessage.originalTags
+                .split(";")
+                .reduce(
+                    (obj, tag) => {
+                        const parts = tag.split("=");
+                        const key = parts[0];
+                        const value = parts[1];
+
+                        // NOTE: handle the case of having repeated tag keys.
+                        // NOTE: this means a parsed tag value can be either a string or an array of strings.
+                        obj[key] = obj[key] ? [].concat(obj[key]).concat(value) : value;
+
+                        return obj;
+                    },
+                    {}
+                );
         } else if (rawMessage.startsWith("PING")) {
             parsedMessage.command = "PING";
             parsedMessage.message = rawMessage.split(":")[1];
