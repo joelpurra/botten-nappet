@@ -18,15 +18,30 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import PinoLogger from "./src/util/pino-logger";
 import ShutdownManager from "./src/util/shutdown-manager";
-import TwitchPubSubConnection from "./src/twitch/pubsub-connection";
-import TwitchPubSubManager from "./src/twitch/pubsub-manager";
+import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
+import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
+import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
+import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
+import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
+import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
+import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
+import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
+import TwitchPollingConnection from "./src/twitch/polling/polling-connection";
+import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 
 const assert = require("assert");
 const Promise = require("bluebird");
 
+const pino = require("pino");
+
+const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
+const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
+
 // TODO: better token/config handling.
-const twitchWebSocketUri = "wss://pubsub-edge.twitch.tv/";
+const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
+const twitchAppClientId = process.env.TWITCH_APP_CLIENT_ID;
 const twitchAppAccessToken = process.env.TWITCH_APP_ACCESS_TOKEN;
 const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
 const twitchUserName = process.env.TWITCH_USER_NAME;
@@ -34,59 +49,92 @@ const twitchUserName = process.env.TWITCH_USER_NAME;
 // NOTE: use a twitch api lookup to get the id from twitchUserName.
 const twitchUserId = parseInt(process.env.TWITCH_USER_ID, 10);
 
-assert.strictEqual(typeof twitchAppAccessToken, "string");
-assert(twitchAppAccessToken.length > 0);
-assert.strictEqual(typeof twitchUserAccessToken, "string");
-assert(twitchUserAccessToken.length > 0);
-assert.strictEqual(typeof twitchUserName, "string");
-assert(twitchUserName.length > 0);
-assert(!isNaN(twitchUserId));
-assert(twitchUserId > 0);
+// TODO: simplify validation and validation error messages.
+assert.strictEqual(typeof loggingLevel, "string", "BOTTEN_NAPPET_LOGGING_LEVEL");
+assert(loggingLevel.length > 0, "BOTTEN_NAPPET_LOGGING_LEVEL");
+assert.strictEqual(typeof twitchAppClientId, "string", "TWITCH_APP_CLIENT_ID");
+assert(twitchAppClientId.length > 0, "TWITCH_APP_CLIENT_ID");
+assert.strictEqual(typeof twitchAppAccessToken, "string", "TWITCH_APP_ACCESS_TOKEN");
+assert(twitchAppAccessToken.length > 0, "TWITCH_APP_ACCESS_TOKEN");
+assert.strictEqual(typeof twitchUserAccessToken, "string", "TWITCH_USER_ACCESS_TOKEN");
+assert(twitchUserAccessToken.length > 0, "TWITCH_USER_ACCESS_TOKEN");
+assert.strictEqual(typeof twitchUserName, "string", "TWITCH_USER_NAME");
+assert(twitchUserName.length > 0, "TWITCH_USER_NAME");
+assert(!isNaN(twitchUserId), "TWITCH_USER_ID");
+assert(twitchUserId > 0, "TWITCH_USER_ID");
 
-const shutdownManager = new ShutdownManager();
-const twitchPubSubConnection = new TwitchPubSubConnection(twitchWebSocketUri);
-const twitchPubSubManager = new TwitchPubSubManager(twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
+const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
+const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
+const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=2`;
+
+// NOTE: assuming that the user only joins their own channel, with a "#" prefix.
+const twitchChannelName = `#${twitchUserName}`;
+
+const applicationName = "botten-nappet";
+
+const rootPinoLogger = pino({
+    name: applicationName,
+    level: loggingLevel,
+});
+
+const rootLogger = new PinoLogger(rootPinoLogger);
+const indexLogger = rootLogger.child("index");
+const shutdownManager = new ShutdownManager(rootLogger);
+const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
+const twitchPubSubManager = new TwitchPubSubManager(rootLogger, twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
+const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
+const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
+const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
+const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
+const twitchPollingFollowingConnection = new TwitchPollingConnection(rootLogger, twitchAppClientId, followingPollingUri, "get", BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL);
+const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
+
+const connectables = [
+    twitchPubSubConnection,
+    twitchIrcConnection,
+    twitchPollingFollowingConnection,
+];
+
+const startables = [
+    twitchPubSubManager,
+    twitchIrcLoggingHandler,
+    twitchIrcPingHandler,
+    twitchIrcGreetingHandler,
+    twitchIrcNewChatterHandler,
+    twitchIrcSubscribingHandler,
+    twitchPollingFollowingHandler,
+];
 
 Promise.resolve()
     .then(() => shutdownManager.start())
-    .then(() => twitchPubSubConnection.connect())
+    .then(() => Promise.map(connectables, (connectable) => connectable.connect()))
     .then(() => {
-        /* eslint-disable no-console */
-        console.log("Connected.");
-        /* eslint-enable no-console */
+        indexLogger.info("Connected.");
 
-        const disconnect = (incomingError) => twitchPubSubConnection.disconnect()
+        const disconnect = (incomingError) => Promise.map(connectables, (connectable) => connectable.disconnect())
             .then(() => {
                 if (incomingError) {
-                    /* eslint-disable no-console */
-                    console.error("Disconnected.", incomingError);
-                    /* eslint-enable no-console */
+                    indexLogger.error("Disconnected.", incomingError);
                 } else {
-                    /* eslint-disable no-console */
-                    console.log("Disconnected.");
-                    /* eslint-enable no-console */
+                    indexLogger.info("Disconnected.");
                 }
 
                 return undefined;
             });
 
         return Promise.resolve()
-            .then(() => twitchPubSubManager.start())
+            .then(() => Promise.map(startables, (startable) => startable.start()))
             .then(() => {
-                /* eslint-disable no-console */
-                console.log(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
-                /* eslint-enable no-console */
+                indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
 
-                const stop = (incomingError) => twitchPubSubManager.stop()
+                const stop = (incomingError) => Promise.map(startables, (startable) => startable.stop())
                     .then(() => {
                         if (incomingError) {
-                            /* eslint-disable no-console */
-                            console.error("Stopped.", incomingError);
-                            /* eslint-enable no-console */
+                            indexLogger.error("Stopped.", incomingError);
                         } else {
-                            /* eslint-disable no-console */
-                            console.log("Stopped.");
-                            /* eslint-enable no-console */
+                            indexLogger.info("Stopped.");
                         }
 
                         return undefined;
@@ -105,7 +153,7 @@ Promise.resolve()
     })
     .catch((error) => {
         /* eslint-disable no-console */
-        console.log("Error.", error);
+        console.error("Error.", error);
         /* eslint-enable no-console */
 
         process.exitCode = 1;

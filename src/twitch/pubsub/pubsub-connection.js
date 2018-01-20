@@ -24,18 +24,22 @@ const Promise = require("bluebird");
 const WebSocket = require("ws");
 
 export default class PubSubConnection {
-    constructor(uri) {
+    constructor(logger, uri) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("wss://"));
 
+        this._logger = logger.child("PubSubConnection");
         this._uri = uri;
 
         this._ws = null;
-        this.maxDisconnectWaitMilliseconds = 10 * 1000;
+        this._maxDisconnectWaitMilliseconds = 10 * 1000;
     }
 
     connect() {
+        assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
@@ -43,9 +47,8 @@ export default class PubSubConnection {
                 const data = {
                     type: "PING",
                 };
-                const message = JSON.stringify(data);
 
-                this._ws.send(message);
+                this._send(data);
             };
 
             const onError = (e) => {
@@ -84,10 +87,39 @@ export default class PubSubConnection {
             registerListeners();
         })
             .then(() => {
+                this._ws.on("error", this._onError.bind(this));
+                this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
                 this._ws.on("close", this._onClose.bind(this));
 
                 return undefined;
             });
+    }
+
+    _send(data) {
+        assert.strictEqual(arguments.length, 1);
+        assert(data !== undefined && data !== null);
+
+        return Promise.try(() => {
+            let message = null;
+
+            if (typeof data === "string") {
+                message = data;
+            } else {
+                message = JSON.stringify(data);
+            }
+
+            this._logger.debug(data, message.length, "_send");
+
+            this._ws.send(message);
+        });
+    }
+
+    _onError(error) {
+        this._logger.error(error, "_onError");
+    }
+
+    _onUnexpectedResponse(error) {
+        this._logger.error(error, "_onUnexpectedResponse");
     }
 
     _onClose() {
@@ -95,11 +127,12 @@ export default class PubSubConnection {
     }
 
     disconnect() {
+        assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
         return Promise.try(() => {
             if (this._ws.readyState !== WebSocket.OPEN) {
-                // console.warn("Already disconnected.");
+                // this._logger.warn("Already disconnected.");
                 return;
             }
 
@@ -111,16 +144,14 @@ export default class PubSubConnection {
                 this._ws.once("close", hasClosed);
 
                 /* eslint-disable promise/catch-or-return */
-                Promise.delay(this.maxDisconnectWaitMilliseconds)
+                Promise.delay(this._maxDisconnectWaitMilliseconds)
                     .then(() => reject(new Error("Disconnect timed out.")));
                 /* eslint-enable promise/catch-or-return */
 
                 this._ws.close();
             })
                 .catch(() => {
-                    /* eslint-disable no-console */
-                    console.warn(`Could not disconnect within ${this.maxDisconnectWaitMilliseconds} milliseconds.`);
-                    /* eslint-enable no-console */
+                    this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
 
                     // NOTE: fallback for a timed out disconnect.
                     this._ws.terminate();
@@ -136,6 +167,13 @@ export default class PubSubConnection {
     }
 
     listen(userAccessToken, topics, dataHandler) {
+        assert.strictEqual(arguments.length, 3);
+        assert.strictEqual(typeof userAccessToken, "string");
+        assert(userAccessToken.length > 0);
+        assert(Array.isArray(topics));
+        assert(topics.length > 0);
+        assert.strictEqual(typeof dataHandler, "function");
+
         assert.notStrictEqual(this._ws, null);
 
         return new Promise((resolve, reject) => {
@@ -167,11 +205,19 @@ export default class PubSubConnection {
                 }
 
                 if (typeof data.error === "string" && data.error.length !== 0) {
-                    reject(new Error(`Listen error: ${JSON.stringify(data.error)}`));
+                    const listenError = new Error(`Listen error: ${JSON.stringify(data.error)}`);
+
+                    this._logger.error(listenError, data, "Listen error");
+
+                    reject(listenError);
                 }
 
                 if (data.type !== "RESPONSE") {
-                    reject(new Error(`Bad type: ${JSON.stringify(data.type)}`));
+                    const badTypeError = new Error(`Bad type: ${JSON.stringify(data.type)}`);
+
+                    this._logger.error(badTypeError, data, "Bad type");
+
+                    reject(badTypeError);
                 }
 
                 this._ws.removeListener("message", onListen);
@@ -199,11 +245,10 @@ export default class PubSubConnection {
                     auth_token: userAccessToken,
                 },
             };
-            const message = JSON.stringify(data);
 
             this._ws.on("message", onListen);
 
-            this._ws.send(message);
+            this._send(data);
         });
     }
 }

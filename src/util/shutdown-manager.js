@@ -23,18 +23,19 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class ShutdownManager {
-    constructor() {
+    constructor(logger) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof logger, "object");
+
+        this._logger = logger.child("ShutdownManager");
+
         this._shutdownHandlers = [];
-
-        this._handleEvent = this._handleEvent.bind(this);
-
         this._shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
+        this._handleEvent = this._handleEvent.bind(this);
 
         this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
             const waitForShutdown = () => {
-                /* eslint-disable no-console */
-                console.warn("Detected shutdown.");
-                /* eslint-enable no-console */
+                this._logger.warn("Detected shutdown.");
 
                 resolve();
             };
@@ -44,6 +45,8 @@ export default class ShutdownManager {
     }
 
     start() {
+        assert.strictEqual(arguments.length, 0);
+
         return Promise.try(() => {
             this._shutdownEvents.forEach((shutdownEvent) => {
                 process.on(shutdownEvent, this._handleEvent);
@@ -52,6 +55,8 @@ export default class ShutdownManager {
     }
 
     stop() {
+        assert.strictEqual(arguments.length, 0);
+
         return Promise.try(() => {
             this._shutdownEvents.forEach((shutdownEvent) => {
                 process.removeListener(shutdownEvent, this._handleEvent);
@@ -60,6 +65,7 @@ export default class ShutdownManager {
     }
 
     register(shutdownHandler) {
+        assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof shutdownHandler, "function");
 
         return Promise.try(() => {
@@ -68,13 +74,13 @@ export default class ShutdownManager {
     }
 
     shutdown() {
+        assert.strictEqual(arguments.length, 0);
+
         return Promise.map(
             this._shutdownHandlers,
             (shutdownHandler) => Promise.resolve(shutdownHandler())
                 .then(() => undefined, (error) => {
-                    /* eslint-disable no-console */
-                    console.warn(`Masking error in shutdownHandler ${shutdownHandler.name}`, error);
-                    /* eslint-enable no-console */
+                    this._logger.warn(error, `Masking error in shutdownHandler ${shutdownHandler.name}`);
 
                     return undefined;
                 })
@@ -82,14 +88,17 @@ export default class ShutdownManager {
     }
 
     waitForShutdownSignal() {
+        assert.strictEqual(arguments.length, 0);
+
         return this._shutdownPromise;
     }
 
     _handleEvent(shutdownEvent) {
+        // TODO: test/ensure that the right number of arguments are passed from each event/signal type.
+        //assert.strictEqual(arguments.length, 1);
+
         return Promise.try(() => {
-            /* eslint-disable no-console */
-            console.log(`Received shutdown event: ${JSON.stringify(shutdownEvent, null, 2)}`);
-            /* eslint-enable no-console */
+            this._logger.debug(shutdownEvent, "Received shutdown event");
 
             this.shutdown();
         });

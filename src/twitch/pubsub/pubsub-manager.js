@@ -22,13 +22,16 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class PubSubManager {
-    constructor(pubSubConnection, userId, userAccessToken) {
+    constructor(logger, pubSubConnection, userId, userAccessToken) {
+        assert.strictEqual(arguments.length, 4);
+        assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof pubSubConnection, "object");
         assert(!isNaN(userId));
         assert(userId > 0);
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
 
+        this._logger = logger.child("PubSubManager");
         this._pubSubConnection = pubSubConnection;
         this._userId = userId;
         this._userAccessToken = userAccessToken;
@@ -40,6 +43,8 @@ export default class PubSubManager {
     }
 
     start() {
+        assert.strictEqual(arguments.length, 0);
+
         return this._pubSubConnection.listen(this._userAccessToken, this._topics, this._dataHandler.bind(this))
             .then((killSwitch) => {
                 this._killSwitch = killSwitch;
@@ -50,6 +55,8 @@ export default class PubSubManager {
     }
 
     stop() {
+        assert.strictEqual(arguments.length, 0);
+
         // TODO: assert killSwitch?
         return Promise.try(() => {
             if (typeof this._killSwitch === "function") {
@@ -59,12 +66,17 @@ export default class PubSubManager {
     }
 
     _dataHandler(topic, data) {
-        /* eslint-disable no-console */
-        console.log("dataHandler", topic, JSON.stringify(data, null, 2));
-        /* eslint-enable no-console */
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof topic, "string");
+        assert(topic.length > 0);
+        assert.strictEqual(typeof data, "object");
+
+        this._logger.debug(data, topic, "dataHandler");
     }
 
     _executeKillSwitch() {
+        assert.strictEqual(arguments.length, 0);
+
         return Promise.try(() => {
             if (typeof this._killSwitch !== "function") {
                 return;
