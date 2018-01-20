@@ -22,14 +22,14 @@ import ConnectionManager from "../connection-manager";
 
 const assert = require("assert");
 
-export default class IrcManager extends ConnectionManager {
-    constructor(logger, ircConnection) {
-        super(logger, ircConnection);
+export default class PollingManager extends ConnectionManager {
+    constructor(logger, pollingConnection) {
+        super(logger, pollingConnection);
 
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof ircConnection, "object");
+        assert.strictEqual(typeof pollingConnection, "object");
 
-        this._logger = logger.child("IrcManager");
+        this._logger = logger.child("PollingManager");
     }
 }

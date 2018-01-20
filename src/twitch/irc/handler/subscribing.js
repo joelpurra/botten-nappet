@@ -38,7 +38,7 @@ export default class SubscribingIrcHandler extends IrcManager {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
+        this._logger.trace("Responding to subscriber.", data.tags.login, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.

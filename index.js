@@ -28,6 +28,8 @@ import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
 import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
 import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
 import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
+import TwitchPollingConnection from "./src/twitch/polling/polling-connection";
+import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 
 const assert = require("assert");
 const Promise = require("bluebird");
@@ -35,9 +37,11 @@ const Promise = require("bluebird");
 const pino = require("pino");
 
 const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
+const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
 
 // TODO: better token/config handling.
 const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
+const twitchAppClientId = process.env.TWITCH_APP_CLIENT_ID;
 const twitchAppAccessToken = process.env.TWITCH_APP_ACCESS_TOKEN;
 const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
 const twitchUserName = process.env.TWITCH_USER_NAME;
@@ -48,6 +52,8 @@ const twitchUserId = parseInt(process.env.TWITCH_USER_ID, 10);
 // TODO: simplify validation and validation error messages.
 assert.strictEqual(typeof loggingLevel, "string", "BOTTEN_NAPPET_LOGGING_LEVEL");
 assert(loggingLevel.length > 0, "BOTTEN_NAPPET_LOGGING_LEVEL");
+assert.strictEqual(typeof twitchAppClientId, "string", "TWITCH_APP_CLIENT_ID");
+assert(twitchAppClientId.length > 0, "TWITCH_APP_CLIENT_ID");
 assert.strictEqual(typeof twitchAppAccessToken, "string", "TWITCH_APP_ACCESS_TOKEN");
 assert(twitchAppAccessToken.length > 0, "TWITCH_APP_ACCESS_TOKEN");
 assert.strictEqual(typeof twitchUserAccessToken, "string", "TWITCH_USER_ACCESS_TOKEN");
@@ -59,6 +65,7 @@ assert(twitchUserId > 0, "TWITCH_USER_ID");
 
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
+const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=2`;
 
 // NOTE: assuming that the user only joins their own channel, with a "#" prefix.
 const twitchChannelName = `#${twitchUserName}`;
@@ -81,6 +88,14 @@ const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConne
 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
 const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
 const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
+const twitchPollingFollowingConnection = new TwitchPollingConnection(rootLogger, twitchAppClientId, followingPollingUri, "get", BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL);
+const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
+
+const connectables = [
+    twitchPubSubConnection,
+    twitchIrcConnection,
+    twitchPollingFollowingConnection,
+];
 
 const startables = [
     twitchPubSubManager,
@@ -89,21 +104,16 @@ const startables = [
     twitchIrcGreetingHandler,
     twitchIrcNewChatterHandler,
     twitchIrcSubscribingHandler,
+    twitchPollingFollowingHandler,
 ];
 
 Promise.resolve()
     .then(() => shutdownManager.start())
-    .then(() => Promise.all([
-        twitchPubSubConnection.connect(),
-        twitchIrcConnection.connect(),
-    ]))
+    .then(() => Promise.map(connectables, (connectable) => connectable.connect()))
     .then(() => {
         indexLogger.info("Connected.");
 
-        const disconnect = (incomingError) => Promise.all([
-            twitchPubSubConnection.disconnect(),
-            twitchIrcConnection.disconnect(),
-        ])
+        const disconnect = (incomingError) => Promise.map(connectables, (connectable) => connectable.disconnect())
             .then(() => {
                 if (incomingError) {
                     indexLogger.error("Disconnected.", incomingError);
