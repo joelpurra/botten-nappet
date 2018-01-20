@@ -24,22 +24,29 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class GreetingIrcHandler extends IrcManager {
-    constructor(logger, ircConnection) {
+    constructor(logger, ircConnection, username) {
         super(logger, ircConnection);
 
-        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(arguments.length, 3);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
+        assert.strictEqual(typeof username, "string");
+        assert(username.length > 0);
 
         this._logger = logger.child("GreetingIrcHandler");
+        this._username = username;
 
         this._greetings = [
             /\bhello\b/,
             /\bhi\b/,
+            /\bhiya\b/,
             /\bhey\b/,
             /\bhowdy\b/,
+            /\baloha\b/,
             /\bgood (morning|evening|day)\b/,
             /\bwhat ?s up\b/,
+            /\byo\b/,
+            /\bay+\b/,
         ];
     }
 
@@ -64,6 +71,10 @@ export default class GreetingIrcHandler extends IrcManager {
             }
 
             if (typeof data.message !== "string") {
+                return false;
+            }
+
+            if (data.username === this._username) {
                 return false;
             }
 
