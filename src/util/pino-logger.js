@@ -41,6 +41,8 @@ export default class PinoLogger {
         this._loggingMethods.forEach(
             (loggingMethod) => {
                 this[loggingMethod] = (...args) => this._parentPinoLogger[loggingMethod]({
+                    // TODO: serialize error objects etcetera.
+                    // args: this._serialize(args),
                     args: args,
                 });
             }
@@ -62,4 +64,17 @@ export default class PinoLogger {
 
         return childLogger;
     }
+
+    // _valueReplacer(/* eslint-disable no-unused-vars */key/* eslint-enable no-unused-vars */, value) {
+    //     if (value !== null && typeof value === "object" && value.stack) {
+    //         return value.toString();
+    //     }
+    //
+    //     return value;
+    // }
+    //
+    // _serialize(value) {
+    //     // TODO: serialize error objects etcetera.
+    //     return JSON.stringify(value, this._valueReplacer.bind(this), 2);
+    // }
 }
