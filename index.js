@@ -25,6 +25,7 @@ import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
 import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
 import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
+import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
 
 const assert = require("assert");
 const Promise = require("bluebird");
@@ -73,8 +74,9 @@ const shutdownManager = new ShutdownManager(rootLogger);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
 const twitchPubSubManager = new TwitchPubSubManager(rootLogger, twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
 const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
-const twitchIrcManager = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
-const twitchIrcPingManager = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
@@ -102,16 +104,18 @@ Promise.resolve()
         return Promise.resolve()
             .then(() => Promise.all([
                 twitchPubSubManager.start(),
-                twitchIrcManager.start(),
-                twitchIrcPingManager.start(),
+                twitchIrcLoggingHandler.start(),
+                twitchIrcPingHandler.start(),
+                twitchIrcGreetingHandler.start(),
             ]))
             .then(() => {
                 indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
 
                 const stop = (incomingError) => Promise.all([
                     twitchPubSubManager.stop(),
-                    twitchIrcManager.stop(),
-                    twitchIrcPingManager.stop(),
+                    twitchIrcLoggingHandler.stop(),
+                    twitchIrcPingHandler.stop(),
+                    twitchIrcGreetingHandler.stop(),
                 ])
                     .then(() => {
                         if (incomingError) {
