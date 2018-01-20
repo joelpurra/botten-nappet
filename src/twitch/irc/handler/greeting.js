@@ -58,7 +58,15 @@ export default class GreetingIrcHandler extends IrcManager {
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`);
+        let message = null;
+
+        if (data.tags.subscriber === "1") {
+            message = `PRIVMSG ${data.channel} :Hiya ${data.username}, loyal rubber ducky, how are you?`;
+        } else {
+            message = `PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`;
+        }
+
+        this._ircConnection._send(message);
     }
 
     _filter(data) {
