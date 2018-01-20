@@ -23,7 +23,7 @@ import IrcManager from "../irc-manager";
 const assert = require("assert");
 const Promise = require("bluebird");
 
-export default class GreetingIrcHandler extends IrcManager {
+export default class NewChatterIrcHandler extends IrcManager {
     constructor(logger, ircConnection) {
         super(logger, ircConnection);
 
@@ -31,27 +31,18 @@ export default class GreetingIrcHandler extends IrcManager {
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
 
-        this._logger = logger.child("GreetingIrcHandler");
-
-        this._greetings = [
-            /\bhello\b/,
-            /\bhi\b/,
-            /\bhey\b/,
-            /\bhowdy\b/,
-            /\bgood (morning|evening|day)\b/,
-            /\bwhat ?s up\b/,
-        ];
+        this._logger = logger.child("NewChatterIrcHandler");
     }
 
     _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("Responding to greeting.", data.username, data.message, "_dataHandler");
+        this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure greeting message.
-        this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`);
+        this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
     }
 
     _filter(data) {
@@ -63,20 +54,23 @@ export default class GreetingIrcHandler extends IrcManager {
                 return false;
             }
 
-            if (typeof data.message !== "string") {
+            if (data.command !== "USERNOTICE") {
                 return false;
             }
 
-            const tokenizedMessage = data.message
-                .toLowerCase()
-                .split(/[^a-z]+/)
-                .join(" ");
+            if (typeof data.tags["msg-id"] !== "string") {
+                return false;
+            }
 
-            const isGreeting = this._greetings.some((greeting) => {
-                return greeting.test(tokenizedMessage);
-            });
+            if (data.tags["msg-id"] !== "ritual") {
+                return false;
+            }
 
-            return isGreeting;
+            if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
+                return false;
+            }
+
+            return true;
         });
     }
 }

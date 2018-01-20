@@ -26,6 +26,7 @@ import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
 import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
 import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
 import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
+import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
 
 const assert = require("assert");
 const Promise = require("bluebird");
@@ -77,6 +78,15 @@ const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSock
 const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection);
+const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
+
+const startables = [
+    twitchPubSubManager,
+    twitchIrcLoggingHandler,
+    twitchIrcPingHandler,
+    twitchIrcGreetingHandler,
+    twitchIrcNewChatterHandler,
+];
 
 Promise.resolve()
     .then(() => shutdownManager.start())
@@ -102,21 +112,11 @@ Promise.resolve()
             });
 
         return Promise.resolve()
-            .then(() => Promise.all([
-                twitchPubSubManager.start(),
-                twitchIrcLoggingHandler.start(),
-                twitchIrcPingHandler.start(),
-                twitchIrcGreetingHandler.start(),
-            ]))
+            .then(() => Promise.map(startables, (startable) => startable.start()))
             .then(() => {
                 indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
 
-                const stop = (incomingError) => Promise.all([
-                    twitchPubSubManager.stop(),
-                    twitchIrcLoggingHandler.stop(),
-                    twitchIrcPingHandler.stop(),
-                    twitchIrcGreetingHandler.stop(),
-                ])
+                const stop = (incomingError) => Promise.map(startables, (startable) => startable.stop())
                     .then(() => {
                         if (incomingError) {
                             indexLogger.error("Stopped.", incomingError);
