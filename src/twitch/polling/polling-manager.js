@@ -23,12 +23,12 @@ import ConnectionManager from "../connection-manager";
 const assert = require("assert");
 
 export default class PollingManager extends ConnectionManager {
-    constructor(logger, pollingConnection) {
-        super(logger, pollingConnection);
+    constructor(logger, connection) {
+        super(logger, connection);
 
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof pollingConnection, "object");
+        assert.strictEqual(typeof connection, "object");
 
         this._logger = logger.child("PollingManager");
     }

@@ -24,12 +24,12 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class NewChatterIrcHandler extends IrcManager {
-    constructor(logger, ircConnection) {
-        super(logger, ircConnection);
+    constructor(logger, connection) {
+        super(logger, connection);
 
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof ircConnection, "object");
+        assert.strictEqual(typeof connection, "object");
 
         this._logger = logger.child("NewChatterIrcHandler");
     }
@@ -42,7 +42,7 @@ export default class NewChatterIrcHandler extends IrcManager {
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
+        this._connection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
     }
 
     _filter(data) {
