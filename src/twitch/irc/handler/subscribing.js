@@ -23,7 +23,7 @@ import IrcManager from "../irc-manager";
 const assert = require("assert");
 const Promise = require("bluebird");
 
-export default class GreetingIrcHandler extends IrcManager {
+export default class SubscribingIrcHandler extends IrcManager {
     constructor(logger, ircConnection) {
         super(logger, ircConnection);
 
@@ -31,27 +31,26 @@ export default class GreetingIrcHandler extends IrcManager {
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof ircConnection, "object");
 
-        this._logger = logger.child("GreetingIrcHandler");
-
-        this._greetings = [
-            /\bhello\b/,
-            /\bhi\b/,
-            /\bhey\b/,
-            /\bhowdy\b/,
-            /\bgood (morning|evening|day)\b/,
-            /\bwhat ?s up\b/,
-        ];
+        this._logger = logger.child("SubscribingIrcHandler");
     }
 
     _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("Responding to greeting.", data.username, data.message, "_dataHandler");
+        this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`);
+        let message = null;
+
+        if (data.tags["msg-id"] === "resub") {
+            message = `PRIVMSG ${data.channel} :Wow, ${data.tags.login}, thanks for getting your ${data.tags["msg-param-months"]} rubber duckies in a row!`;
+        } else {
+            message = `PRIVMSG ${data.channel} :Wow, ${data.tags.login}, thanks for being my rubber ducky!`;
+        }
+
+        this._ircConnection._send(message);
     }
 
     _filter(data) {
@@ -63,20 +62,19 @@ export default class GreetingIrcHandler extends IrcManager {
                 return false;
             }
 
-            if (typeof data.message !== "string") {
+            if (data.command !== "USERNOTICE") {
                 return false;
             }
 
-            const tokenizedMessage = data.message
-                .toLowerCase()
-                .split(/[^a-z]+/)
-                .join(" ");
+            if (typeof data.tags["msg-id"] !== "string") {
+                return false;
+            }
 
-            const isGreeting = this._greetings.some((greeting) => {
-                return greeting.test(tokenizedMessage);
-            });
+            if (data.tags["msg-id"] !== "sub" && data.tags["msg-id"] !== "resub") {
+                return false;
+            }
 
-            return isGreeting;
+            return true;
         });
     }
 }

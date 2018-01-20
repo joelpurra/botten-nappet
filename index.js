@@ -27,6 +27,7 @@ import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
 import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
 import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
 import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
+import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
 
 const assert = require("assert");
 const Promise = require("bluebird");
@@ -79,6 +80,7 @@ const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIr
 const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
+const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
 
 const startables = [
     twitchPubSubManager,
@@ -86,6 +88,7 @@ const startables = [
     twitchIrcPingHandler,
     twitchIrcGreetingHandler,
     twitchIrcNewChatterHandler,
+    twitchIrcSubscribingHandler,
 ];
 
 Promise.resolve()

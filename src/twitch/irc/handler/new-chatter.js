@@ -41,7 +41,7 @@ export default class NewChatterIrcHandler extends IrcManager {
         this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
-        // TODO: configure greeting message.
+        // TODO: configure message.
         this._ircConnection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
     }
 
