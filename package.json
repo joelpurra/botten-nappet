@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "scripts": {
     "start": "node $npm_package_main",
-    "debug": "node $npm_package_main | pino",
+    "debug": "node --inspect $npm_package_main",
+    "debug:break": "node --inspect --inspect-brk $npm_package_main",
     "clean": "rimraf dist/",
     "build": "npm run --silent build:index",
     "build:index": "rollup --config rollup.config.index.js",
