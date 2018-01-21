@@ -69,7 +69,8 @@ assert(twitchUserId > 0, "TWITCH_USER_ID");
 
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
-const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=2`;
+const followingPollingLimit = 10;
+const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
 
 // NOTE: assuming that the user only joins their own channel, with a "#" prefix.
 const twitchChannelName = `#${twitchUserName}`;
