@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PinoLogger from "./src/util/pino-logger";
 import ShutdownManager from "./src/util/shutdown-manager";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
-import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
+import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
 import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
 import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
@@ -34,6 +34,7 @@ import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/followin
 const assert = require("assert");
 const Promise = require("bluebird");
 
+const fs = require("fs");
 const pino = require("pino");
 
 const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
@@ -41,6 +42,7 @@ const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
 
 // TODO: better token/config handling.
 const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
+const loggingFile = process.env.BOTTEN_NAPPET_LOG_FILE;
 const twitchAppClientId = process.env.TWITCH_APP_CLIENT_ID;
 const twitchAppAccessToken = process.env.TWITCH_APP_ACCESS_TOKEN;
 const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
@@ -52,6 +54,8 @@ const twitchUserId = parseInt(process.env.TWITCH_USER_ID, 10);
 // TODO: simplify validation and validation error messages.
 assert.strictEqual(typeof loggingLevel, "string", "BOTTEN_NAPPET_LOGGING_LEVEL");
 assert(loggingLevel.length > 0, "BOTTEN_NAPPET_LOGGING_LEVEL");
+assert.strictEqual(typeof loggingFile, "string", "BOTTEN_NAPPET_LOG_FILE");
+assert(loggingFile.length > 0, "BOTTEN_NAPPET_LOG_FILE");
 assert.strictEqual(typeof twitchAppClientId, "string", "TWITCH_APP_CLIENT_ID");
 assert(twitchAppClientId.length > 0, "TWITCH_APP_CLIENT_ID");
 assert.strictEqual(typeof twitchAppAccessToken, "string", "TWITCH_APP_ACCESS_TOKEN");
@@ -65,23 +69,32 @@ assert(twitchUserId > 0, "TWITCH_USER_ID");
 
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
-const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=2`;
+const followingPollingLimit = 10;
+const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
 
 // NOTE: assuming that the user only joins their own channel, with a "#" prefix.
 const twitchChannelName = `#${twitchUserName}`;
 
 const applicationName = "botten-nappet";
 
-const rootPinoLogger = pino({
-    name: applicationName,
-    level: loggingLevel,
-});
+const logFileStream = fs.createWriteStream(loggingFile);
+const rootPinoLogger = pino(
+    {
+        name: applicationName,
+        level: loggingLevel,
+        extreme: true,
+        onTerminated: (/* eslint-disable no-unused-vars */eventName, error/* eslint-enable no-unused-vars */) => {
+            // NOTE: override onTerminated to prevent pino from calling process.exit().
+        },
+    },
+    logFileStream
+);
 
 const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
-const twitchPubSubManager = new TwitchPubSubManager(rootLogger, twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
+const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessToken, twitchUserId);
 const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
 const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
@@ -98,7 +111,7 @@ const connectables = [
 ];
 
 const startables = [
-    twitchPubSubManager,
+    twitchPubSubLoggingHandler,
     twitchIrcLoggingHandler,
     twitchIrcPingHandler,
     twitchIrcGreetingHandler,

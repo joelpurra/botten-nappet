@@ -40,11 +40,16 @@ export default class PinoLogger {
 
         this._loggingMethods.forEach(
             (loggingMethod) => {
-                this[loggingMethod] = (...args) => this._parentPinoLogger[loggingMethod]({
-                    // TODO: serialize error objects etcetera.
-                    // args: this._serialize(args),
-                    args: args,
-                });
+                this[loggingMethod] = (...args) => {
+                    this._parentPinoLogger[loggingMethod]({
+                        // TODO: serialize error objects etcetera.
+                        // args: this._serialize(args),
+                        args: args,
+                    });
+
+                    // TODO: configure to flush only during development/debugging.
+                    this._parentPinoLogger.flush();
+                };
             }
         );
     }

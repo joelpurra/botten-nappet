@@ -24,12 +24,12 @@ const assert = require("assert");
 const Promise = require("bluebird");
 
 export default class FollowingPollingHandler extends PollingManager {
-    constructor(logger, pollingFollowingConnection, ircConnection, ircChannel) {
-        super(logger, pollingFollowingConnection);
+    constructor(logger, connection, ircConnection, ircChannel) {
+        super(logger, connection);
 
         assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof pollingFollowingConnection, "object");
+        assert.strictEqual(typeof connection, "object");
         assert.strictEqual(typeof ircConnection, "object");
         assert.strictEqual(typeof ircChannel, "string");
         assert(ircChannel.startsWith("#"));

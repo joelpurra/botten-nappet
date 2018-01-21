@@ -166,13 +166,14 @@ export default class PubSubConnection {
         });
     }
 
-    listen(userAccessToken, topics, dataHandler) {
-        assert.strictEqual(arguments.length, 3);
+    listen(dataHandler, filter, userAccessToken, topics) {
+        assert.strictEqual(arguments.length, 4);
+        assert.strictEqual(typeof dataHandler, "function");
+        assert.strictEqual(typeof filter, "function");
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
         assert(Array.isArray(topics));
         assert(topics.length > 0);
-        assert.strictEqual(typeof dataHandler, "function");
 
         assert.notStrictEqual(this._ws, null);
 
@@ -185,14 +186,21 @@ export default class PubSubConnection {
                     return;
                 }
 
-                if (!topics.includes(data.data.topic)) {
+                const topic = data.data.topic;
+
+                if (!topics.includes(topic)) {
                     return;
                 };
 
                 const messageData = JSON.parse(data.data.message);
 
-                // TODO: try-catch for bad handlers.
-                dataHandler(data.data.topic, messageData);
+                // TODO: try-catch for bad filters.
+                const shouldHandle = filter(topic, messageData);
+
+                if (shouldHandle === true) {
+                    // TODO: try-catch for bad handlers.
+                    dataHandler(topic, messageData);
+                }
             };
 
             const onListen = (message) => {

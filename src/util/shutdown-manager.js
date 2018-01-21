@@ -30,18 +30,32 @@ export default class ShutdownManager {
         this._logger = logger.child("ShutdownManager");
 
         this._shutdownHandlers = [];
-        this._shutdownEvents = ["beforeExit", "SIGINT", "SIGTERM", "SIGHUP", "SIGBREAK"];
+        this._shutdownEvents = [
+            "beforeExit",
+            "exit",
+            "SIGBREAK",
+            "SIGHUP",
+            "SIGINT",
+            "SIGQUIT",
+            "SIGTERM",
+            "uncaughtException",
+            "unhandledRejection",
+        ];
         this._handleEvent = this._handleEvent.bind(this);
+        this._handleEvents = {};
 
         this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
             const waitForShutdown = () => {
-                this._logger.warn("Detected shutdown.");
-
                 resolve();
             };
 
             this.register(waitForShutdown);
-        });
+        })
+            .then(() => {
+                this._logger.warn("Detected shutdown.", "_shutdownPromise");
+
+                return undefined;
+            });
     }
 
     start() {
@@ -49,7 +63,11 @@ export default class ShutdownManager {
 
         return Promise.try(() => {
             this._shutdownEvents.forEach((shutdownEvent) => {
-                process.on(shutdownEvent, this._handleEvent);
+                const specificShutdownEventHandler = this._handleEvent.bind(null, shutdownEvent);
+
+                this._handleEvents[shutdownEvent] = specificShutdownEventHandler;
+
+                process.on(shutdownEvent, this._handleEvents[shutdownEvent]);
             });
         });
     }
@@ -59,7 +77,7 @@ export default class ShutdownManager {
 
         return Promise.try(() => {
             this._shutdownEvents.forEach((shutdownEvent) => {
-                process.removeListener(shutdownEvent, this._handleEvent);
+                process.removeListener(shutdownEvent, this._handleEvents[shutdownEvent]);
             });
         });
     }
@@ -93,12 +111,13 @@ export default class ShutdownManager {
         return this._shutdownPromise;
     }
 
-    _handleEvent(shutdownEvent) {
+    _handleEvent(shutdownEvent, ...args) {
         // TODO: test/ensure that the right number of arguments are passed from each event/signal type.
         //assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof shutdownEvent, "string");
 
         return Promise.try(() => {
-            this._logger.debug(shutdownEvent, "Received shutdown event");
+            this._logger.debug(shutdownEvent, "Received shutdown event", args);
 
             this.shutdown();
         });

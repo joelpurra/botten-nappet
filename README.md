@@ -19,6 +19,7 @@ export TWITCH_APP_ACCESS_TOKEN='configure me'
 export TWITCH_USER_ACCESS_TOKEN='configure me'
 export TWITCH_USER_NAME='configure me'
 export TWITCH_USER_ID='configure me'
+export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
 ```
 
 
@@ -59,8 +60,11 @@ npm run --silent watch
 export BOTTEN_NAPPET_LOGGING_LEVEL='trace'
 export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
 
-# Pipe log output to file.
-npm run --silent start | tee "$BOTTEN_NAPPET_LOG_FILE"
+# Start debugger. Connect to it using Google Chrome, see chrome://inspect/
+# https://medium.com/@paul_irish/debugging-node-js-nightlies-with-chrome-devtools-7c4a1b95ae27
+# Run "debug" for normal debugging, or "debug:break" to break on the first statement.
+# NOTE: pipes log output to a file, which is pretty-printed separately.
+npm run --silent debug
 
 # New terminal window: watch log file and pretty print.
 tail -f "$BOTTEN_NAPPET_LOG_FILE" | ./node_modules/.bin/pino

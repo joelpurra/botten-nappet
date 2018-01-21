@@ -18,73 +18,30 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("assert");
-const Promise = require("bluebird");
+import ConnectionManager from "../connection-manager";
 
-export default class PubSubManager {
-    constructor(logger, pubSubConnection, userId, userAccessToken) {
+const assert = require("assert");
+
+export default class PubSubManager extends ConnectionManager {
+    constructor(logger, connection, userAccessToken, topics) {
+        super(logger, connection);
+
         assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof pubSubConnection, "object");
-        assert(!isNaN(userId));
-        assert(userId > 0);
+        assert.strictEqual(typeof connection, "object");
         assert.strictEqual(typeof userAccessToken, "string");
         assert(userAccessToken.length > 0);
+        assert(Array.isArray(topics));
+        assert(topics.length > 0);
 
         this._logger = logger.child("PubSubManager");
-        this._pubSubConnection = pubSubConnection;
-        this._userId = userId;
         this._userAccessToken = userAccessToken;
-
-        // TODO: one class per listen-topic, or one class per concern?
-        this._topics = [`channel-bits-events-v1.${this._userId}`, `channel-subscribe-events-v1.${this._userId}`, `channel-commerce-events-v1.${this._userId}`, `whispers.${this._userId}`];
-
-        this._killSwitch = null;
+        this._topics = topics;
     }
 
     start() {
         assert.strictEqual(arguments.length, 0);
 
-        return this._pubSubConnection.listen(this._userAccessToken, this._topics, this._dataHandler.bind(this))
-            .then((killSwitch) => {
-                this._killSwitch = killSwitch;
-
-                return undefined;
-            })
-            .tapCatch(() => this._executeKillSwitch());
-    }
-
-    stop() {
-        assert.strictEqual(arguments.length, 0);
-
-        // TODO: assert killSwitch?
-        return Promise.try(() => {
-            if (typeof this._killSwitch === "function") {
-                this._executeKillSwitch();
-            }
-        });
-    }
-
-    _dataHandler(topic, data) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof topic, "string");
-        assert(topic.length > 0);
-        assert.strictEqual(typeof data, "object");
-
-        this._logger.debug(data, topic, "dataHandler");
-    }
-
-    _executeKillSwitch() {
-        assert.strictEqual(arguments.length, 0);
-
-        return Promise.try(() => {
-            if (typeof this._killSwitch !== "function") {
-                return;
-            }
-
-            const killSwitch = this._killSwitch;
-            this._killSwitch = null;
-            killSwitch();
-        });
+        return super.start(this._userAccessToken, this._topics);
     }
 }

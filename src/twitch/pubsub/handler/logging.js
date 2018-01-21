@@ -18,31 +18,46 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IrcManager from "../irc-manager";
+import PubSubManager from "../pubsub-manager";
 
 const assert = require("assert");
 const Promise = require("bluebird");
 
-export default class LoggingIrcHandler extends IrcManager {
-    constructor(logger, connection) {
-        super(logger, connection);
+export default class LoggingPubSubHandler extends PubSubManager {
+    constructor(logger, connection, userAccessToken, userId) {
+        const topics = [
+            `channel-bits-events-v1.${userId}`,
+            `channel-subscribe-events-v1.${userId}`,
+            `channel-commerce-events-v1.${userId}`,
+            `whispers.${userId}`,
+        ];
 
-        assert.strictEqual(arguments.length, 2);
+        super(logger, connection, userAccessToken, topics);
+
+        assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof connection, "object");
+        assert.strictEqual(typeof userAccessToken, "string");
+        assert(userAccessToken.length > 0);
+        assert(!isNaN(userId));
+        assert(userId > 0);
 
-        this._logger = logger.child("LoggingIrcHandler");
+        this._logger = logger.child("LoggingPubSubHandler");
     }
 
-    _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
+    _dataHandler(topic, data) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof topic, "string");
+        assert(topic.length > 0);
         assert.strictEqual(typeof data, "object");
 
         this._logger.trace(data, "_dataHandler");
     }
 
-    _filter(data) {
-        assert.strictEqual(arguments.length, 1);
+    _filter(topic, data) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof topic, "string");
+        assert(topic.length > 0);
         assert.strictEqual(typeof data, "object");
 
         return Promise.resolve(true);
