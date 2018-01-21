@@ -33,10 +33,10 @@ export default class ConnectionManager {
         this._killSwitch = null;
     }
 
-    start() {
-        assert.strictEqual(arguments.length, 0);
+    start(...extraListenArguments) {
+        assert(arguments.length === 0 || Array.isArray(extraListenArguments));
 
-        return this._connection.listen(this._dataHandler.bind(this), this._filter.bind(this))
+        return this._connection.listen(this._dataHandler.bind(this), this._filter.bind(this), ...extraListenArguments)
             .then((killSwitch) => {
                 this._killSwitch = killSwitch;
 

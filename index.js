@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PinoLogger from "./src/util/pino-logger";
 import ShutdownManager from "./src/util/shutdown-manager";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
-import TwitchPubSubManager from "./src/twitch/pubsub/pubsub-manager";
+import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
 import TwitchIrcLoggingHandler from "./src/twitch/irc/handler/logging";
 import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
@@ -93,7 +93,7 @@ const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
-const twitchPubSubManager = new TwitchPubSubManager(rootLogger, twitchPubSubConnection, twitchUserId, twitchUserAccessToken);
+const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessToken, twitchUserId);
 const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
 const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
@@ -110,7 +110,7 @@ const connectables = [
 ];
 
 const startables = [
-    twitchPubSubManager,
+    twitchPubSubLoggingHandler,
     twitchIrcLoggingHandler,
     twitchIrcPingHandler,
     twitchIrcGreetingHandler,
