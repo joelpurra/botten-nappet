@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import PollingManager from "../polling-manager";
 
-const assert = require("assert");
+const assert = require("power-assert");
 const Promise = require("bluebird");
 
 export default class FollowingPollingHandler extends PollingManager {
@@ -55,7 +55,7 @@ export default class FollowingPollingHandler extends PollingManager {
 
             // TODO: use a string templating system.
             // TODO: configure message.
-            const message = `PRIVMSG ${this._ircChannel} :Hey ${follow.user.name}, thanks for following! Hope to see you at the next live stream 😀`;
+            const message = `PRIVMSG ${this._ircChannel} :Hey ${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
 
             this._ircConnection._send(message);
         });

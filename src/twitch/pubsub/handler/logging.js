@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import PubSubManager from "../pubsub-manager";
 
-const assert = require("assert");
+const assert = require("power-assert");
 const Promise = require("bluebird");
 
 export default class LoggingPubSubHandler extends PubSubManager {
