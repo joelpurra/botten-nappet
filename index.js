@@ -30,6 +30,8 @@ import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
 import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
 import PollingClientIdConnection from "./src/twitch/polling/connection/polling-clientid-connection";
 import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
+import TwitchPollingApplicationTokenConnection from "./src/twitch/authentication/polling-application-token-connection";
+import TwitchApplicationTokenManager from "./src/twitch/authentication/application-token-manager";
 
 const assert = require("power-assert");
 const Promise = require("bluebird");
@@ -44,7 +46,7 @@ const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
 const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
 const loggingFile = process.env.BOTTEN_NAPPET_LOG_FILE;
 const twitchAppClientId = process.env.TWITCH_APP_CLIENT_ID;
-const twitchAppAccessToken = process.env.TWITCH_APP_ACCESS_TOKEN;
+const twitchAppClientSecret = process.env.TWITCH_APP_CLIENT_SECRET;
 const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
 const twitchUserName = process.env.TWITCH_USER_NAME;
 
@@ -58,8 +60,6 @@ assert.strictEqual(typeof loggingFile, "string", "BOTTEN_NAPPET_LOG_FILE");
 assert(loggingFile.length > 0, "BOTTEN_NAPPET_LOG_FILE");
 assert.strictEqual(typeof twitchAppClientId, "string", "TWITCH_APP_CLIENT_ID");
 assert(twitchAppClientId.length > 0, "TWITCH_APP_CLIENT_ID");
-assert.strictEqual(typeof twitchAppAccessToken, "string", "TWITCH_APP_ACCESS_TOKEN");
-assert(twitchAppAccessToken.length > 0, "TWITCH_APP_ACCESS_TOKEN");
 assert.strictEqual(typeof twitchUserAccessToken, "string", "TWITCH_USER_ACCESS_TOKEN");
 assert(twitchUserAccessToken.length > 0, "TWITCH_USER_ACCESS_TOKEN");
 assert.strictEqual(typeof twitchUserName, "string", "TWITCH_USER_NAME");
@@ -71,6 +71,12 @@ const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
 const followingPollingLimit = 10;
 const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
+const twitchAppScopes = [
+    "channel_feed_read",
+];
+const twitchAppTokenRefreshInterval = 45 * 60 * 1000;
+const twitchAppTokenUri = "https://api.twitch.tv/kraken/oauth2/token";
+const twitchAppTokenRevocationUri = "https://api.twitch.tv/kraken/oauth2/revoke";
 
 // NOTE: assuming that the user only joins their own channel, with a "#" prefix.
 const twitchChannelName = `#${twitchUserName}`;
@@ -93,6 +99,8 @@ const rootPinoLogger = pino(
 const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
+const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchAppTokenUri, "post");
+const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchAppTokenRevocationUri);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
 const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessToken, twitchUserId);
 const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
@@ -101,10 +109,11 @@ const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConne
 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
 const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
 const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
-const twitchPollingFollowingConnection = new PollingClientIdConnection(rootLogger, twitchAppClientId, BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL, followingPollingUri, "get");
+const twitchPollingFollowingConnection = new PollingClientIdConnection(rootLogger, twitchAppClientId, BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL, false, followingPollingUri, "get");
 const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
 
 const connectables = [
+    twitchPollingApplicationTokenConnection,
     twitchPubSubConnection,
     twitchIrcConnection,
     twitchPollingFollowingConnection,
@@ -118,6 +127,7 @@ const startables = [
     twitchIrcNewChatterHandler,
     twitchIrcSubscribingHandler,
     twitchPollingFollowingHandler,
+    twitchApplicationTokenManager,
 ];
 
 Promise.resolve()

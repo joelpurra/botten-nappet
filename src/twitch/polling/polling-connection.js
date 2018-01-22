@@ -24,11 +24,12 @@ const Promise = require("bluebird");
 const axios = require("axios");
 
 export default class PollingConnection {
-    constructor(logger, interval, uri, method, defaultHeaders, defaultData) {
-        assert(arguments.length === 4 || arguments.length === 5 || arguments.length === 6);
+    constructor(logger, interval, atBegin, uri, method, defaultHeaders, defaultData) {
+        assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
         assert.strictEqual(typeof logger, "object");
         assert(!isNaN(interval));
         assert(interval > 0);
+        assert.strictEqual(typeof atBegin, "boolean");
         assert.strictEqual(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("https://"));
@@ -39,6 +40,7 @@ export default class PollingConnection {
 
         this._logger = logger.child("PollingConnection");
         this._interval = interval;
+        this._atBegin = atBegin;
         this._uri = uri;
         this._method = method;
         this._defaultHeaders = defaultHeaders;
@@ -105,6 +107,54 @@ export default class PollingConnection {
         assert.fail("Method should be overwritten.");
     }
 
+    _setConnection(headers, data) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof headers, "object");
+        assert.strictEqual(typeof data, "object");
+
+        assert.strictEqual(this._axios, null);
+
+        return Promise.try(() => {
+            const axiosInstanceConfig = {
+                baseURL: this._uri,
+                // NOTE: per-instance method has no effect due to bug in axios, must use per request.
+                // TODO: remove per-call overrides once axios has been fixed.
+                // https://github.com/axios/axios/issues/723
+                method: this._method,
+                headers: headers,
+                data: data,
+            };
+
+            this._axios = axios.create(axiosInstanceConfig);
+
+            return undefined;
+        });
+    }
+
+    _unsetConnection() {
+        assert.strictEqual(arguments.length, 0);
+
+        assert.notStrictEqual(this._axios, null);
+
+        return Promise.try(() => {
+            this._axios = null;
+
+            return undefined;
+        });
+    }
+
+    _startInterval() {
+        assert.strictEqual(arguments.length, 0);
+
+        assert.notStrictEqual(this._axios, null);
+
+        return Promise.try(() => {
+            this._intervalId = setInterval(this._poll.bind(this), this._interval);
+
+            return undefined;
+        });
+    }
+
     connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._axios, null);
@@ -114,23 +164,18 @@ export default class PollingConnection {
             this._getAllHeaders(),
             this._getAllData(),
         ])
-            .then(([headers, data]) => {
-                const axiosInstanceConfig = {
-                    baseURL: this._uri,
-                    method: this._method,
-                    headers: headers,
-                    data: data,
-                };
-
-                this._axios = axios.create(axiosInstanceConfig);
-
-                this._intervalId = setInterval(this._poll.bind(this), this._interval);
+            .then(([headers, data]) => this._setConnection(headers, data))
+            .then(() => {
+                if (this._atBegin === true) {
+                    return this._poll();
+                }
 
                 return undefined;
-            });
+            })
+            .then(() => this._startInterval());
     }
 
-    disconnect() {
+    _stopInterval() {
         assert.notStrictEqual(this._axios, null);
         assert.notStrictEqual(this._intervalId, null);
 
@@ -138,14 +183,50 @@ export default class PollingConnection {
             clearInterval(this._intervalId);
 
             this._intervalId = null;
-            this._axios = null;
         });
+    }
+
+    disconnect() {
+        assert.notStrictEqual(this._axios, null);
+        assert.notStrictEqual(this._intervalId, null);
+
+        return Promise.resolve()
+            .then(() => this._stopInterval())
+            .then(() => this._unsetConnection());
+    }
+
+    force(resetInterval) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof resetInterval, "boolean");
+
+        assert.notStrictEqual(this._axios, null);
+        assert.notStrictEqual(this._intervalId, null);
+
+        return Promise.resolve()
+            .tap(() => {
+                this._logger.trace(resetInterval, "force");
+            })
+            .then(() => this._poll())
+            .then(() => {
+                if (resetInterval === true) {
+                    return this._stopInterval()
+                        .then(() => this._startInterval());
+                }
+
+                return undefined;
+            });
     }
 
     _poll() {
         assert.strictEqual(arguments.length, 0);
+        assert.notStrictEqual(this._axios, null);
 
-        return Promise.resolve(this._axios.request())
+        return Promise.resolve(this._axios.request({
+            // NOTE: per-instance method has no effect due to bug in axios, must use per request.
+            // TODO: remove per-call overrides once axios has been fixed.
+            // https://github.com/axios/axios/issues/723
+            method: this._method,
+        }))
             .tap((response) => {
                 this._logger.trace(response.data, response.status, response.statusText, "_poll");
             })

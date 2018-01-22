@@ -18,19 +18,21 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import PollingConnection from "../polling-connection";
+import PollingConnection from "../polling/polling-connection";
 
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
-export default class PollingClientIdConnection extends PollingConnection {
-    constructor(logger, applicationClientId, interval, atBegin, uri, method, defaultHeaders, defaultData) {
+export default class PollingApplicationTokenConnection extends PollingConnection {
+    constructor(logger, applicationClientId, applicationClientSecret, scopes, interval, atBegin, uri, method, defaultHeaders, defaultData) {
         super(logger, interval, atBegin, uri, method, defaultHeaders, defaultData);
 
-        assert(arguments.length === 6 || arguments.length === 7 || arguments.length === 8);
+        assert(arguments.length === 7 || arguments.length === 8 || arguments.length === 9);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof applicationClientId, "string");
         assert(applicationClientId.length > 0);
+        assert.strictEqual(typeof applicationClientSecret, "string");
+        assert(applicationClientSecret.length > 0);
         assert(!isNaN(interval));
         assert(interval > 0);
         assert.strictEqual(typeof atBegin, "boolean");
@@ -41,22 +43,22 @@ export default class PollingClientIdConnection extends PollingConnection {
         assert(method.length > 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
+        assert(Array.isArray(scopes));
 
         super._getHeaders = this._getHeaders.bind(this);
         super._getData = this._getData.bind(this);
 
-        this._logger = logger.child("PollingClientIdConnection");
+        this._logger = logger.child("PollingApplicationTokenConnection");
         this._applicationClientId = applicationClientId;
+        this._applicationClientSecret = applicationClientSecret;
+        this._scopes = scopes;
     }
 
     _getHeaders() {
         assert.strictEqual(arguments.length, 0);
 
         return Promise.try(() => {
-            const headers = {
-                Accept: "application/vnd.twitchtv.v5+json",
-                "Client-ID": `${this._applicationClientId}`,
-            };
+            const headers = {};
 
             return headers;
         });
@@ -66,7 +68,12 @@ export default class PollingClientIdConnection extends PollingConnection {
         assert.strictEqual(arguments.length, 0);
 
         return Promise.try(() => {
-            const data = {};
+            const data = {
+                client_id: this._applicationClientId,
+                client_secret: this._applicationClientSecret,
+                grant_type: "client_credentials",
+                scope: this._scopes.join(" "),
+            };
 
             return data;
         });
