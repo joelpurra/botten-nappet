@@ -24,23 +24,25 @@ const Promise = require("bluebird");
 const axios = require("axios");
 
 export default class PollingConnection {
-    constructor(logger, applicationClientId, uri, method, interval) {
-        assert.strictEqual(arguments.length, 5);
+    constructor(logger, interval, uri, method, defaultHeaders, defaultData) {
+        assert(arguments.length === 4 || arguments.length === 5 || arguments.length === 6);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof applicationClientId, "string");
-        assert(applicationClientId.length > 0);
+        assert(!isNaN(interval));
+        assert(interval > 0);
         assert.strictEqual(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("https://"));
         assert.strictEqual(typeof method, "string");
         assert(method.length > 0);
-        assert(!isNaN(interval));
+        assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
+        assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
         this._logger = logger.child("PollingConnection");
-        this._applicationClientId = applicationClientId;
+        this._interval = interval;
         this._uri = uri;
         this._method = method;
-        this._interval = interval;
+        this._defaultHeaders = defaultHeaders;
+        this._defaultData = defaultData;
 
         this._methods = [
             "get",
@@ -63,27 +65,69 @@ export default class PollingConnection {
         this._dataHandlers = [];
     }
 
+    _getAllHeaders() {
+        assert.strictEqual(arguments.length, 0);
+
+        return Promise.try(() => {
+            return this._getHeaders()
+                .then((overriddenHeaders) => {
+                    const headers = {
+                        ...this._defaultHeaders,
+                        ...overriddenHeaders,
+                    };
+
+                    return headers;
+                });
+        });
+    }
+
+    _getHeaders() {
+        assert.fail("Method should be overwritten.");
+    }
+
+    _getAllData() {
+        assert.strictEqual(arguments.length, 0);
+
+        return Promise.try(() => {
+            return this._getData()
+                .then((overriddenData) => {
+                    const data = {
+                        ...this._defaultData,
+                        ...overriddenData,
+                    };
+
+                    return data;
+                });
+        });
+    }
+
+    _getData() {
+        assert.fail("Method should be overwritten.");
+    }
+
     connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._axios, null);
         assert.strictEqual(this._intervalId, null);
 
-        return Promise.try(() => {
-            const axiosInstanceConfig = {
-                baseURL: this._uri,
-                method: this._method,
-                headers: {
-                    "Accept": "application/vnd.twitchtv.v5+json",
-                    "Client-ID": `${this._applicationClientId}`,
-                    // TODO: enable requests which require authorization.
-                    // "Authorization": `OAuth ${this._applicationAccessToken}`,
-                },
-            };
+        return Promise.all([
+            this._getAllHeaders(),
+            this._getAllData(),
+        ])
+            .then(([headers, data]) => {
+                const axiosInstanceConfig = {
+                    baseURL: this._uri,
+                    method: this._method,
+                    headers: headers,
+                    data: data,
+                };
 
-            this._axios = axios.create(axiosInstanceConfig);
+                this._axios = axios.create(axiosInstanceConfig);
 
-            this._intervalId = setInterval(this._poll.bind(this), this._interval);
-        });
+                this._intervalId = setInterval(this._poll.bind(this), this._interval);
+
+                return undefined;
+            });
     }
 
     disconnect() {
