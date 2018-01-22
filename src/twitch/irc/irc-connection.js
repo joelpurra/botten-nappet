@@ -31,7 +31,7 @@ or in the "license" file accompanying this file. This file is distributed on an 
     Web Socket to Twitch chat. The important part events are onopen and onmessage.
 */
 
-const assert = require("assert");
+const assert = require("power-assert");
 const Promise = require("bluebird");
 
 const WebSocket = require("ws");

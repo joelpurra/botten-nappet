@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import ConnectionManager from "../connection-manager";
 
-const assert = require("assert");
+const assert = require("power-assert");
 
 export default class PubSubManager extends ConnectionManager {
     constructor(logger, connection, userAccessToken, topics) {

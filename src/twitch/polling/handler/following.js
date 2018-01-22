@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import PollingManager from "../polling-manager";
 
-const assert = require("assert");
+const assert = require("power-assert");
 const Promise = require("bluebird");
 
 export default class FollowingPollingHandler extends PollingManager {

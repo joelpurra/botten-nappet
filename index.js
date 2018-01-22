@@ -31,7 +31,7 @@ import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
 import TwitchPollingConnection from "./src/twitch/polling/polling-connection";
 import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 
-const assert = require("assert");
+const assert = require("power-assert");
 const Promise = require("bluebird");
 
 const fs = require("fs");
