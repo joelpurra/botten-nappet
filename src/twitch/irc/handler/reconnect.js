@@ -23,7 +23,7 @@ import IrcManager from "../irc-manager";
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
-export default class NewChatterIrcHandler extends IrcManager {
+export default class ReconnectIrcHandler extends IrcManager {
     constructor(logger, connection) {
         super(logger, connection);
 
@@ -31,47 +31,23 @@ export default class NewChatterIrcHandler extends IrcManager {
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof connection, "object");
 
-        this._logger = logger.child("NewChatterIrcHandler");
+        this._logger = logger.child("ReconnectIrcHandler");
     }
 
     _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
+        this._logger.info("Reconnecting irc upon server request.", "_dataHandler");
 
-        // TODO: use a string templating system.
-        // TODO: configure message.
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
+        this._connection.reconnect();
     }
 
     _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
-
-            if (data.command !== "USERNOTICE") {
-                return false;
-            }
-
-            if (typeof data.tags["msg-id"] !== "string") {
-                return false;
-            }
-
-            if (data.tags["msg-id"] !== "ritual") {
-                return false;
-            }
-
-            if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
-                return false;
-            }
-
-            return true;
-        });
+        return Promise.resolve(data.command === "RECONNECT");
     }
 }

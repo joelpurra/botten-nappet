@@ -50,6 +50,7 @@ export default class SubscribingIrcHandler extends IrcManager {
             message = `PRIVMSG ${data.channel} :Wow, ${data.tags.login}, thanks for being my rubber ducky!`;
         }
 
+        // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send(message);
     }
 

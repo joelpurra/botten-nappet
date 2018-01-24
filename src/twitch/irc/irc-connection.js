@@ -231,6 +231,7 @@ export default class IrcConnection {
     }
 
     disconnect() {
+        assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
         return Promise.try(() => {
@@ -268,6 +269,13 @@ export default class IrcConnection {
                     return undefined;
                 });
         });
+    }
+
+    reconnect() {
+        assert.strictEqual(arguments.length, 0);
+
+        return this._connection.disconnect()
+            .then(() => this._connection.connect());
     }
 
     _parseMessage(rawMessage) {

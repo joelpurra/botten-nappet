@@ -40,6 +40,7 @@ export default class PingIrcHandler extends IrcManager {
 
         this._logger.trace("Responding to PING.", "_dataHandler");
 
+        // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send("PONG :" + data.message);
     }
 
