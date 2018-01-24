@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import PinoLogger from "./src/util/pino-logger";
 import ShutdownManager from "./src/util/shutdown-manager";
+import DatabaseConnection from "./src/storage/database-connection";
+import UserRepository from "./src/storage/repository/user-repository";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
 import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
@@ -32,6 +34,9 @@ import PollingClientIdConnection from "./src/twitch/polling/connection/polling-c
 import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 import TwitchPollingApplicationTokenConnection from "./src/twitch/authentication/polling-application-token-connection";
 import TwitchApplicationTokenManager from "./src/twitch/authentication/application-token-manager";
+import TwitchUserTokenManager from "./src/twitch/authentication/user-token-manager";
+import TwitchUserHelper from "./src/twitch/helper/user-helper";
+import TwitchCSRFHelper from "./src/twitch/helper/csrf-helper";
 
 const assert = require("power-assert");
 const Promise = require("bluebird");
@@ -45,32 +50,33 @@ const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
 // TODO: better token/config handling.
 const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
 const loggingFile = process.env.BOTTEN_NAPPET_LOG_FILE;
+const databaseUri = process.env.BOTTEN_NAPPET_DATABASE_URI;
 const twitchAppClientId = process.env.TWITCH_APP_CLIENT_ID;
 const twitchAppClientSecret = process.env.TWITCH_APP_CLIENT_SECRET;
-const twitchUserAccessToken = process.env.TWITCH_USER_ACCESS_TOKEN;
+const twitchAppOAuthRedirectUrl = process.env.TWITCH_APP_OAUTH_REDIRECT_URL;
 const twitchUserName = process.env.TWITCH_USER_NAME;
-
-// NOTE: use a twitch api lookup to get the id from twitchUserName.
-const twitchUserId = parseInt(process.env.TWITCH_USER_ID, 10);
 
 // TODO: simplify validation and validation error messages.
 assert.strictEqual(typeof loggingLevel, "string", "BOTTEN_NAPPET_LOGGING_LEVEL");
 assert(loggingLevel.length > 0, "BOTTEN_NAPPET_LOGGING_LEVEL");
 assert.strictEqual(typeof loggingFile, "string", "BOTTEN_NAPPET_LOG_FILE");
 assert(loggingFile.length > 0, "BOTTEN_NAPPET_LOG_FILE");
+assert.strictEqual(typeof databaseUri, "string", "BOTTEN_NAPPET_DATABASE_URI");
+assert(databaseUri.length > 0, "BOTTEN_NAPPET_DATABASE_URI");
+assert(databaseUri.startsWith("nedb://"), "BOTTEN_NAPPET_DATABASE_URI");
 assert.strictEqual(typeof twitchAppClientId, "string", "TWITCH_APP_CLIENT_ID");
 assert(twitchAppClientId.length > 0, "TWITCH_APP_CLIENT_ID");
-assert.strictEqual(typeof twitchUserAccessToken, "string", "TWITCH_USER_ACCESS_TOKEN");
-assert(twitchUserAccessToken.length > 0, "TWITCH_USER_ACCESS_TOKEN");
+assert.strictEqual(typeof twitchAppOAuthRedirectUrl, "string", "TWITCH_APP_OAUTH_REDIRECT_URL");
+assert(twitchAppOAuthRedirectUrl.length > 0, "TWITCH_APP_OAUTH_REDIRECT_URL");
 assert.strictEqual(typeof twitchUserName, "string", "TWITCH_USER_NAME");
 assert(twitchUserName.length > 0, "TWITCH_USER_NAME");
-assert(!isNaN(twitchUserId), "TWITCH_USER_ID");
-assert(twitchUserId > 0, "TWITCH_USER_ID");
 
+const twitchUserOAuthTokenUri = "https://api.twitch.tv/kraken/oauth2/token";
+const twitchAppOAuthAuthorizationUri = "https://api.twitch.tv/kraken/oauth2/authorize";
+const twitchUsersDataUri = "https://api.twitch.tv/helix/users";
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
 const followingPollingLimit = 10;
-const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
 const twitchAppScopes = [
     "channel_feed_read",
 ];
@@ -96,83 +102,154 @@ const rootPinoLogger = pino(
     logFileStream
 );
 
-const twitchUserAccessTokenProvider = () => {
-    return Promise.resolve(twitchUserAccessToken);
-};
-
 const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
+const databaseConnection = new DatabaseConnection(rootLogger, databaseUri);
 const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchAppTokenUri, "post");
 const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchAppTokenRevocationUri);
-const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
-const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessTokenProvider, twitchUserId);
-const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessTokenProvider);
-const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
-const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
-const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
-const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
-const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
-const twitchPollingFollowingConnection = new PollingClientIdConnection(rootLogger, twitchAppClientId, BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL, false, followingPollingUri, "get");
-const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
-
-const connectables = [
-    twitchPollingApplicationTokenConnection,
-    twitchPubSubConnection,
-    twitchIrcConnection,
-    twitchPollingFollowingConnection,
-];
-
-const startables = [
-    twitchPubSubLoggingHandler,
-    twitchIrcLoggingHandler,
-    twitchIrcPingHandler,
-    twitchIrcGreetingHandler,
-    twitchIrcNewChatterHandler,
-    twitchIrcSubscribingHandler,
-    twitchPollingFollowingHandler,
-    twitchApplicationTokenManager,
-];
+const twitchCSRFHelper = new TwitchCSRFHelper(rootLogger);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
-    .then(() => Promise.map(connectables, (connectable) => connectable.connect()))
+    .then(() => databaseConnection.connect())
     .then(() => {
-        indexLogger.info("Connected.");
+        indexLogger.info("Managed.");
 
-        const disconnect = (incomingError) => Promise.map(connectables, (connectable) => connectable.disconnect())
+        const shutdown = (incomingError) => Promise.resolve()
+            .then(() => databaseConnection.disconnect())
+            .then(() => shutdownManager.stop())
             .then(() => {
                 if (incomingError) {
-                    indexLogger.error("Disconnected.", incomingError);
-                } else {
-                    indexLogger.info("Disconnected.");
+                    indexLogger.error("Unmanaged.", incomingError);
+
+                    throw incomingError;
                 }
+
+                indexLogger.info("Unmanaged.");
 
                 return undefined;
             });
 
-        return Promise.resolve()
-            .then(() => Promise.map(startables, (startable) => startable.start()))
+        return twitchPollingApplicationTokenConnection.connect()
+            .then(() => twitchApplicationTokenManager.start())
+            .then(() => twitchApplicationTokenManager.getOrWait())
             .then(() => {
-                indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
+                indexLogger.info("Application authenticated.");
 
-                const stop = (incomingError) => Promise.map(startables, (startable) => startable.stop())
+                const disconnectAuthentication = (incomingError) => Promise.resolve()
+                    .then(() => twitchApplicationTokenManager.stop())
+                    .then(() => twitchPollingApplicationTokenConnection.disconnect())
                     .then(() => {
                         if (incomingError) {
-                            indexLogger.error("Stopped.", incomingError);
-                        } else {
-                            indexLogger.info("Stopped.");
+                            indexLogger.error("Unauthenticated.", incomingError);
+
+                            throw incomingError;
                         }
+
+                        indexLogger.info("Unauthenticated.");
 
                         return undefined;
                     });
 
-                return shutdownManager.waitForShutdownSignal()
-                    .then(() => stop(), (error) => stop(error));
+                const twitchApplicationAccessTokenProvider = () => twitchApplicationTokenManager.getOrWait();
+
+                const twitchUserHelper = new TwitchUserHelper(rootLogger, twitchCSRFHelper, UserRepository, twitchAppOAuthAuthorizationUri, twitchAppOAuthRedirectUrl, twitchUserOAuthTokenUri, twitchUsersDataUri, twitchAppClientId, twitchAppClientSecret, twitchApplicationAccessTokenProvider);
+
+                return Promise.all([
+                    // TODO: replace with an https server.
+                    // TODO: revoke user token?
+                    twitchUserHelper.getUserToken(twitchUserName),
+                    twitchUserHelper.getUserIdByUserName(twitchUserName),
+                ])
+                    .then(([twitchUserToken, twitchUserId]) => {
+                        // TODO: use twitchUserIdProvider instead of twitchUserId.
+                        // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
+
+                        const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchUserOAuthTokenUri, twitchAppTokenRevocationUri, twitchAppClientId, twitchAppClientSecret);
+
+                        const twitchUserAccessTokenProvider = () => userTokenManager.get(twitchUserToken)
+                            // TODO: don't store the token here, but in the userTokenManager, or in the twitchUserHelper?
+                            .tap((refreshedToken) => twitchUserHelper.storeUserToken(twitchUserName, refreshedToken))
+                            .then((refreshedToken) => refreshedToken.access_token);
+
+                        const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
+
+                        const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
+                        const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessTokenProvider);
+
+                        // TODO: use twitchUserIdProvider instead of twitchUserId.
+                        const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessTokenProvider, twitchUserId);
+                        const twitchPollingFollowingConnection = new PollingClientIdConnection(rootLogger, twitchAppClientId, BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL, false, followingPollingUri, "get");
+
+                        const connectables = [
+                            twitchPubSubConnection,
+                            twitchIrcConnection,
+                            twitchPollingFollowingConnection,
+                        ];
+
+                        return Promise.map(connectables, (connectable) => connectable.connect())
+                            .then(() => {
+                                indexLogger.info("Connected.");
+
+                                const disconnect = (incomingError) => Promise.map(connectables, (connectable) => connectable.disconnect())
+                                    .then(() => {
+                                        if (incomingError) {
+                                            indexLogger.error("Disconnected.", incomingError);
+
+                                            throw incomingError;
+                                        }
+
+                                        indexLogger.info("Disconnected.");
+
+                                        return undefined;
+                                    });
+
+                                const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
+                                const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
+                                const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
+                                const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
+                                const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
+                                const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
+
+                                const startables = [
+                                    twitchPubSubLoggingHandler,
+                                    twitchIrcLoggingHandler,
+                                    twitchIrcPingHandler,
+                                    twitchIrcGreetingHandler,
+                                    twitchIrcNewChatterHandler,
+                                    twitchIrcSubscribingHandler,
+                                    twitchPollingFollowingHandler,
+                                ];
+
+                                return Promise.resolve()
+                                    .then(() => Promise.map(startables, (startable) => startable.start()))
+                                    .then(() => {
+                                        indexLogger.info(`Started listening to events for ${twitchUserName} (${twitchUserId}).`);
+
+                                        const stop = (incomingError) => Promise.map(startables, (startable) => startable.stop())
+                                            .then(() => {
+                                                if (incomingError) {
+                                                    indexLogger.error("Stopped.", incomingError);
+
+                                                    throw incomingError;
+                                                }
+
+                                                indexLogger.info("Stopped.");
+
+                                                return undefined;
+                                            });
+
+                                        return shutdownManager.waitForShutdownSignal()
+                                            .then(() => stop(), (error) => stop(error));
+                                    })
+                                    .then(() => disconnect(), (error) => disconnect(error));
+                            });
+                    })
+                    .then(() => disconnectAuthentication(), (error) => disconnectAuthentication(error));
             })
-            .then(() => disconnect(), (error) => disconnect(error));
+            .then(() => shutdown(), (error) => shutdown(error));
     })
-    .then(() => shutdownManager.stop())
     .then(() => {
         process.exitCode = 0;
 
