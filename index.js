@@ -96,14 +96,18 @@ const rootPinoLogger = pino(
     logFileStream
 );
 
+const twitchUserAccessTokenProvider = () => {
+    return Promise.resolve(twitchUserAccessToken);
+};
+
 const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
 const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchAppTokenUri, "post");
 const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchAppTokenRevocationUri);
 const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
-const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessToken, twitchUserId);
-const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessToken);
+const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(rootLogger, twitchPubSubConnection, twitchUserAccessTokenProvider, twitchUserId);
+const twitchIrcConnection = new TwitchIrcConnection(rootLogger, twitchIrcWebSocketUri, twitchChannelName, twitchUserName, twitchUserAccessTokenProvider);
 const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);

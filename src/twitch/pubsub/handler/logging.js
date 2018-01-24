@@ -24,7 +24,7 @@ const assert = require("power-assert");
 const Promise = require("bluebird");
 
 export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger, connection, userAccessToken, userId) {
+    constructor(logger, connection, userAccessTokenProvider, userId) {
         const topics = [
             `channel-bits-events-v1.${userId}`,
             `channel-subscribe-events-v1.${userId}`,
@@ -32,13 +32,12 @@ export default class LoggingPubSubHandler extends PubSubManager {
             `whispers.${userId}`,
         ];
 
-        super(logger, connection, userAccessToken, topics);
+        super(logger, connection, userAccessTokenProvider, topics);
 
         assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof userAccessToken, "string");
-        assert(userAccessToken.length > 0);
+        assert.strictEqual(typeof userAccessTokenProvider, "function");
         assert(!isNaN(userId));
         assert(userId > 0);
 

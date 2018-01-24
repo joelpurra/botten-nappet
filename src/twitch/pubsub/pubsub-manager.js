@@ -23,25 +23,26 @@ import ConnectionManager from "../connection-manager";
 const assert = require("power-assert");
 
 export default class PubSubManager extends ConnectionManager {
-    constructor(logger, connection, userAccessToken, topics) {
+    constructor(logger, connection, userAccessTokenProvider, topics) {
         super(logger, connection);
 
         assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof userAccessToken, "string");
-        assert(userAccessToken.length > 0);
+        assert.strictEqual(typeof userAccessTokenProvider, "function");
         assert(Array.isArray(topics));
         assert(topics.length > 0);
 
         this._logger = logger.child("PubSubManager");
-        this._userAccessToken = userAccessToken;
+        this._userAccessTokenProvider = userAccessTokenProvider;
         this._topics = topics;
     }
 
     start() {
         assert.strictEqual(arguments.length, 0);
 
-        return super.start(this._userAccessToken, this._topics);
+        return Promise.resolve()
+            .then(() => this._userAccessTokenProvider())
+            .then((twitchUserAccessToken) => super.start(twitchUserAccessToken, this._topics));
     }
 }
