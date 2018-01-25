@@ -22,12 +22,12 @@ import {
     assert,
 } from "check-types";
 
+import ConnectionManager from "../../connection/connection-manager";
 import PinoLogger from "../../util/pino-logger";
-import ConnectionManager from "../connection-manager";
 import IPubSubConnection from "./ipubsub-connection";
 import IPubSubResponse from "./ipubsub-response";
 
-export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, any> {
+export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse> {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 

@@ -22,12 +22,12 @@ import {
     assert,
 } from "check-types";
 
+import ConnectionManager from "../../connection/connection-manager";
 import PinoLogger from "../../util/pino-logger";
-import ConnectionManager from "../connection-manager";
+import IIncomingIrcCommand from "./command/iincoming-irc-command";
 import IIRCConnection from "./iirc-connection";
-import IParsedMessage from "./iparsed-message";
 
-export default abstract class IrcManager extends ConnectionManager<IParsedMessage, string> {
+export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {
     protected connection: IIRCConnection;
 
     constructor(logger: PinoLogger, connection: IIRCConnection) {
@@ -41,6 +41,6 @@ export default abstract class IrcManager extends ConnectionManager<IParsedMessag
         this.connection = connection;
     }
 
-    protected abstract async dataHandler(data: IParsedMessage): Promise<void>;
-    protected abstract async filter(data: IParsedMessage): Promise<boolean>;
+    protected abstract async dataHandler(data: IIncomingIrcCommand): Promise<void>;
+    protected abstract async filter(data: IIncomingIrcCommand): Promise<boolean>;
 }

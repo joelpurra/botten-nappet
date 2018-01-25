@@ -31,12 +31,19 @@ import fs from "fs";
 import configLibrary from "config";
 import pino from "pino";
 
+import IConnectable from "../connection/iconnectable";
+import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
+
 import Config from "../config/config";
 import DatabaseConnection from "../storage/database-connection";
 import UserStorageManager from "../storage/manager/user-storage-manager";
 import UserRepository from "../storage/repository/user-repository";
 import GracefulShutdownManager from "../util/graceful-shutdown-manager";
 import PinoLogger from "../util/pino-logger";
+
+import MessageQueuePublisher from "../message-queue/publisher";
+import MessageQueueSingleItemJsonTopicsSubscriber from "../message-queue/single-item-topics-subscriber";
+import MessageQueueTopicPublisher from "../message-queue/topic-publisher";
 
 import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
 import TwitchPollingApplicationTokenConnection from "../twitch/authentication/polling-application-token-connection";
@@ -52,16 +59,25 @@ import TwitchRequestHelper from "../twitch/helper/request-helper";
 import TwitchTokenHelper from "../twitch/helper/token-helper";
 import TwitchUserHelper from "../twitch/helper/user-helper";
 import TwitchUserTokenHelper from "../twitch/helper/user-token-helper";
+
+import ITwitchIncomingIrcCommand from "../twitch/irc/command/iincoming-irc-command";
+import ITwitchOutgoingIrcCommand from "../twitch/irc/command/ioutgoing-irc-command";
 import TwitchIrcFollowReminderHandler from "../twitch/irc/handler/follow-reminder";
 import TwitchIrcGreetingHandler from "../twitch/irc/handler/greeting";
 import TwitchIrcLoggingHandler from "../twitch/irc/handler/logging";
 import TwitchIrcNewChatterHandler from "../twitch/irc/handler/new-chatter";
 import TwitchIrcPingHandler from "../twitch/irc/handler/ping";
 import TwitchIrcSubscribingHandler from "../twitch/irc/handler/subscribing";
-import TwitchIrcTextResponseCommandHandler from "../twitch/irc/handler/text-response-command";
 import TwitchIrcConnection from "../twitch/irc/irc-connection";
+
+import TwitchOutgoingIrcCommandEventEmitter from "../twitch/irc/event-emitter/outgoing-irc-command-event-emitter";
+import TwitchIncomingIrcCommandEventTranslator from "../twitch/irc/event-handler/incoming-irc-command-event-translator";
+import TwitchOutgoingIrcCommandEventHandler from "../twitch/irc/event-handler/outgoing-irc-command-event-handler";
+import TwitchIrcTextResponseCommandHandler from "../twitch/irc/handler/text-response-command";
+
 import PollingClientIdConnection from "../twitch/polling/connection/polling-clientid-connection";
 import TwitchPollingFollowingHandler from "../twitch/polling/handler/following";
+
 import TwitchPubSubLoggingHandler from "../twitch/pubsub/handler/logging";
 import TwitchPubSubPingHandler from "../twitch/pubsub/handler/ping";
 import TwitchPubSubReconnectHandler from "../twitch/pubsub/handler/reconnect";
@@ -93,13 +109,55 @@ const perUserHandlersMain = async (
     mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
+    messageQueuePublisher: MessageQueuePublisher,
     twitchIrcConnection: TwitchIrcConnection,
     twitchPollingFollowingConnection: PollingClientIdConnection,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
     twitchPubSubPingHandler: TwitchPubSubPingHandler,
     twitchPubSubReconnectHandler: TwitchPubSubReconnectHandler,
     twitchPubSubLoggingHandler: TwitchPubSubLoggingHandler,
     twitchUserId: number,
 ): Promise<void> => {
+    const messageQueueTopicPublisherForIIncomingIrcCommand =
+        new MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingIrcCommand,
+        );
+
+    const messageQueueTopicPublisherForIOutgoingIrcCommand =
+        new MessageQueueTopicPublisher<ITwitchOutgoingIrcCommand>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchOutgoingIrcCommand,
+        );
+
+    const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
+        rootLogger,
+        twitchIrcConnection,
+        messageQueueTopicPublisherForIIncomingIrcCommand,
+    );
+
+    const twitchOutgoingIrcCommandEventEmitter = new TwitchOutgoingIrcCommandEventEmitter(
+        rootLogger,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+    );
+
+    const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
+        twitchIrcConnection,
+    );
+
+    const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
+    );
+
     const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
     const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
     const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(
@@ -110,10 +168,6 @@ const perUserHandlersMain = async (
     const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
     const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
     const twitchIrcFollowReminderHandler = new TwitchIrcFollowReminderHandler(rootLogger, twitchIrcConnection);
-    const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(
-        rootLogger,
-        twitchIrcConnection,
-    );
     const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(
         rootLogger,
         twitchPollingFollowingConnection,
@@ -121,7 +175,7 @@ const perUserHandlersMain = async (
         config.twitchChannelName,
     );
 
-    const startables = [
+    const startables: IStartableStoppable[] = [
         twitchPubSubPingHandler,
         twitchPubSubReconnectHandler,
         twitchPubSubLoggingHandler,
@@ -131,8 +185,10 @@ const perUserHandlersMain = async (
         twitchIrcNewChatterHandler,
         twitchIrcSubscribingHandler,
         twitchIrcFollowReminderHandler,
-        twitchIrcTextResponseCommandHandler,
         twitchPollingFollowingHandler,
+        twitchIncomingIrcCommandEventTranslator,
+        twitchOutgoingIrcCommandEventHandler,
+        twitchIrcTextResponseCommandHandler,
     ];
 
     const stop = async (incomingError?: Error) => {
@@ -176,6 +232,7 @@ const authenticatedApplicationMain = async (
     mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
+    messageQueuePublisher: MessageQueuePublisher,
     twitchApplicationTokenManager: TwitchApplicationTokenManager,
     twitchRequestHelper: TwitchRequestHelper,
     twitchCSRFHelper: TwitchCSRFHelper,
@@ -264,11 +321,25 @@ const authenticatedApplicationMain = async (
         followingPollingUri,
         "get",
     );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
+        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingIrcCommand,
+        );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
+        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchOutgoingIrcCommand,
+        );
 
-    const connectables = [
+    const connectables: IConnectable[] = [
         twitchAllPubSubTopicsForTwitchUserIdConnection,
         twitchIrcConnection,
         twitchPollingFollowingConnection,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
     ];
 
     await Bluebird.map(connectables, async (connectable) => connectable.connect());
@@ -276,7 +347,13 @@ const authenticatedApplicationMain = async (
     mainLogger.info("Connected.");
 
     const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => connectable.disconnect());
+        await Bluebird.map(connectables, async (connectable) => {
+            try {
+                connectable.disconnect();
+            } catch (error) {
+                mainLogger.error(error, connectable, "Swallowed error while disconnecting.");
+            }
+        });
 
         if (incomingError) {
             mainLogger.error(incomingError, "Disconnected.");
@@ -295,8 +372,11 @@ const authenticatedApplicationMain = async (
             mainLogger,
             rootLogger,
             gracefulShutdownManager,
+            messageQueuePublisher,
             twitchIrcConnection,
             twitchPollingFollowingConnection,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
             twitchPubSubPingHandler,
             twitchPubSubReconnectHandler,
             twitchPubSubLoggingHandler,
@@ -314,6 +394,7 @@ const managedMain = async (
     mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
+    messageQueuePublisher: MessageQueuePublisher,
     twitchRequestHelper: TwitchRequestHelper,
     twitchCSRFHelper: TwitchCSRFHelper ,
     twitchTokenHelper: TwitchTokenHelper ,
@@ -347,6 +428,7 @@ const managedMain = async (
             mainLogger,
             rootLogger,
             gracefulShutdownManager,
+            messageQueuePublisher,
             twitchApplicationTokenManager,
             twitchRequestHelper,
             twitchCSRFHelper,
@@ -365,6 +447,7 @@ const managerMain = async (
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     databaseConnection: DatabaseConnection,
+    messageQueuePublisher: MessageQueuePublisher,
     twitchRequestHelper: TwitchRequestHelper,
     twitchCSRFHelper: TwitchCSRFHelper,
     twitchTokenHelper: TwitchTokenHelper,
@@ -373,10 +456,12 @@ const managerMain = async (
 ) => {
     await gracefulShutdownManager.start();
     await databaseConnection.connect();
+    await messageQueuePublisher.connect();
 
     mainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
+        await messageQueuePublisher.disconnect();
         await databaseConnection.disconnect();
         await gracefulShutdownManager.stop();
 
@@ -397,6 +482,7 @@ const managerMain = async (
             mainLogger,
             rootLogger,
             gracefulShutdownManager,
+            messageQueuePublisher,
             twitchRequestHelper,
             twitchCSRFHelper,
             twitchTokenHelper,
@@ -421,6 +507,7 @@ const main = async (): Promise<void> => {
 
     const gracefulShutdownManager = new GracefulShutdownManager(rootLogger);
     const databaseConnection = new DatabaseConnection(rootLogger, config.databaseUri);
+    const messageQueuePublisher = new MessageQueuePublisher(rootLogger, config.zmqAddress);
     const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(
         rootLogger,
         config.twitchAppClientId,
@@ -453,6 +540,7 @@ const main = async (): Promise<void> => {
         rootLogger,
         gracefulShutdownManager,
         databaseConnection,
+        messageQueuePublisher,
         twitchRequestHelper,
         twitchCSRFHelper,
         twitchTokenHelper,

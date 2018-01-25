@@ -23,7 +23,6 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
-import IConnection from "../../iconnection";
 import IIRCConnection from "../../irc/iirc-connection";
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
@@ -31,14 +30,14 @@ import PollingManager from "../polling-manager";
 type TwitchApiV5ChannelFollower = any;
 type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
 
-export default class FollowingPollingHandler extends PollingManager<any, void> {
+export default class FollowingPollingHandler extends PollingManager<any> {
     private lastFollowingMessageTimestamp: number;
     private ircChannel: string;
     private ircConnection: IIRCConnection;
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<any, void>,
+        connection: IPollingConnection<any>,
         ircConnection: IIRCConnection,
         ircChannel: string,
     ) {

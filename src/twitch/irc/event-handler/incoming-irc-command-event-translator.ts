@@ -22,69 +22,43 @@ import {
     assert,
 } from "check-types";
 
+import IEventEmitter from "../../../event/ievent-emitter";
 import PinoLogger from "../../../util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IIRCConnection from "../iirc-connection";
 import IrcManager from "../irc-manager";
 
-export default class NewChatterIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class IncomingIrcCommandEventTranslator extends IrcManager {
+    private incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IIRCConnection,
+        incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof incomingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("NewChatterIrcHandler");
+        this.logger = logger.child("IncomingIrcCommandEventHandler");
+        this.incomingIrcCommandEventEmitter = incomingIrcCommandEventEmitter;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        const tags = data.tags!;
-        const username = tags.login;
-        const channel = data.channel;
+        this.logger.trace(data, "dataHandler");
 
-        this.logger.trace("Responding to new chatter.", username, data.message, "dataHandler");
-
-        // TODO: use a string templating system.
-        // TODO: configure message.
-        /* tslint:disable:max-line-length */
-        const message = `PRIVMSG ${channel} :Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
-        /* tslint:enable:max-line-length */
-
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send(message);
+        this.incomingIrcCommandEventEmitter.emit(data);
     }
 
     protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (data.command !== "USERNOTICE") {
-            return false;
-        }
-
-        if (data.tags === null) {
-            return false;
-        }
-
-        if (typeof data.tags !== "object") {
-            return false;
-        }
-
-        if (typeof data.tags["msg-id"] !== "string") {
-            return false;
-        }
-
-        if (data.tags["msg-id"] !== "ritual") {
-            return false;
-        }
-
-        if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
-            return false;
-        }
 
         return true;
     }

@@ -18,13 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    Observable,
-} from "rxjs/internal/Observable";
-
 import IWebSocketConnection from "../websocket/iwebsocket-connection";
-import IParsedMessage from "./iparsed-message";
+import IIncomingIrcCommand from "./command/iincoming-irc-command";
 
-export default interface IIRCConnection extends IWebSocketConnection<IParsedMessage, string> {
+export default interface IIRCConnection extends IWebSocketConnection<IIncomingIrcCommand, string> {
     readonly channel: string;
 }

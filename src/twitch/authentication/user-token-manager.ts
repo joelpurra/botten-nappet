@@ -25,7 +25,6 @@ import PinoLogger from "../../util/pino-logger";
 import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
 import IAugmentedToken from "./iaugmented-token";
-import IRawToken from "./iraw-token";
 
 export default class UserTokenManager {
     private userTokenHelper: UserTokenHelper;

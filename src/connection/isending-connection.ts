@@ -18,22 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    Observable,
-} from "rxjs/internal/Observable";
+import IConnectable from "./iconnectable";
 
-export default interface IConnection<T, V> {
+export default interface ISendingConnection<T> extends IConnectable {
     // TODO: separate interfaces per method?
-    connect: () => Promise<void>;
-
-    // TODO: separate interfaces per method?
-    disconnect: () => Promise<void>;
-
-    // TODO: separate interfaces per method?
-    reconnect: () => Promise<void>;
-
-    // TODO: separate interfaces per method?
-    send: (data: V) => Promise<void>;
-
-    readonly dataObservable: Observable<T>;
+    send: (data: T) => Promise<void>;
 }

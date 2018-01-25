@@ -28,6 +28,7 @@ import IPubSubResponse from "../ipubsub-response";
 import PubSubManager from "../pubsub-manager";
 
 export default class PingPubSubHandler extends PubSubManager {
+    public pubSubConnection: IPubSubConnection;
     private pingIntervalMilliseconds: number;
     private pingIntervalId: (number | NodeJS.Timer | null);
 
@@ -40,6 +41,7 @@ export default class PingPubSubHandler extends PubSubManager {
 
         this.logger = logger.child("PingPubSubHandler");
         this.pingIntervalId = null;
+        this.pubSubConnection = this.connection as IPubSubConnection;
 
         // NOTE: minimum interval is a PING every 5 minutes.
         // https://dev.twitch.tv/docs/pubsub#connection-management
@@ -98,6 +100,6 @@ export default class PingPubSubHandler extends PubSubManager {
         };
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        return this.connection.send(message);
+        return this.pubSubConnection.send(message);
     }
 }

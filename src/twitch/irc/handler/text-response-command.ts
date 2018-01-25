@@ -23,26 +23,37 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
-import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
-import IrcManager from "../irc-manager";
+
+import IEventEmitter from "../../../event/ievent-emitter";
+
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
+import IIncomingIrcCommand from "../command/iincoming-irc-command";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
 interface ICommandAndResponse {
     [key: string]: string;
 }
 
-export default class TextResponseCommandIrcHandler extends IrcManager {
+export default class TextResponseCommandIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private commandsAndResponses: ICommandAndResponse;
     private commandPrefix: string;
 
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child("TextResponseCommandIrcHandler");
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
         this.commandPrefix = "!";
         this.commandsAndResponses = {
@@ -53,7 +64,7 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
         };
     }
 
-    protected async dataHandler(data: IParsedMessage): Promise<void> {
+    public async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -74,13 +85,17 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
 
         const response = this.commandsAndResponses[incomingCommand];
 
-        const message = `PRIVMSG ${data.channel} :@${data.username}: ${response}`;
+        const command: IOutgoingIrcCommand = {
+            channel: data.channel,
+            command: "PRIVMSG",
+            message: `@${data.username}: ${response}`,
+            tags: {},
+        };
 
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send(message);
+        this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IParsedMessage): Promise<boolean> {
+    public async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

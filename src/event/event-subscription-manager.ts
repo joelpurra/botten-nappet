@@ -22,18 +22,22 @@ import {
     assert,
 } from "check-types";
 
-import ConnectionManager from "../../connection/connection-manager";
-import IReceivingConnection from "../../connection/ireceiving-connection";
-import PinoLogger from "../../util/pino-logger";
+import PinoLogger from "../util/pino-logger";
 
-export default abstract class PollingManager<T> extends ConnectionManager<T> {
-    constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {
+import ConnectionManager from "../connection/connection-manager";
+import IEventSubscriptionConnection from "./ievent-subscription-connection";
+
+export default abstract class EventSubscriptionManager<T> extends ConnectionManager<T> {
+    constructor(logger: PinoLogger, connection: IEventSubscriptionConnection<T>) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("PollingManager");
+        this.logger = logger.child("EventSubscriptionManager");
     }
+
+    protected abstract async dataHandler(data: T): Promise<void>;
+    protected abstract async filter(data: T): Promise<boolean>;
 }

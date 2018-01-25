@@ -23,8 +23,8 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
+import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
 export default class ReconnectIrcHandler extends IrcManager {
@@ -38,7 +38,7 @@ export default class ReconnectIrcHandler extends IrcManager {
         this.logger = logger.child("ReconnectIrcHandler");
     }
 
-    protected async dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -48,7 +48,7 @@ export default class ReconnectIrcHandler extends IrcManager {
         this.connection.reconnect();
     }
 
-    protected async filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

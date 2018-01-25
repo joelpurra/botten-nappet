@@ -22,32 +22,48 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 import IIRCConnection from "../iirc-connection";
-import IrcManager from "../irc-manager";
 
-export default class LoggingIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class OutgoingIrcCommandEventHandler extends EventSubscriptionManager<IOutgoingIrcCommand> {
+    private ircConnection: IIRCConnection;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IOutgoingIrcCommand>,
+        ircConnection: IIRCConnection,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof ircConnection, "object");
 
-        this.logger = logger.child("LoggingIrcHandler");
+        this.logger = logger.child("OutgoingIrcCommandEventHandler");
+        this.ircConnection = ircConnection;
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
+    public async dataHandler(data: IOutgoingIrcCommand): Promise<void> {
         assert.equal(typeof data, "object");
+        assert.not.null(data);
 
-        this.logger.trace(data, "dataHandler");
+        this.logger.trace(data, "handle");
+
+        // TODO: serialize data.tags.
+        const message = `${data.command} ${data.channel} :${data.message}`;
+
+        return this.ircConnection.send(message);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
+    public async filter(data: IOutgoingIrcCommand): Promise<boolean> {
         assert.equal(typeof data, "object");
+        assert.not.null(data);
+
+        this.logger.trace(data, "filter");
 
         return true;
     }

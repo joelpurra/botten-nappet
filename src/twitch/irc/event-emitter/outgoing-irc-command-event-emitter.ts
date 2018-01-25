@@ -22,18 +22,30 @@ import {
     assert,
 } from "check-types";
 
-import ConnectionManager from "../../connection/connection-manager";
-import IReceivingConnection from "../../connection/ireceiving-connection";
-import PinoLogger from "../../util/pino-logger";
+import IEventEmitter from "../../../event/ievent-emitter";
+import TopicPublisher from "../../../message-queue/topic-publisher";
+import PinoLogger from "../../../util/pino-logger";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
-export default abstract class PollingManager<T> extends ConnectionManager<T> {
-    constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {
-        super(logger, connection);
+export default class OutgoingIrcCommandEventEmitter implements IEventEmitter<IOutgoingIrcCommand> {
+    private logger: PinoLogger;
+    private topicPublisher: TopicPublisher<IOutgoingIrcCommand>;
 
+    constructor(logger: PinoLogger, topicPublisher: TopicPublisher<IOutgoingIrcCommand>) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
+        assert.equal(typeof topicPublisher, "object");
 
-        this.logger = logger.child("PollingManager");
+        this.logger = logger.child("OutgoingIrcCommandEventEmitter");
+        this.topicPublisher = topicPublisher;
+    }
+
+    public async emit(data: IOutgoingIrcCommand): Promise<void> {
+        assert.equal(typeof data, "object");
+        assert.not.null(data);
+
+        this.logger.trace(data, "emit");
+
+        this.topicPublisher.emit(data);
     }
 }

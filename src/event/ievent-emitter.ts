@@ -18,22 +18,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    assert,
-} from "check-types";
-
-import ConnectionManager from "../../connection/connection-manager";
-import IReceivingConnection from "../../connection/ireceiving-connection";
-import PinoLogger from "../../util/pino-logger";
-
-export default abstract class PollingManager<T> extends ConnectionManager<T> {
-    constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {
-        super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-
-        this.logger = logger.child("PollingManager");
-    }
+export default interface IEventEmitter<T> {
+    emit(data: T): Promise<void>;
 }

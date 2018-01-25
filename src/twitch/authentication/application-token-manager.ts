@@ -24,12 +24,12 @@ import {
 
 import axios from "axios";
 
+import ConnectionManager from "../../connection/connection-manager";
 import PinoLogger from "../../util/pino-logger";
-import ConnectionManager from "../connection-manager";
 import IPollingConnection from "../polling/ipolling-connection";
 import IRawToken from "./iraw-token";
 
-export default class ApplicationTokenManager extends ConnectionManager<IRawToken, void> {
+export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
     private tokenHasBeenSet: (() => void) | null;
     private applicationAccessToken: string | null;
@@ -41,7 +41,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<IRawToken, void>,
+        connection: IPollingConnection<IRawToken>,
         clientId: string,
         oauthTokenRevocationUri: string,
     ) {
@@ -63,6 +63,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         this.oauthTokenRevocationMethod = "post";
         this.oauthTokenRevocationHeaders = {};
 
+        // TODO: use rawOAuthToken for anything?
         this.rawOAuthToken = null;
         this.applicationAccessToken = null;
 
@@ -87,7 +88,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
         await super.start();
 
-        const pollingConnection = this.connection as IPollingConnection<IRawToken, void>;
+        const pollingConnection = this.connection as IPollingConnection<IRawToken>;
 
         return pollingConnection.send(undefined);
     }
