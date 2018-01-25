@@ -18,32 +18,21 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import json from "rollup-plugin-json";
+const assert = require("power-assert");
+const Promise = require("bluebird");
 
-import babel from "./rollup.config.babel.js";
-// TODO: enable for production builds?
-// import uglify from "./rollup.config.uglify.js";
-import filesize from "./rollup.config.filesize.js";
-import license from "./rollup.config.license.js";
+export default class CSRFHelper {
+    constructor(logger) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof logger, "object");
 
-const inputName = "index";
-const fileExtension = ".js";
-const fileName = `${inputName}${fileExtension}`;
+        this._logger = logger.child("CSRFHelper");
+    }
 
-export default {
-    plugins: [
-        json(),
-        babel(),
-        // TODO: enable for production builds?
-        // uglify(),
-        license(inputName),
-        filesize(),
-    ],
-    input: `${fileName}`,
-    output: {
-        format: "cjs",
-        sourcemap: true,
-        name: inputName,
-        file: `dist/${fileName}`,
-    },
-};
+    getRandomCSRF() {
+        assert.strictEqual(arguments.length, 0);
+
+        // TODO: use a random string library.
+        return Promise.resolve(Math.random().toString(10));
+    }
+}

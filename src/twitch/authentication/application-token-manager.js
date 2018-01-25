@@ -47,6 +47,21 @@ export default class ApplicationTokenManager extends ConnectionManager {
 
         this._rawToken = null;
         this._applicationAccessToken = null;
+
+        this._tokenHasBeenSet = null;
+
+        this._waitForFirstTokenPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
+            const waitForToken = () => {
+                resolve();
+            };
+
+            this._tokenHasBeenSet = waitForToken;
+        })
+            .then(() => {
+                this._logger.info("Received first token.", "_waitForFirstTokenPromise");
+
+                return undefined;
+            });
     }
 
     start() {
@@ -73,10 +88,7 @@ export default class ApplicationTokenManager extends ConnectionManager {
 
         return Promise.all([
             this._revokeTokenIfSet(this._applicationAccessToken),
-            Promise.try(() => {
-                this._rawToken = data;
-                this._applicationAccessToken = data.access_token;
-            }),
+            this._setToken(data),
         ]);
     }
 
@@ -95,6 +107,18 @@ export default class ApplicationTokenManager extends ConnectionManager {
 
             return true;
         });
+    }
+
+    _setToken(data) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof data, "object");
+
+        return Promise.try(() => {
+            this._rawToken = data;
+            this._applicationAccessToken = data.access_token;
+        })
+            .then(() => this._tokenHasBeenSet())
+            .return(undefined);
     }
 
     _sendRevocation(data) {
@@ -155,6 +179,15 @@ export default class ApplicationTokenManager extends ConnectionManager {
     get() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => this._applicationAccessToken);
+        return Promise.resolve(this._applicationAccessToken);
+    }
+
+    getOrWait() {
+        assert.strictEqual(arguments.length, 0);
+
+        return Promise.try(() => {
+            return this._waitForFirstTokenPromise
+                .then(() => this.get());
+        });
     }
 }

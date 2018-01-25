@@ -18,31 +18,45 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConnectionManager from "../connection-manager";
-
 const assert = require("power-assert");
+const Promise = require("bluebird");
 
-export default class PubSubManager extends ConnectionManager {
-    constructor(logger, connection, userAccessTokenProvider, topics) {
-        super(logger, connection);
+const connect = require("camo").connect;
 
-        assert.strictEqual(arguments.length, 4);
+export default class DatabaseConnection {
+    constructor(logger, uri) {
+        assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof userAccessTokenProvider, "function");
-        assert(Array.isArray(topics));
-        assert(topics.length > 0);
+        assert.strictEqual(typeof uri, "string");
+        assert(uri.length > 0);
+        assert(uri.startsWith("nedb://"));
 
-        this._logger = logger.child("PubSubManager");
-        this._userAccessTokenProvider = userAccessTokenProvider;
-        this._topics = topics;
+        this._logger = logger.child("DatabaseConnection");
+        this._uri = uri;
+
+        this._database = null;
     }
 
-    start() {
+    connect() {
         assert.strictEqual(arguments.length, 0);
+        assert.strictEqual(this._database, null);
 
-        return Promise.resolve()
-            .then(() => this._userAccessTokenProvider())
-            .then((twitchUserAccessToken) => super.start(twitchUserAccessToken, this._topics));
+        return Promise.try(() => {
+            return connect(this._uri)
+                .then((db) => {
+                    this._database = db;
+
+                    return undefined;
+                });
+        });
+    }
+
+    disconnect() {
+        assert.strictEqual(arguments.length, 0);
+        assert.notStrictEqual(this._database, null);
+
+        return Promise.try(() => {
+            return this._database.close();
+        });
     }
 }

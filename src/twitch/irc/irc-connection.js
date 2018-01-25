@@ -37,7 +37,7 @@ const Promise = require("bluebird");
 const WebSocket = require("ws");
 
 export default class IrcConnection {
-    constructor(logger, uri, channel, username, userAccessToken) {
+    constructor(logger, uri, channel, username, userAccessTokenProvider) {
         assert.strictEqual(arguments.length, 5);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof uri, "string");
@@ -47,14 +47,13 @@ export default class IrcConnection {
         assert(channel.length > 0);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
-        assert.strictEqual(typeof userAccessToken, "string");
-        assert(userAccessToken.length > 0);
+        assert.strictEqual(typeof userAccessTokenProvider, "function");
 
         this._logger = logger.child("IrcConnection");
         this._uri = uri;
         this._channel = channel;
         this._username = username;
-        this._userAccessToken = userAccessToken;
+        this._userAccessTokenProvider = userAccessTokenProvider;
 
         this._ws = null;
         this._maxDisconnectWaitMilliseconds = 10 * 1000;
@@ -67,26 +66,68 @@ export default class IrcConnection {
 
         return new Promise((resolve, reject) => {
             const onOpen = () => {
-                unregisterListeners();
+                Promise.resolve()
+                    .then(() => this._userAccessTokenProvider())
+                    .then((userAccessToken) => {
+                        unregisterListeners();
 
-                // TODO: verify requirements.
-                this._send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
+                        // TODO: make capabilities configurable/subclassable?
+                        const capabilities = [
+                            "twitch.tv/tags",
+                            "twitch.tv/commands",
+                            "twitch.tv/membership",
+                        ];
 
-                // NOTE: the user access token needs to have an "oauth:" prefix.
-                this._send(`PASS oauth:${this._userAccessToken}`);
+                        const capabilitiesString = capabilities.join(" ");
 
-                this._send(`NICK ${this._username}`);
-                this._send(`JOIN ${this._channel}`);
+                        return Promise.mapSeries(
+                            [
+                                {
+                                    cmds: [
+                                        `CAP REQ :${capabilitiesString}`,
+                                    ],
+                                    verifier: (message) => message.includes("CAP * ACK"),
+                                },
 
-                resolve();
+                                {
+                                    cmds: [
+                                        // NOTE: the user access token needs to have an "oauth:" prefix.
+                                        `PASS oauth:${userAccessToken}`,
+                                        `NICK ${this._username}`,
+                                    ],
+                                    // NOTE: the "001" message might change, but for now it's a hardcoded return value.
+                                    // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
+                                    verifier: (message) => message.includes("001"),
+                                },
+
+                                {
+                                    cmds: [
+                                        `JOIN ${this._channel}`,
+                                    ],
+                                    verifier: (message) => message.includes(`JOIN ${this._channel}`),
+                                },
+                            ],
+                            ({ cmds, verifier }) => this._sendCommandsAndVerifyResponse(cmds, verifier)
+                        )
+                            .then(() => {
+                                resolve();
+
+                                return undefined;
+                            });
+                    })
+                    .catch((error) => {
+                        reject(error);
+
+                        return undefined;
+                    });
             };
 
-            const onError = (e) => {
+            const onError = (error) => {
                 unregisterListeners();
 
                 this.disconnect();
 
-                reject(e);
+                reject(error);
             };
 
             const registerListeners = () => {
@@ -102,13 +143,59 @@ export default class IrcConnection {
             this._ws = new WebSocket(this._uri, "irc");
 
             registerListeners();
-        }).then(() => {
-            this._ws.on("error", this._onError.bind(this));
-            this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
-            this._ws.on("close", this._onClose.bind(this));
-            this._ws.on("message", this._onMessage.bind(this));
+        })
+            .then(() => {
+                this._ws.on("error", this._onError.bind(this));
+                this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
+                this._ws.on("close", this._onClose.bind(this));
+                this._ws.on("message", this._onMessage.bind(this));
 
-            return undefined;
+                return undefined;
+            });
+    }
+
+    _sendCommandsAndVerifyResponse(cmds, verifier) {
+        assert.strictEqual(arguments.length, 2);
+        assert(Array.isArray(cmds));
+        assert(cmds.length > 0);
+        assert.strictEqual(typeof verifier, "function");
+
+        return new Promise((resolve, reject) => {
+            const errorHandler = (error) => {
+                unregisterListeners();
+
+                reject(error);
+            };
+
+            const messageHandler = (message) => {
+                const matchingMessage = verifier(message);
+
+                if (matchingMessage) {
+                    unregisterListeners();
+
+                    resolve();
+                }
+            };
+
+            const registerListeners = () => {
+                this._ws.on("error", errorHandler);
+                this._ws.on("message", messageHandler);
+            };
+
+            const unregisterListeners = () => {
+                this._ws.removeListener("error", errorHandler);
+                this._ws.removeListener("message", messageHandler);
+            };
+
+            registerListeners();
+
+            Promise.mapSeries(
+                cmds,
+                (cmd) => this._send(cmd)
+            )
+                .catch((error) => {
+                    reject(error);
+                });
         });
     }
 
@@ -144,6 +231,7 @@ export default class IrcConnection {
     }
 
     disconnect() {
+        assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
         return Promise.try(() => {
@@ -161,23 +249,33 @@ export default class IrcConnection {
                 this._ws.once("close", hasClosed);
 
                 /* eslint-disable promise/catch-or-return */
-                Promise.delay(this._maxDisconnectWaitMilliseconds).then(() => reject(new Error("Disconnect timed out.")));
+                Promise.delay(this._maxDisconnectWaitMilliseconds)
+                    .then(() => reject(new Error("Disconnect timed out.")));
                 /* eslint-enable promise/catch-or-return */
 
                 this._ws.close();
-            }).catch(() => {
-                this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
+            })
+                .catch(() => {
+                    this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
 
-                // NOTE: fallback for a timed out disconnect.
-                this._ws.terminate();
+                    // NOTE: fallback for a timed out disconnect.
+                    this._ws.terminate();
 
-                return undefined;
-            }).then(() => {
-                this._ws = null;
+                    return undefined;
+                })
+                .then(() => {
+                    this._ws = null;
 
-                return undefined;
-            });
+                    return undefined;
+                });
         });
+    }
+
+    reconnect() {
+        assert.strictEqual(arguments.length, 0);
+
+        return this._connection.disconnect()
+            .then(() => this._connection.connect());
     }
 
     _parseMessage(rawMessage) {
@@ -224,7 +322,8 @@ export default class IrcConnection {
 
                         // NOTE: handle the case of having repeated tag keys.
                         // NOTE: this means a parsed tag value can be either a string or an array of strings.
-                        obj[key] = obj[key] ? [].concat(obj[key]).concat(value) : value;
+                        obj[key] = obj[key] ? [].concat(obj[key])
+                            .concat(value) : value;
 
                         return obj;
                     },

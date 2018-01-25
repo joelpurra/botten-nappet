@@ -66,6 +66,7 @@ export default class GreetingIrcHandler extends IrcManager {
             message = `PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`;
         }
 
+        // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send(message);
     }
 
