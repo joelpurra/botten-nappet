@@ -21,7 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import json from "rollup-plugin-json";
 
 import babel from "./rollup.config.babel.js";
-import uglify from "./rollup.config.uglify.js";
+// TODO: enable for production builds?
+// import uglify from "./rollup.config.uglify.js";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
@@ -33,7 +34,8 @@ export default {
     plugins: [
         json(),
         babel(),
-        uglify(),
+        // TODO: enable for production builds?
+        // uglify(),
         license(inputName),
         filesize(),
     ],
