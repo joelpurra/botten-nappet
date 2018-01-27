@@ -21,71 +21,42 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
-const RefreshToken = require("refresh-token");
-const deepStrictEqual = require("deep-strict-equal");
-
 export default class UserTokenManager {
-    constructor(logger, userOAuthTokenUri, revocationUri, clientId, clientSecret) {
-        assert.strictEqual(arguments.length, 5);
+    constructor(logger, tokenHelper, userHelper) {
+        assert.strictEqual(arguments.length, 3);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof userOAuthTokenUri, "string");
-        assert(userOAuthTokenUri.length > 0);
-        assert(userOAuthTokenUri.startsWith("https://"));
-        assert.strictEqual(typeof revocationUri, "string");
-        assert(revocationUri.length > 0);
-        assert(revocationUri.startsWith("https://"));
-        assert.strictEqual(typeof clientId, "string");
-        assert(clientId.length > 0);
-        assert.strictEqual(typeof clientSecret, "string");
-        assert(clientSecret.length > 0);
+        assert.strictEqual(typeof tokenHelper, "object");
+        assert.strictEqual(typeof userHelper, "object");
 
         this._logger = logger.child("UserTokenManager");
-        this._userOAuthTokenUri = userOAuthTokenUri;
-        this._revocationUri = revocationUri;
-        this._clientId = clientId;
-        this._clientSecret = clientSecret;
+        this._tokenHelper = tokenHelper;
+        this._userHelper = userHelper;
     }
 
-    get(tokenToRefresh) {
+    get(username) {
         assert.strictEqual(arguments.length, 1);
-        assert.notStrictEqual(tokenToRefresh, null);
-        assert.strictEqual(typeof tokenToRefresh, "object");
+        assert.strictEqual(typeof username, "string");
+        assert(username.length > 0);
 
         return Promise.try(() => {
-            // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
-            const refreshTokenWithClientIdAndSecret = {
-                access_token: tokenToRefresh.access_token,
-                refresh_token: tokenToRefresh.refresh_token,
-                expires_in: tokenToRefresh.expires_in,
-                client_id: this._clientId,
-                client_secret: this._clientSecret,
-            };
+            // TODO: replace with an https server.
+            return this._userHelper.getUserToken(username)
+                .then((userToken) => {
+                    return this._tokenHelper.isTokenValid(userToken)
+                        .then((isValid) => {
+                            if (isValid) {
+                                return userToken;
+                            }
 
-            const refreshToken = new RefreshToken(
-                this._userOAuthTokenUri,
-                refreshTokenWithClientIdAndSecret
-            );
-
-            const getToken = Promise.promisify(refreshToken.getToken, {
-                context: refreshToken,
-            });
-
-            return getToken();
-        })
-            .then((refreshedAccessToken) => {
-                const refreshedToken = {
-                    access_token: refreshedAccessToken,
-                    refresh_token: tokenToRefresh.refresh_token,
-                    expires_in: tokenToRefresh.expires_in,
-                    scope: tokenToRefresh.scope,
-                };
-
-                return refreshedToken;
-            })
-            .tap((refreshedToken) => {
-                const wasUpdated = deepStrictEqual(refreshedToken, tokenToRefresh);
-
-                this._logger.trace(refreshedToken, tokenToRefresh, wasUpdated, "get");
-            });
+                            return this._userHelper.forgetUserToken(username)
+                                // TODO: user-wrappers with username for the generic token functions?
+                                .then(() => this._tokenHelper.revokeToken(userToken))
+                                .then(() => this._userHelper.getUserToken(username));
+                        });
+                })
+                // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
+                .then((userToken) => this._userHelper.ensureRefreshed(userToken))
+                .tap((refreshedToken) => this._userHelper.storeUserToken(username, refreshedToken));
+        });
     }
 }

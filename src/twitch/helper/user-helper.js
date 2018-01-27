@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
+const RefreshToken = require("refresh-token");
+const deepStrictEqual = require("deep-strict-equal");
+
 const readline = require("readline");
 
 const axios = require("axios");
@@ -410,6 +413,49 @@ export default class UserHelper {
             })
             .tap((token) => {
                 this._logger.trace(token, "getUserToken");
+            });
+    }
+
+    ensureRefreshed(tokenToRefresh) {
+        assert.strictEqual(arguments.length, 1);
+        assert.notStrictEqual(tokenToRefresh, null);
+        assert.strictEqual(typeof tokenToRefresh, "object");
+
+        return Promise.try(() => {
+            // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
+            const refreshTokenWithClientIdAndSecret = {
+                access_token: tokenToRefresh.access_token,
+                refresh_token: tokenToRefresh.refresh_token,
+                expires_in: tokenToRefresh.expires_in,
+                client_id: this._clientId,
+                client_secret: this._clientSecret,
+            };
+
+            const refreshToken = new RefreshToken(
+                this._oauthTokenUri,
+                refreshTokenWithClientIdAndSecret
+            );
+
+            const getToken = Promise.promisify(refreshToken.getToken, {
+                context: refreshToken,
+            });
+
+            return getToken();
+        })
+            .then((refreshedAccessToken) => {
+                const refreshedToken = {
+                    access_token: refreshedAccessToken,
+                    refresh_token: tokenToRefresh.refresh_token,
+                    expires_in: tokenToRefresh.expires_in,
+                    scope: tokenToRefresh.scope,
+                };
+
+                return refreshedToken;
+            })
+            .tap((refreshedToken) => {
+                const wasUpdated = deepStrictEqual(refreshedToken, tokenToRefresh);
+
+                this._logger.trace(refreshedToken, tokenToRefresh, wasUpdated, "get");
             });
     }
 }

@@ -49,7 +49,7 @@ const pino = require("pino");
 const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
 const BOTTEN_NAPPET_DEFAULT_POLLING_INTERVAL = 30 * 1000;
 
-// TODO: better token/config handling.
+// TODO: better config handling.
 const loggingLevel = process.env.BOTTEN_NAPPET_LOGGING_LEVEL || BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL;
 const loggingFile = process.env.BOTTEN_NAPPET_LOG_FILE;
 const databaseUri = process.env.BOTTEN_NAPPET_DATABASE_URI;
@@ -171,43 +171,15 @@ Promise.resolve()
                     twitchApplicationAccessTokenProvider
                 );
 
-                const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchOAuthTokenUri, twitchOAuthTokenRevocationUri, twitchAppClientId, twitchAppClientSecret);
+                const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchTokenHelper, twitchUserHelper);
 
-                const twitchUserAccessTokenProvider = () => {
-                    // TODO: replace with an https server.
-                    // TODO: revoke user token?
-                    return twitchUserHelper.getUserToken(twitchUserName)
-                        .then((twitchUserToken) => {
-                            return twitchTokenHelper.isTokenValid(twitchUserToken)
-                                .then((isValid) => {
-                                    if (isValid) {
-                                        return twitchUserToken;
-                                    }
+                const twitchUserTokenProvider = () => userTokenManager.get(twitchUserName);
+                const twitchUserAccessTokenProvider = () => twitchUserTokenProvider()
+                    .then((twitchUserToken) => twitchUserToken.access_token);
 
-                                    return twitchUserHelper.forgetUserToken(twitchUserName)
-                                    // TODO: user-wrappers with username for the generic token functions?
-                                        .then(() => twitchTokenHelper.revokeToken(twitchUserToken))
-                                        .then(() => twitchUserHelper.getUserToken(twitchUserName));
-                                });
-                        })
-                        // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
-                        .then((twitchUserToken) => userTokenManager.get(twitchUserToken))
-                        // TODO: don't store the token here, but in the userTokenManager, or in the twitchUserHelper?
-                        .tap((refreshedToken) => twitchUserHelper.storeUserToken(twitchUserName, refreshedToken))
-                        .then((refreshedToken) => refreshedToken.access_token);
-                };
-
-                return Promise.all([
-                    twitchUserHelper.getUserIdByUserName(twitchUserName),
-                    // TODO: move out of Promise.all?
-                    twitchUserAccessTokenProvider(),
-                ])
-                    .then((
-                        [
-                            twitchUserId,
-                            /* eslint-disable no-unused-vars */twitchUserToken, /* eslint-enable no-unused-vars */
-                        ]
-                    ) => {
+                return twitchUserTokenProvider()
+                    .then((twitchUserToken) => twitchTokenHelper.getUserIdByAccessToken(twitchUserToken))
+                    .then((twitchUserId) => {
                         // TODO: use twitchUserIdProvider instead of twitchUserId.
                         // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
 

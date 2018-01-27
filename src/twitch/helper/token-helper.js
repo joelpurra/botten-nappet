@@ -56,8 +56,8 @@ export default class TokenHelper {
         assert.strictEqual(typeof token.access_token, "string");
         assert(token.access_token.length > 0);
 
-        // TODO: use as a way to get username/userid/scopes from a user access token.
         // https://dev.twitch.tv/docs/v5#root-url
+        //
         // const sampleResponse = {
         //     "token": {
         //         "authorization": {
@@ -140,6 +140,34 @@ export default class TokenHelper {
                 .get("valid")
                 .tap((valid) => {
                     this._logger.trace(token, valid, "isTokenValid");
+                });
+        });
+    }
+
+    getUserIdByAccessToken(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+
+        return Promise.try(() => {
+            return this._getTokenValidation(token)
+            // NOTE: twitch response data.
+                .get("user_id")
+                .tap((userId) => {
+                    this._logger.trace(token, userId, "getUserIdByAccessToken");
+                });
+        });
+    }
+
+    getUserNameByAccessToken(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+
+        return Promise.try(() => {
+            return this._getTokenValidation(token)
+            // NOTE: twitch response data.
+                .get("user_name")
+                .tap((userName) => {
+                    this._logger.trace(token, userName, "getUserNameByAccessToken");
                 });
         });
     }
