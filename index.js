@@ -71,8 +71,10 @@ assert(twitchAppOAuthRedirectUrl.length > 0, "TWITCH_APP_OAUTH_REDIRECT_URL");
 assert.strictEqual(typeof twitchUserName, "string", "TWITCH_USER_NAME");
 assert(twitchUserName.length > 0, "TWITCH_USER_NAME");
 
-const twitchUserOAuthTokenUri = "https://api.twitch.tv/kraken/oauth2/token";
-const twitchAppOAuthAuthorizationUri = "https://api.twitch.tv/kraken/oauth2/authorize";
+const twitchOAuthTokenUri = "https://api.twitch.tv/kraken/oauth2/token";
+const twitchOAuthTokenRevocationUri = "https://api.twitch.tv/kraken/oauth2/revoke";
+const twitchOAuthAuthorizationUri = "https://api.twitch.tv/kraken/oauth2/authorize";
+const twitchOAuthTokenVerificationUri = "https://api.twitch.tv/kraken";
 const twitchUsersDataUri = "https://api.twitch.tv/helix/users";
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
@@ -81,8 +83,6 @@ const twitchAppScopes = [
     "channel_feed_read",
 ];
 const twitchAppTokenRefreshInterval = 45 * 60 * 1000;
-const twitchAppTokenUri = "https://api.twitch.tv/kraken/oauth2/token";
-const twitchAppTokenRevocationUri = "https://api.twitch.tv/kraken/oauth2/revoke";
 
 // NOTE: assuming that the user only joins their own channel, with a "#" prefix.
 const twitchChannelName = `#${twitchUserName}`;
@@ -106,8 +106,8 @@ const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
 const shutdownManager = new ShutdownManager(rootLogger);
 const databaseConnection = new DatabaseConnection(rootLogger, databaseUri);
-const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchAppTokenUri, "post");
-const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchAppTokenRevocationUri);
+const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchOAuthTokenUri, "post");
+const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchOAuthTokenRevocationUri);
 const twitchCSRFHelper = new TwitchCSRFHelper(rootLogger);
 
 Promise.resolve()
@@ -154,24 +154,60 @@ Promise.resolve()
 
                 const twitchApplicationAccessTokenProvider = () => twitchApplicationTokenManager.getOrWait();
 
-                const twitchUserHelper = new TwitchUserHelper(rootLogger, twitchCSRFHelper, UserRepository, twitchAppOAuthAuthorizationUri, twitchAppOAuthRedirectUrl, twitchUserOAuthTokenUri, twitchUsersDataUri, twitchAppClientId, twitchAppClientSecret, twitchApplicationAccessTokenProvider);
+                const twitchUserHelper = new TwitchUserHelper(
+                    rootLogger,
+                    twitchCSRFHelper,
+                    UserRepository,
+                    twitchOAuthTokenRevocationUri,
+                    twitchOAuthAuthorizationUri,
+                    twitchAppOAuthRedirectUrl,
+                    twitchOAuthTokenUri,
+                    twitchOAuthTokenVerificationUri,
+                    twitchUsersDataUri,
+                    twitchAppClientId,
+                    twitchAppClientSecret,
+                    twitchApplicationAccessTokenProvider
+                );
 
-                return Promise.all([
+                const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchOAuthTokenUri, twitchOAuthTokenRevocationUri, twitchAppClientId, twitchAppClientSecret);
+
+                const twitchUserAccessTokenProvider = () => {
                     // TODO: replace with an https server.
                     // TODO: revoke user token?
-                    twitchUserHelper.getUserToken(twitchUserName),
+                    return twitchUserHelper.getUserToken(twitchUserName)
+                        .then((twitchUserToken) => {
+                            return twitchUserHelper.isTokenValid(twitchUserToken)
+                                .then((isValid) => {
+                                    if (isValid) {
+                                        return twitchUserToken;
+                                    }
+
+                                    return twitchUserHelper.forgetUserToken(twitchUserName)
+                                    // TODO: user-wrappers with username for the generic token functions?
+                                        .then(() => twitchUserHelper.revokeToken(twitchUserToken))
+                                        .then(() => twitchUserHelper.getUserToken(twitchUserName));
+                                });
+                        })
+                        // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
+                        .then((twitchUserToken) => userTokenManager.get(twitchUserToken))
+                        // TODO: don't store the token here, but in the userTokenManager, or in the twitchUserHelper?
+                        .tap((refreshedToken) => twitchUserHelper.storeUserToken(twitchUserName, refreshedToken))
+                        .then((refreshedToken) => refreshedToken.access_token);
+                };
+
+                return Promise.all([
                     twitchUserHelper.getUserIdByUserName(twitchUserName),
+                    // TODO: move out of Promise.all?
+                    twitchUserAccessTokenProvider(),
                 ])
-                    .then(([twitchUserToken, twitchUserId]) => {
+                    .then((
+                        [
+                            twitchUserId,
+                            /* eslint-disable no-unused-vars */twitchUserToken, /* eslint-enable no-unused-vars */
+                        ]
+                    ) => {
                         // TODO: use twitchUserIdProvider instead of twitchUserId.
                         // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
-
-                        const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchUserOAuthTokenUri, twitchAppTokenRevocationUri, twitchAppClientId, twitchAppClientSecret);
-
-                        const twitchUserAccessTokenProvider = () => userTokenManager.get(twitchUserToken)
-                            // TODO: don't store the token here, but in the userTokenManager, or in the twitchUserHelper?
-                            .tap((refreshedToken) => twitchUserHelper.storeUserToken(twitchUserName, refreshedToken))
-                            .then((refreshedToken) => refreshedToken.access_token);
 
                         const followingPollingUri = `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
 

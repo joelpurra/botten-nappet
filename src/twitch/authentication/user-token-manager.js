@@ -52,6 +52,7 @@ export default class UserTokenManager {
         assert.strictEqual(typeof tokenToRefresh, "object");
 
         return Promise.try(() => {
+            // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
             const refreshTokenWithClientIdAndSecret = {
                 access_token: tokenToRefresh.access_token,
                 refresh_token: tokenToRefresh.refresh_token,

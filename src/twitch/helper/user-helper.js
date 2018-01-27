@@ -27,20 +27,39 @@ const axios = require("axios");
 const qs = require("qs");
 
 export default class UserHelper {
-    constructor(logger, csrfHelper, UserRepository, appOAuthAuthorizationUri, appOAuthRedirectUrl, userOAuthTokenUri, usersDataUri, appClientId, appClientSecret, applicationAccessTokenProvider) {
-        assert.strictEqual(arguments.length, 10);
+    constructor(
+        logger,
+        csrfHelper,
+        UserRepository,
+        oauthTokenRevocationUri,
+        oauthAuthorizationUri,
+        appOAuthRedirectUrl,
+        oauthTokenUri,
+        oauthTokenVerificationUri,
+        usersDataUri,
+        appClientId,
+        appClientSecret,
+        applicationAccessTokenProvider
+    ) {
+        assert.strictEqual(arguments.length, 12);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof csrfHelper, "object");
         assert.strictEqual(typeof UserRepository, "function");
-        assert.strictEqual(typeof appOAuthAuthorizationUri, "string");
-        assert(appOAuthAuthorizationUri.length > 0);
-        assert(appOAuthAuthorizationUri.startsWith("https://"));
+        assert.strictEqual(typeof oauthTokenRevocationUri, "string");
+        assert(oauthTokenRevocationUri.length > 0);
+        assert(oauthTokenRevocationUri.startsWith("https://"));
+        assert.strictEqual(typeof oauthAuthorizationUri, "string");
+        assert(oauthAuthorizationUri.length > 0);
+        assert(oauthAuthorizationUri.startsWith("https://"));
         assert.strictEqual(typeof appOAuthRedirectUrl, "string");
         assert(appOAuthRedirectUrl.length > 0);
         assert(appOAuthRedirectUrl.startsWith("https://"));
-        assert.strictEqual(typeof userOAuthTokenUri, "string");
-        assert(userOAuthTokenUri.length > 0);
-        assert(userOAuthTokenUri.startsWith("https://"));
+        assert.strictEqual(typeof oauthTokenUri, "string");
+        assert(oauthTokenUri.length > 0);
+        assert(oauthTokenUri.startsWith("https://"));
+        assert.strictEqual(typeof oauthTokenVerificationUri, "string");
+        assert(oauthTokenVerificationUri.length > 0);
+        assert(oauthTokenVerificationUri.startsWith("https://"));
         assert.strictEqual(typeof usersDataUri, "string");
         assert(usersDataUri.length > 0);
         assert(usersDataUri.startsWith("https://"));
@@ -53,10 +72,12 @@ export default class UserHelper {
         this._logger = logger.child("UserHelper");
         this._csrfHelper = csrfHelper;
         this._UserRepository = UserRepository;
-        this._appOAuthAuthorizationUri = appOAuthAuthorizationUri;
-        this._usersDataUri = usersDataUri;
+        this._oauthTokenRevocationUri = oauthTokenRevocationUri;
+        this._oauthAuthorizationUri = oauthAuthorizationUri;
         this._appOAuthRedirectUrl = appOAuthRedirectUrl;
-        this._userOAuthTokenUri = userOAuthTokenUri;
+        this._oauthTokenUri = oauthTokenUri;
+        this._oauthTokenVerificationUri = oauthTokenVerificationUri;
+        this._usersDataUri = usersDataUri;
         this._appClientId = appClientId;
         this._appClientSecret = appClientSecret;
         this._applicationAccessTokenProvider = applicationAccessTokenProvider;
@@ -164,7 +185,7 @@ export default class UserHelper {
 
             const serializedParams = this._twitchQuerystringSerializer(params);
 
-            const url = `${this._appOAuthAuthorizationUri}?${serializedParams}`;
+            const url = `${this._oauthAuthorizationUri}?${serializedParams}`;
 
             return url;
         });
@@ -296,7 +317,7 @@ export default class UserHelper {
                 const serializedData = this._twitchQuerystringSerializer(data);
 
                 // TODO: use an https class.
-                return Promise.resolve(axios.post(this._userOAuthTokenUri, serializedData))
+                return Promise.resolve(axios.post(this._oauthTokenUri, serializedData))
                 // NOTE: axios response data.
                     .get("data");
             })
@@ -336,10 +357,11 @@ export default class UserHelper {
             });
     }
 
-    storeUserToken(username, token) {
+    _writeUserToken(username, token) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
+        // NOTE: token can be null, to "forget" it.
         assert.strictEqual(typeof token, "object");
 
         return Promise.resolve()
@@ -361,7 +383,33 @@ export default class UserHelper {
                 ));
             })
             .tap((userAfterStoring) => {
+                this._logger.trace(userAfterStoring, "_writeUserToken");
+            });
+    }
+
+    storeUserToken(username, token) {
+        assert.strictEqual(arguments.length, 2);
+        assert.strictEqual(typeof username, "string");
+        assert(username.length > 0);
+        assert(token !== null);
+        assert.strictEqual(typeof token, "object");
+
+        return Promise.resolve()
+            .then(() => this._writeUserToken(username, token))
+            .tap((userAfterStoring) => {
                 this._logger.trace(userAfterStoring, "storeUserToken");
+            });
+    }
+
+    forgetUserToken(username) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof username, "string");
+        assert(username.length > 0);
+
+        return Promise.resolve()
+            .then(() => this._writeUserToken(username, null))
+            .tap((userAfterStoring) => {
+                this._logger.trace(userAfterStoring, "forgetUserToken");
             });
     }
 
@@ -383,5 +431,102 @@ export default class UserHelper {
             .tap((token) => {
                 this._logger.trace(token, "getUserToken");
             });
+    }
+
+    _getTokenValidation(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+        assert.strictEqual(typeof token.access_token, "string");
+        assert(token.access_token.length > 0);
+
+        // TODO: move/refactor/reuse function for application access tokens?
+        // TODO: use as a way to get username/userid/scopes from a user access token.
+        // https://dev.twitch.tv/docs/v5#root-url
+        // const sampleResponse = {
+        //     "token": {
+        //         "authorization": {
+        //             "created_at": "2016-12-14T15:51:16Z",
+        //             "scopes": [
+        //                 "user_read",
+        //             ],
+        //             "updated_at": "2016-12-14T15:51:16Z",
+        //         },
+        //         "client_id": "uo6dggojyb8d6soh92zknwmi5ej1q2",
+        //         "user_id": "44322889",
+        //         "user_name": "dallas",
+        //         "valid": true,
+        //     },
+        // };
+
+        return Promise.try(() => {
+            const userAccessToken = token.access_token;
+
+            // TODO: use an https class.
+            return Promise.resolve(axios.get(
+                this._oauthTokenVerificationUri,
+                {
+                    headers: {
+                        Accept: "application/vnd.twitchtv.v5+json",
+                        "Client-ID": this._appClientId,
+                        Authorization: `OAuth ${userAccessToken}`,
+                    },
+                }
+            ))
+            // NOTE: axios response data.
+                .get("data")
+            // NOTE: twitch response data.
+                .get("token")
+                .tap((validatedToken) => {
+                    this._logger.trace(token, validatedToken, "_getTokenValidation");
+                });
+        });
+    }
+
+    revokeToken(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+
+        // TODO: move/refactor/reuse function for application access tokens?
+        // TODO: use as a way to get username/userid/scopes from a user access token.
+        // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
+
+        return Promise.try(() => {
+            const userAccessToken = token.access_token;
+
+            const params = {
+                client_id: this._appClientId,
+                token: userAccessToken,
+            };
+
+            // TODO: use an https class.
+            return Promise.resolve(axios.post(
+                this._oauthTokenRevocationUri,
+                {
+                    paramsSerializer: this._twitchQuerystringSerializer,
+                    params: params,
+                }
+            ))
+            // NOTE: axios response data.
+                .get("data")
+            // NOTE: twitch response data.
+                .get("token")
+                .tap((validatedToken) => {
+                    this._logger.trace(token, validatedToken, "revokeToken");
+                });
+        });
+    }
+
+    isTokenValid(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+
+        return Promise.try(() => {
+            return this._getTokenValidation(token)
+            // NOTE: twitch response data.
+                .get("valid")
+                .tap((valid) => {
+                    this._logger.trace(token, valid, "isTokenValid");
+                });
+        });
     }
 }
