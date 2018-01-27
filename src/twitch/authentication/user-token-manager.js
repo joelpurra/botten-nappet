@@ -21,70 +21,44 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
-const RefreshToken = require("refresh-token");
-const deepStrictEqual = require("deep-strict-equal");
-
 export default class UserTokenManager {
-    constructor(logger, userOAuthTokenUri, revocationUri, clientId, clientSecret) {
-        assert.strictEqual(arguments.length, 5);
+    constructor(logger, tokenHelper, userTokenHelper) {
+        assert.strictEqual(arguments.length, 3);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof userOAuthTokenUri, "string");
-        assert(userOAuthTokenUri.length > 0);
-        assert(userOAuthTokenUri.startsWith("https://"));
-        assert.strictEqual(typeof revocationUri, "string");
-        assert(revocationUri.length > 0);
-        assert(revocationUri.startsWith("https://"));
-        assert.strictEqual(typeof clientId, "string");
-        assert(clientId.length > 0);
-        assert.strictEqual(typeof clientSecret, "string");
-        assert(clientSecret.length > 0);
+        assert.strictEqual(typeof tokenHelper, "object");
+        assert.strictEqual(typeof userTokenHelper, "object");
 
         this._logger = logger.child("UserTokenManager");
-        this._userOAuthTokenUri = userOAuthTokenUri;
-        this._revocationUri = revocationUri;
-        this._clientId = clientId;
-        this._clientSecret = clientSecret;
+        this._tokenHelper = tokenHelper;
+        this._userTokenHelper = userTokenHelper;
     }
 
-    get(tokenToRefresh) {
+    get(username) {
         assert.strictEqual(arguments.length, 1);
-        assert.notStrictEqual(tokenToRefresh, null);
-        assert.strictEqual(typeof tokenToRefresh, "object");
+        assert.strictEqual(typeof username, "string");
+        assert(username.length > 0);
 
         return Promise.try(() => {
-            const refreshTokenWithClientIdAndSecret = {
-                access_token: tokenToRefresh.access_token,
-                refresh_token: tokenToRefresh.refresh_token,
-                expires_in: tokenToRefresh.expires_in,
-                client_id: this._clientId,
-                client_secret: this._clientSecret,
-            };
+            return this._userTokenHelper.get(username)
+                .then((userToken) => {
+                    return this._tokenHelper.validate(userToken)
+                        .then((isValid) => {
+                            if (isValid) {
+                                return userToken;
+                            }
 
-            const refreshToken = new RefreshToken(
-                this._userOAuthTokenUri,
-                refreshTokenWithClientIdAndSecret
-            );
-
-            const getToken = Promise.promisify(refreshToken.getToken, {
-                context: refreshToken,
-            });
-
-            return getToken();
-        })
-            .then((refreshedAccessToken) => {
-                const refreshedToken = {
-                    access_token: refreshedAccessToken,
-                    refresh_token: tokenToRefresh.refresh_token,
-                    expires_in: tokenToRefresh.expires_in,
-                    scope: tokenToRefresh.scope,
-                };
-
-                return refreshedToken;
-            })
-            .tap((refreshedToken) => {
-                const wasUpdated = deepStrictEqual(refreshedToken, tokenToRefresh);
-
-                this._logger.trace(refreshedToken, tokenToRefresh, wasUpdated, "get");
-            });
+                            return Promise.resolve()
+                                .then(() => this._userTokenHelper.refresh(userToken))
+                                .tap((rawRefreshedToken) => this._userTokenHelper.store(username, rawRefreshedToken))
+                                .then((user) => {
+                                    return this._userTokenHelper.forget(username)
+                                    // TODO: user-wrappers with username for the generic token functions?
+                                        .then(() => this._tokenHelper.revoke(userToken))
+                                    // NOTE: recursive. Hope recursion ends at some point.
+                                        .then(() => this.get(username));
+                                });
+                        });
+                });
+        });
     }
 }
