@@ -38,6 +38,8 @@ import TwitchUserTokenManager from "./src/twitch/authentication/user-token-manag
 import TwitchRequestHelper from "./src/twitch/helper/request-helper";
 import TwitchTokenHelper from "./src/twitch/helper/token-helper";
 import TwitchUserHelper from "./src/twitch/helper/user-helper";
+import TwitchUserStorageHelper from "./src/twitch/helper/user-storage-helper";
+import TwitchUserTokenHelper from "./src/twitch/helper/user-token-helper";
 import TwitchCSRFHelper from "./src/twitch/helper/csrf-helper";
 
 const assert = require("power-assert");
@@ -160,22 +162,30 @@ Promise.resolve()
 
                 const twitchUserHelper = new TwitchUserHelper(
                     rootLogger,
-                    twitchCSRFHelper,
-                    UserRepository,
-                    twitchOAuthAuthorizationUri,
-                    twitchAppOAuthRedirectUrl,
-                    twitchOAuthTokenUri,
+                    twitchRequestHelper,
                     twitchUsersDataUri,
-                    twitchAppClientId,
-                    twitchAppClientSecret,
                     twitchApplicationAccessTokenProvider
                 );
 
-                const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchTokenHelper, twitchUserHelper);
+                const twitchUserStorageHelper = new TwitchUserStorageHelper(rootLogger, UserRepository);
+
+                const twitchUserTokenHelper = new TwitchUserTokenHelper(
+                    rootLogger,
+                    twitchCSRFHelper,
+                    twitchUserStorageHelper,
+                    twitchRequestHelper,
+                    twitchOAuthAuthorizationUri,
+                    twitchAppOAuthRedirectUrl,
+                    twitchOAuthTokenUri,
+                    twitchAppClientId,
+                    twitchAppClientSecret
+                );
+
+                const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchTokenHelper, twitchUserTokenHelper);
 
                 const twitchUserTokenProvider = () => userTokenManager.get(twitchUserName);
                 const twitchUserAccessTokenProvider = () => twitchUserTokenProvider()
-                    .then((twitchUserToken) => twitchUserToken.access_token);
+                    .then((twitchUserToken) => twitchUserToken.token.access_token);
 
                 return twitchUserTokenProvider()
                     .then((twitchUserToken) => twitchTokenHelper.getUserIdByAccessToken(twitchUserToken))

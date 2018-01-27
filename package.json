@@ -48,7 +48,6 @@
     "nedb": "^1.8.0",
     "pino": "^4.10.3",
     "qs": "^6.5.1",
-    "refresh-token": "^1.0.0",
     "ws": "^4.0.0"
   },
   "devDependencies": {

@@ -21,58 +21,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("power-assert");
 const Promise = require("bluebird");
 
-const RefreshToken = require("refresh-token");
-const deepStrictEqual = require("deep-strict-equal");
-
-const readline = require("readline");
-
 const axios = require("axios");
-const qs = require("qs");
 
 export default class UserHelper {
     constructor(
         logger,
-        csrfHelper,
-        UserRepository,
-        oauthAuthorizationUri,
-        appOAuthRedirectUrl,
-        oauthTokenUri,
+        requestHelper,
         usersDataUri,
-        appClientId,
-        appClientSecret,
         applicationAccessTokenProvider
     ) {
-        assert.strictEqual(arguments.length, 10);
+        assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof csrfHelper, "object");
-        assert.strictEqual(typeof UserRepository, "function");
-        assert.strictEqual(typeof oauthAuthorizationUri, "string");
-        assert(oauthAuthorizationUri.length > 0);
-        assert(oauthAuthorizationUri.startsWith("https://"));
-        assert.strictEqual(typeof appOAuthRedirectUrl, "string");
-        assert(appOAuthRedirectUrl.length > 0);
-        assert(appOAuthRedirectUrl.startsWith("https://"));
-        assert.strictEqual(typeof oauthTokenUri, "string");
-        assert(oauthTokenUri.length > 0);
-        assert(oauthTokenUri.startsWith("https://"));
+        assert.strictEqual(typeof requestHelper, "object");
         assert.strictEqual(typeof usersDataUri, "string");
         assert(usersDataUri.length > 0);
         assert(usersDataUri.startsWith("https://"));
-        assert.strictEqual(typeof appClientId, "string");
-        assert(appClientId.length > 0);
-        assert.strictEqual(typeof appClientSecret, "string");
-        assert(appClientSecret.length > 0);
         assert.strictEqual(typeof applicationAccessTokenProvider, "function");
 
         this._logger = logger.child("UserHelper");
-        this._csrfHelper = csrfHelper;
-        this._UserRepository = UserRepository;
-        this._oauthAuthorizationUri = oauthAuthorizationUri;
-        this._appOAuthRedirectUrl = appOAuthRedirectUrl;
-        this._oauthTokenUri = oauthTokenUri;
+        this._requestHelper = requestHelper;
         this._usersDataUri = usersDataUri;
-        this._appClientId = appClientId;
-        this._appClientSecret = appClientSecret;
         this._applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
 
@@ -114,7 +82,7 @@ export default class UserHelper {
                     return Promise.resolve(axios.get(
                         this._usersDataUri,
                         {
-                            paramsSerializer: this._twitchQuerystringSerializer,
+                            paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
                             params: params,
                             headers: {
                                 Authorization: `Bearer ${applicationAccessToken}`,
@@ -140,322 +108,5 @@ export default class UserHelper {
         return this._getUsersData(username)
             .get(0)
             .get("id");
-    }
-
-    _getUserAuthorizationUrl(randomCSRF) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof randomCSRF, "string");
-        assert(randomCSRF.length > 0);
-
-        return Promise.try(() => {
-            // TODO: configure scopes per request or per activity/subclass.
-            // https://dev.twitch.tv/docs/authentication#scopes
-            const scopes = [
-                "channel_feed_read",
-                "channel_subscriptions",
-                "chat_login",
-            ];
-            const serializedScopes = scopes.join(" ");
-
-            const params = {
-                client_id: this._appClientId,
-                redirect_uri: this._appOAuthRedirectUrl,
-                response_type: "code",
-                scope: serializedScopes,
-                force_verify: "true",
-                state: randomCSRF,
-            };
-
-            const serializedParams = this._twitchQuerystringSerializer(params);
-
-            const url = `${this._oauthAuthorizationUri}?${serializedParams}`;
-
-            return url;
-        });
-    }
-
-    _parseCodeFromAnswer(answer, randomCSRF) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof answer, "string");
-        assert(answer.length > 0);
-        assert.strictEqual(typeof randomCSRF, "string");
-        assert(randomCSRF.length > 0);
-
-        return Promise.try(() => {
-            const paramsRx = /\?(.+)$/i;
-
-            let code = null;
-
-            if (paramsRx.test(answer)) {
-                const matches = paramsRx.exec(answer);
-
-                const querystring = matches[1];
-
-                const params = qs.parse(querystring);
-
-                // NOTE: security check.
-                if (params.state !== randomCSRF) {
-                    throw new Error("Random CSRF mismatch.");
-                }
-
-                code = params.code;
-            } else {
-                code = answer;
-            }
-
-            return code;
-        })
-            .tap((code) => {
-                assert.strictEqual(typeof code, "string");
-                assert(code.length > 0);
-            });
-    }
-
-    _promptForCodeOrUrl() {
-        assert.strictEqual(arguments.length, 0);
-
-        return Promise.try(() => {
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout,
-            });
-
-            return new Promise((resolve, reject) => {
-                try {
-                    rl.question("Paste the code or full url: ", (answer) => resolve(answer));
-                } catch (error) {
-                    reject(error);
-                }
-            })
-                .tap(() => {
-                    rl.close();
-                })
-                .tap((answer) => {
-                    assert.strictEqual(typeof answer, "string");
-                    assert(answer.length > 0);
-                });
-        });
-    }
-
-    _promptToOpenAuthorizationUrl(userAuthorizationUrl) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof userAuthorizationUrl, "string");
-        assert(userAuthorizationUrl.length > 0);
-        assert(userAuthorizationUrl.startsWith("https://"));
-
-        return Promise.try(() => {
-            /* eslint-disable no-console */
-            console.info("Open this url and authorize the application:", userAuthorizationUrl);
-            /* eslint-enable no-console */
-
-            return undefined;
-        });
-    }
-
-    _getUserAuthorizationCode() {
-        assert.strictEqual(arguments.length, 0);
-
-        // TODO: replace with an https server.
-        return Promise.resolve()
-            .then(() => this._csrfHelper.getRandomCSRF())
-            .then((randomCSRF) => {
-                return this._getUserAuthorizationUrl(randomCSRF)
-                    .then((userAuthorizationUrl) => this._promptToOpenAuthorizationUrl(userAuthorizationUrl))
-                    .then(() => this._promptForCodeOrUrl())
-                    .then((answer) => this._parseCodeFromAnswer(answer, randomCSRF))
-                    .tap((code) => {
-                        assert.strictEqual(typeof code, "string");
-                        assert(code.length > 0);
-                    });
-            });
-    }
-
-    _getUserTokenFromUser() {
-        assert.strictEqual(arguments.length, 0);
-
-        // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
-        // const sampleResponse = {
-        //     "access_token": "0123456789abcdefghijABCDEFGHIJ",
-        //     "refresh_token": "eyJfaWQmNzMtNGCJ9%6VFV5LNrZFUj8oU231/3Aj",
-        //     "expires_in": 3600,
-        //     "scope": "viewing_activity_read",
-        // };
-
-        // TODO: replace with an https server.
-        return Promise.resolve()
-            .then(() => this._getUserAuthorizationCode())
-            .tap((code) => {
-                assert.strictEqual(typeof code, "string");
-                assert(code.length > 0);
-            })
-            .then((code) => {
-                const data = {
-                    client_id: this._appClientId,
-                    client_secret: this._appClientSecret,
-                    code: code,
-                    grant_type: "authorization_code",
-                    redirect_uri: this._appOAuthRedirectUrl,
-                };
-
-                const serializedData = this._twitchQuerystringSerializer(data);
-
-                // TODO: use an https class.
-                return Promise.resolve(axios.post(this._oauthTokenUri, serializedData))
-                // NOTE: axios response data.
-                    .get("data");
-            })
-            .tap((token) => {
-                this._logger.trace(token, "_getUserTokenFromUser");
-            });
-    }
-
-    _getUserTokenFromDatabase(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
-
-        return Promise.resolve()
-            .then(() => {
-                const findUser = {
-                    username: username,
-                };
-
-                return Promise.resolve(this._UserRepository.findOne(findUser))
-                    .then((userWithToken) => {
-                        const isValidUserToken = (
-                            userWithToken
-                              && typeof userWithToken.twitchToken === "object"
-                              && typeof userWithToken.twitchToken.access_token === "string"
-                        );
-
-                        if (isValidUserToken) {
-                            return userWithToken.twitchToken;
-                        }
-
-                        return null;
-                    });
-            })
-            .tap((token) => {
-                this._logger.trace(token, "_getUserTokenFromDatabase");
-            });
-    }
-
-    _writeUserToken(username, token) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
-        // NOTE: token can be null, to "forget" it.
-        assert.strictEqual(typeof token, "object");
-
-        return Promise.resolve()
-            .then(() => {
-                const findUser = {
-                    username: username,
-                };
-                const upsertUser = {
-                    username: username,
-                    twitchToken: token,
-                };
-
-                return Promise.resolve(this._UserRepository.findOneAndUpdate(
-                    findUser,
-                    upsertUser,
-                    {
-                        upsert: true,
-                    }
-                ));
-            })
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "_writeUserToken");
-            });
-    }
-
-    storeUserToken(username, token) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
-        assert(token !== null);
-        assert.strictEqual(typeof token, "object");
-
-        return Promise.resolve()
-            .then(() => this._writeUserToken(username, token))
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "storeUserToken");
-            });
-    }
-
-    forgetUserToken(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
-
-        return Promise.resolve()
-            .then(() => this._writeUserToken(username, null))
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "forgetUserToken");
-            });
-    }
-
-    getUserToken(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
-
-        return Promise.resolve()
-            .then(() => this._getUserTokenFromDatabase(username))
-            .then((tokenFromDatabase) => {
-                if (tokenFromDatabase) {
-                    return tokenFromDatabase;
-                }
-
-                return this._getUserTokenFromUser()
-                    .tap((tokenFromUser) => this.storeUserToken(username, tokenFromUser));
-            })
-            .tap((token) => {
-                this._logger.trace(token, "getUserToken");
-            });
-    }
-
-    ensureRefreshed(tokenToRefresh) {
-        assert.strictEqual(arguments.length, 1);
-        assert.notStrictEqual(tokenToRefresh, null);
-        assert.strictEqual(typeof tokenToRefresh, "object");
-
-        return Promise.try(() => {
-            // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
-            const refreshTokenWithClientIdAndSecret = {
-                access_token: tokenToRefresh.access_token,
-                refresh_token: tokenToRefresh.refresh_token,
-                expires_in: tokenToRefresh.expires_in,
-                client_id: this._clientId,
-                client_secret: this._clientSecret,
-            };
-
-            const refreshToken = new RefreshToken(
-                this._oauthTokenUri,
-                refreshTokenWithClientIdAndSecret
-            );
-
-            const getToken = Promise.promisify(refreshToken.getToken, {
-                context: refreshToken,
-            });
-
-            return getToken();
-        })
-            .then((refreshedAccessToken) => {
-                const refreshedToken = {
-                    access_token: refreshedAccessToken,
-                    refresh_token: tokenToRefresh.refresh_token,
-                    expires_in: tokenToRefresh.expires_in,
-                    scope: tokenToRefresh.scope,
-                };
-
-                return refreshedToken;
-            })
-            .tap((refreshedToken) => {
-                const wasUpdated = deepStrictEqual(refreshedToken, tokenToRefresh);
-
-                this._logger.trace(refreshedToken, tokenToRefresh, wasUpdated, "get");
-            });
     }
 }

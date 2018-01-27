@@ -53,8 +53,9 @@ export default class TokenHelper {
     _getTokenValidation(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.access_token, "string");
-        assert(token.access_token.length > 0);
+        assert.strictEqual(typeof token.token, "object");
+        assert.strictEqual(typeof token.token.access_token, "string");
+        assert(token.token.access_token.length > 0);
 
         // https://dev.twitch.tv/docs/v5#root-url
         //
@@ -75,7 +76,7 @@ export default class TokenHelper {
         // };
 
         return Promise.try(() => {
-            const accessToken = token.access_token;
+            const accessToken = token.token.access_token;
 
             // TODO: use an https class.
             return Promise.resolve(axios.get(
@@ -92,20 +93,21 @@ export default class TokenHelper {
                 .get("data")
             // NOTE: twitch response data.
                 .get("token")
-                .tap((validatedToken) => {
-                    this._logger.trace(token, validatedToken, "_getTokenValidation");
+                .tap((tokenValidation) => {
+                    this._logger.trace(token, tokenValidation, "_getTokenValidation");
                 });
         });
     }
 
-    revokeToken(token) {
+    revoke(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
+        assert.strictEqual(typeof token.token, "object");
 
         // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
 
         return Promise.try(() => {
-            const accessToken = token.access_token;
+            const accessToken = token.token.access_token;
 
             const params = {
                 client_id: this._appClientId,
@@ -122,24 +124,43 @@ export default class TokenHelper {
             ))
             // NOTE: axios response data.
                 .get("data")
-            // NOTE: twitch response data.
-                .get("token")
-                .tap((validatedToken) => {
-                    this._logger.trace(token, validatedToken, "revokeToken");
+                .tap((twitchResponse) => {
+                    this._logger.trace(token, twitchResponse, "revoke");
                 });
         });
     }
 
-    isTokenValid(token) {
+    isExpired(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
+        assert.strictEqual(typeof token.token, "object");
 
+        return Promise.try(() => {
+            if (token.expiresApproximatelyAt === null) {
+                return true;
+            }
+
+            if (token.expiresApproximatelyAt < Date.now()) {
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    validate(token) {
+        assert.strictEqual(arguments.length, 1);
+        assert.strictEqual(typeof token, "object");
+        assert.strictEqual(typeof token.token, "object");
+
+        // TODO: only allow a single outstanding token validation per user.
+        // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
         return Promise.try(() => {
             return this._getTokenValidation(token)
             // NOTE: twitch response data.
                 .get("valid")
                 .tap((valid) => {
-                    this._logger.trace(token, valid, "isTokenValid");
+                    this._logger.trace(token, valid, "validate");
                 });
         });
     }

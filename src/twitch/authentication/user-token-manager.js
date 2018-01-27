@@ -22,15 +22,15 @@ const assert = require("power-assert");
 const Promise = require("bluebird");
 
 export default class UserTokenManager {
-    constructor(logger, tokenHelper, userHelper) {
+    constructor(logger, tokenHelper, userTokenHelper) {
         assert.strictEqual(arguments.length, 3);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof tokenHelper, "object");
-        assert.strictEqual(typeof userHelper, "object");
+        assert.strictEqual(typeof userTokenHelper, "object");
 
         this._logger = logger.child("UserTokenManager");
         this._tokenHelper = tokenHelper;
-        this._userHelper = userHelper;
+        this._userTokenHelper = userTokenHelper;
     }
 
     get(username) {
@@ -39,24 +39,26 @@ export default class UserTokenManager {
         assert(username.length > 0);
 
         return Promise.try(() => {
-            // TODO: replace with an https server.
-            return this._userHelper.getUserToken(username)
+            return this._userTokenHelper.get(username)
                 .then((userToken) => {
-                    return this._tokenHelper.isTokenValid(userToken)
+                    return this._tokenHelper.validate(userToken)
                         .then((isValid) => {
                             if (isValid) {
                                 return userToken;
                             }
 
-                            return this._userHelper.forgetUserToken(username)
-                                // TODO: user-wrappers with username for the generic token functions?
-                                .then(() => this._tokenHelper.revokeToken(userToken))
-                                .then(() => this._userHelper.getUserToken(username));
+                            return Promise.resolve()
+                                .then(() => this._userTokenHelper.refresh(userToken))
+                                .tap((rawRefreshedToken) => this._userTokenHelper.store(username, rawRefreshedToken))
+                                .then((user) => {
+                                    return this._userTokenHelper.forget(username)
+                                    // TODO: user-wrappers with username for the generic token functions?
+                                        .then(() => this._tokenHelper.revoke(userToken))
+                                    // NOTE: recursive. Hope recursion ends at some point.
+                                        .then(() => this.get(username));
+                                });
                         });
-                })
-                // TODO: improve getting/refreshing the token to have a creation time, not just expiry time.
-                .then((userToken) => this._userHelper.ensureRefreshed(userToken))
-                .tap((refreshedToken) => this._userHelper.storeUserToken(username, refreshedToken));
+                });
         });
     }
 }
