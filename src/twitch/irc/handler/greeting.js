@@ -43,8 +43,10 @@ export default class GreetingIrcHandler extends IrcManager {
             /\bhey\b/,
             /\bhowdy\b/,
             /\baloha\b/,
+            /\b(o )?hai\b/,
             /\bgood (morning|evening|day)\b/,
             /\bwhat ?s up\b/,
+            /\bwh?a+z+(u+p+)?\b/,
             /\byo\b/,
             /\bay+\b/,
         ];
