@@ -35,6 +35,8 @@ import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/followin
 import TwitchPollingApplicationTokenConnection from "./src/twitch/authentication/polling-application-token-connection";
 import TwitchApplicationTokenManager from "./src/twitch/authentication/application-token-manager";
 import TwitchUserTokenManager from "./src/twitch/authentication/user-token-manager";
+import TwitchRequestHelper from "./src/twitch/helper/request-helper";
+import TwitchTokenHelper from "./src/twitch/helper/token-helper";
 import TwitchUserHelper from "./src/twitch/helper/user-helper";
 import TwitchCSRFHelper from "./src/twitch/helper/csrf-helper";
 
@@ -109,6 +111,8 @@ const databaseConnection = new DatabaseConnection(rootLogger, databaseUri);
 const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchOAuthTokenUri, "post");
 const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchOAuthTokenRevocationUri);
 const twitchCSRFHelper = new TwitchCSRFHelper(rootLogger);
+const twitchRequestHelper = new TwitchRequestHelper(rootLogger);
+const twitchTokenHelper = new TwitchTokenHelper(rootLogger, twitchRequestHelper, twitchOAuthTokenRevocationUri, twitchOAuthTokenVerificationUri, twitchAppClientId);
 
 Promise.resolve()
     .then(() => shutdownManager.start())
@@ -158,11 +162,9 @@ Promise.resolve()
                     rootLogger,
                     twitchCSRFHelper,
                     UserRepository,
-                    twitchOAuthTokenRevocationUri,
                     twitchOAuthAuthorizationUri,
                     twitchAppOAuthRedirectUrl,
                     twitchOAuthTokenUri,
-                    twitchOAuthTokenVerificationUri,
                     twitchUsersDataUri,
                     twitchAppClientId,
                     twitchAppClientSecret,
@@ -176,7 +178,7 @@ Promise.resolve()
                     // TODO: revoke user token?
                     return twitchUserHelper.getUserToken(twitchUserName)
                         .then((twitchUserToken) => {
-                            return twitchUserHelper.isTokenValid(twitchUserToken)
+                            return twitchTokenHelper.isTokenValid(twitchUserToken)
                                 .then((isValid) => {
                                     if (isValid) {
                                         return twitchUserToken;
@@ -184,7 +186,7 @@ Promise.resolve()
 
                                     return twitchUserHelper.forgetUserToken(twitchUserName)
                                     // TODO: user-wrappers with username for the generic token functions?
-                                        .then(() => twitchUserHelper.revokeToken(twitchUserToken))
+                                        .then(() => twitchTokenHelper.revokeToken(twitchUserToken))
                                         .then(() => twitchUserHelper.getUserToken(twitchUserName));
                                 });
                         })

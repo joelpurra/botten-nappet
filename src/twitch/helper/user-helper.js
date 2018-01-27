@@ -31,23 +31,18 @@ export default class UserHelper {
         logger,
         csrfHelper,
         UserRepository,
-        oauthTokenRevocationUri,
         oauthAuthorizationUri,
         appOAuthRedirectUrl,
         oauthTokenUri,
-        oauthTokenVerificationUri,
         usersDataUri,
         appClientId,
         appClientSecret,
         applicationAccessTokenProvider
     ) {
-        assert.strictEqual(arguments.length, 12);
+        assert.strictEqual(arguments.length, 10);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof csrfHelper, "object");
         assert.strictEqual(typeof UserRepository, "function");
-        assert.strictEqual(typeof oauthTokenRevocationUri, "string");
-        assert(oauthTokenRevocationUri.length > 0);
-        assert(oauthTokenRevocationUri.startsWith("https://"));
         assert.strictEqual(typeof oauthAuthorizationUri, "string");
         assert(oauthAuthorizationUri.length > 0);
         assert(oauthAuthorizationUri.startsWith("https://"));
@@ -57,9 +52,6 @@ export default class UserHelper {
         assert.strictEqual(typeof oauthTokenUri, "string");
         assert(oauthTokenUri.length > 0);
         assert(oauthTokenUri.startsWith("https://"));
-        assert.strictEqual(typeof oauthTokenVerificationUri, "string");
-        assert(oauthTokenVerificationUri.length > 0);
-        assert(oauthTokenVerificationUri.startsWith("https://"));
         assert.strictEqual(typeof usersDataUri, "string");
         assert(usersDataUri.length > 0);
         assert(usersDataUri.startsWith("https://"));
@@ -72,26 +64,14 @@ export default class UserHelper {
         this._logger = logger.child("UserHelper");
         this._csrfHelper = csrfHelper;
         this._UserRepository = UserRepository;
-        this._oauthTokenRevocationUri = oauthTokenRevocationUri;
         this._oauthAuthorizationUri = oauthAuthorizationUri;
         this._appOAuthRedirectUrl = appOAuthRedirectUrl;
         this._oauthTokenUri = oauthTokenUri;
-        this._oauthTokenVerificationUri = oauthTokenVerificationUri;
         this._usersDataUri = usersDataUri;
         this._appClientId = appClientId;
         this._appClientSecret = appClientSecret;
         this._applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
-
-    _twitchQuerystringSerializer(params) {
-        // TODO: move to utility class.
-        const qsConfig = {
-            // NOTE: "repeat" for the "new" Twitch api (v6?).
-            arrayFormat: "repeat",
-        };
-
-        return qs.stringify(params, qsConfig);
-    };
 
     _getUsersData(...usernamesAndIds) {
         assert(Array.isArray(usernamesAndIds));
@@ -431,102 +411,5 @@ export default class UserHelper {
             .tap((token) => {
                 this._logger.trace(token, "getUserToken");
             });
-    }
-
-    _getTokenValidation(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.access_token, "string");
-        assert(token.access_token.length > 0);
-
-        // TODO: move/refactor/reuse function for application access tokens?
-        // TODO: use as a way to get username/userid/scopes from a user access token.
-        // https://dev.twitch.tv/docs/v5#root-url
-        // const sampleResponse = {
-        //     "token": {
-        //         "authorization": {
-        //             "created_at": "2016-12-14T15:51:16Z",
-        //             "scopes": [
-        //                 "user_read",
-        //             ],
-        //             "updated_at": "2016-12-14T15:51:16Z",
-        //         },
-        //         "client_id": "uo6dggojyb8d6soh92zknwmi5ej1q2",
-        //         "user_id": "44322889",
-        //         "user_name": "dallas",
-        //         "valid": true,
-        //     },
-        // };
-
-        return Promise.try(() => {
-            const userAccessToken = token.access_token;
-
-            // TODO: use an https class.
-            return Promise.resolve(axios.get(
-                this._oauthTokenVerificationUri,
-                {
-                    headers: {
-                        Accept: "application/vnd.twitchtv.v5+json",
-                        "Client-ID": this._appClientId,
-                        Authorization: `OAuth ${userAccessToken}`,
-                    },
-                }
-            ))
-            // NOTE: axios response data.
-                .get("data")
-            // NOTE: twitch response data.
-                .get("token")
-                .tap((validatedToken) => {
-                    this._logger.trace(token, validatedToken, "_getTokenValidation");
-                });
-        });
-    }
-
-    revokeToken(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-
-        // TODO: move/refactor/reuse function for application access tokens?
-        // TODO: use as a way to get username/userid/scopes from a user access token.
-        // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
-
-        return Promise.try(() => {
-            const userAccessToken = token.access_token;
-
-            const params = {
-                client_id: this._appClientId,
-                token: userAccessToken,
-            };
-
-            // TODO: use an https class.
-            return Promise.resolve(axios.post(
-                this._oauthTokenRevocationUri,
-                {
-                    paramsSerializer: this._twitchQuerystringSerializer,
-                    params: params,
-                }
-            ))
-            // NOTE: axios response data.
-                .get("data")
-            // NOTE: twitch response data.
-                .get("token")
-                .tap((validatedToken) => {
-                    this._logger.trace(token, validatedToken, "revokeToken");
-                });
-        });
-    }
-
-    isTokenValid(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-
-        return Promise.try(() => {
-            return this._getTokenValidation(token)
-            // NOTE: twitch response data.
-                .get("valid")
-                .tap((valid) => {
-                    this._logger.trace(token, valid, "isTokenValid");
-                });
-        });
     }
 }
