@@ -246,9 +246,11 @@ export default class UserTokenHelper {
             .then((user) => {
                 const isValidUserToken = (
                     user
-                              && typeof user.twitchToken === "object"
-                              && typeof user.twitchToken.token === "object"
-                              && typeof user.twitchToken.token.access_token === "string"
+                      && user.twitchToken !== null
+                      && typeof user.twitchToken === "object"
+                      && user.twitchToken.token !== null
+                      && typeof user.twitchToken.token === "object"
+                      && typeof user.twitchToken.token.access_token === "string"
                 );
 
                 if (isValidUserToken) {
@@ -320,8 +322,8 @@ export default class UserTokenHelper {
             const data = {
                 grant_type: "refresh_token",
                 refresh_token: tokenToRefresh.token.refresh_token,
-                client_id: this._clientId,
-                client_secret: this._clientSecret,
+                client_id: this._appClientId,
+                client_secret: this._appClientSecret,
             };
 
             const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
@@ -329,17 +331,7 @@ export default class UserTokenHelper {
             // TODO: use an https class.
             return Promise.resolve(axios.post(this._oauthTokenUri, serializedData))
             // NOTE: axios response data.
-                .get("data")
-                .then((refreshedAccessToken) => {
-                    const rawRefreshedToken = {
-                        access_token: refreshedAccessToken,
-                        refresh_token: refreshedAccessToken.refresh_token,
-                        expires_in: refreshedAccessToken.expires_in,
-                        scope: refreshedAccessToken.scope || tokenToRefresh.token.scope,
-                    };
-
-                    return rawRefreshedToken;
-                });
+                .get("data");
         })
             .tap((rawRefreshedToken) => {
                 const wasUpdated = deepStrictEqual(rawRefreshedToken, tokenToRefresh);

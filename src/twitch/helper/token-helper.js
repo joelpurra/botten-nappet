@@ -117,9 +117,9 @@ export default class TokenHelper {
             // TODO: use an https class.
             return Promise.resolve(axios.post(
                 this._oauthTokenRevocationUri,
+                params,
                 {
                     paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
-                    params: params,
                 }
             ))
             // NOTE: axios response data.
