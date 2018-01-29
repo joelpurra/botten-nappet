@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class UserStorageHelper {
     constructor(
@@ -34,67 +33,62 @@ export default class UserStorageHelper {
         this._UserRepository = UserRepository;
     }
 
-    getByUsername(username) {
+    async getByUsername(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return Promise.resolve()
-            .then(() => {
-                const findUser = {
-                    username: username,
-                };
+        const findUser = {
+            username: username,
+        };
 
-                return Promise.resolve(this._UserRepository.findOne(findUser));
-            })
-            .tap((user) => {
-                this._logger.trace(user, "getByUsername");
-            });
+        const user = await this._UserRepository.findOne(findUser);
+
+        this._logger.trace(user, "getByUsername");
+
+        return user;
     }
 
-    store(user) {
+    async store(user) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof user, "object");
         assert.strictEqual(typeof user.username, "string");
         assert(user.username.length > 0);
 
-        return Promise.resolve()
-            .then(() => {
-                const findUser = {
-                    username: user.username,
-                };
+        const findUser = {
+            username: user.username,
+        };
 
-                return Promise.resolve(this._UserRepository.findOne(findUser))
-                    .then((userFromDatabase) => {
-                        const userFromDatabaseWithoutId = {
-                            ...userFromDatabase,
-                        };
-                        delete userFromDatabaseWithoutId._id;
-                        delete userFromDatabaseWithoutId._schema;
+        const userFromDatabase = await this._UserRepository.findOne(findUser);
 
-                        // TODO: deep merge.
-                        const upsertUser = {
-                            ...userFromDatabaseWithoutId,
-                            ...user,
-                        };
-                        delete upsertUser._id;
-                        delete upsertUser._schema;
+        const userFromDatabaseWithoutId = {
+            ...userFromDatabase,
+        };
+        delete userFromDatabaseWithoutId._id;
+        delete userFromDatabaseWithoutId._schema;
 
-                        return Promise.resolve(this._UserRepository.findOneAndUpdate(
-                            userFromDatabaseWithoutId,
-                            upsertUser,
-                            {
-                                upsert: true,
-                            }
-                        ));
-                    });
-            })
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "store");
-            });
+        // TODO: deep merge.
+        const upsertUser = {
+            ...userFromDatabaseWithoutId,
+            ...user,
+        };
+        delete upsertUser._id;
+        delete upsertUser._schema;
+
+        const userAfterStoring = await this._UserRepository.findOneAndUpdate(
+            userFromDatabaseWithoutId,
+            upsertUser,
+            {
+                upsert: true,
+            }
+        );
+
+        this._logger.trace(userAfterStoring, "store");
+
+        return userAfterStoring;
     }
 
-    storeToken(username, rawToken) {
+    async storeToken(username, rawToken) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
@@ -110,28 +104,28 @@ export default class UserStorageHelper {
         // NOTE: could be empty if the token has no scopes.
         assert(rawToken === null || rawToken.scope.length > 0);
 
-        return Promise.resolve()
-            .then(() => {
-                const storedAt = Date.now();
-                let expiresApproximatelyAt = null;
+        const storedAt = Date.now();
+        let expiresApproximatelyAt = null;
 
-                if (rawToken !== null) {
-                    expiresApproximatelyAt = storedAt + rawToken.expires_in;
-                }
+        if (rawToken !== null) {
+            expiresApproximatelyAt = storedAt + rawToken.expires_in;
+        }
 
-                const userWithToken = {
-                    username: username,
-                    twitchToken: {
-                        storedAt: storedAt,
-                        expiresApproximatelyAt: expiresApproximatelyAt,
-                        token: rawToken,
-                    },
-                };
+        const augmentedToken = {
+            storedAt: storedAt,
+            expiresApproximatelyAt: expiresApproximatelyAt,
+            token: rawToken,
+        };
 
-                return this.store(userWithToken);
-            })
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "storeToken");
-            });
+        const userWithToken = {
+            username: username,
+            twitchToken: augmentedToken,
+        };
+
+        const userAfterStoring = await this.store(userWithToken);
+
+        this._logger.trace(userAfterStoring, "storeToken");
+
+        return userAfterStoring;
     }
 }

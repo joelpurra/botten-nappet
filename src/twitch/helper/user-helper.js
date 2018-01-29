@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 const axios = require("axios");
 
@@ -44,7 +43,7 @@ export default class UserHelper {
         this._applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
 
-    _getUsersData(...usernamesAndIds) {
+    async _getUsersData(...usernamesAndIds) {
         assert(Array.isArray(usernamesAndIds));
         assert(usernamesAndIds.length > 0);
         assert(usernamesAndIds.every((usernameOrId) => typeof usernameOrId === "string" || typeof usernameOrId === "number"));
@@ -67,46 +66,48 @@ export default class UserHelper {
         //     ],
         // };
 
-        return Promise.try(() => {
-            return this._applicationAccessTokenProvider()
-                .then((applicationAccessToken) => {
-                    const usernames = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "string");
-                    const ids = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "number");
+        const applicationAccessToken = await this._applicationAccessTokenProvider();
 
-                    const params = {
-                        login: usernames,
-                        id: ids,
-                    };
+        const usernames = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "string");
+        const ids = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "number");
 
-                    // TODO: use an https class.
-                    return Promise.resolve(axios.get(
-                        this._usersDataUri,
-                        {
-                            paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
-                            params: params,
-                            headers: {
-                                Authorization: `Bearer ${applicationAccessToken}`,
-                            },
-                        }
-                    ))
-                    // NOTE: axios response data.
-                        .get("data")
-                        // NOTE: twitch response data.
-                        .get("data")
-                        .tap((users) => {
-                            this._logger.trace(users, usernamesAndIds, "_getUsersData");
-                        });
-                });
-        });
+        const params = {
+            login: usernames,
+            id: ids,
+        };
+
+        // TODO: use an https class.
+        const response = axios.get(
+            this._usersDataUri,
+            {
+                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+                params: params,
+                headers: {
+                    Authorization: `Bearer ${applicationAccessToken}`,
+                },
+            }
+        );
+
+        // NOTE: axios response data.
+        const data = response.data;
+
+        // NOTE: twitch response data.
+        const users = data.data;
+
+        this._logger.trace(users, usernamesAndIds, "_getUsersData");
+
+        return users;
     }
 
-    getUserIdByUserName(username) {
+    async getUserIdByUserName(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return this._getUsersData(username)
-            .get(0)
-            .get("id");
+        const usersData = await this._getUsersData(username);
+        const firstUserData = usersData[0];
+        const id = firstUserData.id;
+
+        return id;
     }
 }

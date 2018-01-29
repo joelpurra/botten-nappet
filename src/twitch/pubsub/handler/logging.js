@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PubSubManager from "../pubsub-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class LoggingPubSubHandler extends PubSubManager {
     constructor(logger, connection, userAccessTokenProvider, userId) {
@@ -44,7 +43,7 @@ export default class LoggingPubSubHandler extends PubSubManager {
         this._logger = logger.child("LoggingPubSubHandler");
     }
 
-    _dataHandler(topic, data) {
+    async _dataHandler(topic, data) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof topic, "string");
         assert(topic.length > 0);
@@ -53,12 +52,12 @@ export default class LoggingPubSubHandler extends PubSubManager {
         this._logger.trace(data, "_dataHandler");
     }
 
-    _filter(topic, data) {
+    async _filter(topic, data) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof topic, "string");
         assert(topic.length > 0);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.resolve(true);
+        return true;
     }
 }

@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IrcManager from "../irc-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class NewChatterIrcHandler extends IrcManager {
     constructor(logger, connection) {
@@ -34,7 +33,7 @@ export default class NewChatterIrcHandler extends IrcManager {
         this._logger = logger.child("NewChatterIrcHandler");
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
@@ -46,32 +45,30 @@ export default class NewChatterIrcHandler extends IrcManager {
         this._connection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
+        if (typeof data !== "object") {
+            return false;
+        }
 
-            if (data.command !== "USERNOTICE") {
-                return false;
-            }
+        if (data.command !== "USERNOTICE") {
+            return false;
+        }
 
-            if (typeof data.tags["msg-id"] !== "string") {
-                return false;
-            }
+        if (typeof data.tags["msg-id"] !== "string") {
+            return false;
+        }
 
-            if (data.tags["msg-id"] !== "ritual") {
-                return false;
-            }
+        if (data.tags["msg-id"] !== "ritual") {
+            return false;
+        }
 
-            if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
-                return false;
-            }
+        if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
+            return false;
+        }
 
-            return true;
-        });
+        return true;
     }
 }

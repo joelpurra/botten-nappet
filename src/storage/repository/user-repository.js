@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-// const Promise = require("bluebird");
 
 const Document = require("camo").Document;
 

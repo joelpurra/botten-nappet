@@ -67,182 +67,161 @@ export default class PollingConnection {
         this._dataHandlers = [];
     }
 
-    _getAllHeaders() {
+    async _getAllHeaders() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            return this._getHeaders()
-                .then((overriddenHeaders) => {
-                    const headers = {
-                        ...this._defaultHeaders,
-                        ...overriddenHeaders,
-                    };
+        const overriddenHeaders = await this._getHeaders();
 
-                    return headers;
-                });
-        });
+        const headers = {
+            ...this._defaultHeaders,
+            ...overriddenHeaders,
+        };
+
+        return headers;
     }
 
-    _getHeaders() {
+    async _getHeaders() {
         assert.fail("Method should be overwritten.");
     }
 
-    _getAllData() {
+    async _getAllData() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            return this._getData()
-                .then((overriddenData) => {
-                    const data = {
-                        ...this._defaultData,
-                        ...overriddenData,
-                    };
+        const overriddenData = await this._getData();
 
-                    return data;
-                });
-        });
+        const data = {
+            ...this._defaultData,
+            ...overriddenData,
+        };
+
+        return data;
     }
 
-    _getData() {
+    async _getData() {
         assert.fail("Method should be overwritten.");
     }
 
-    _setConnection(headers, data) {
+    async _setConnection(headers, data) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof headers, "object");
         assert.strictEqual(typeof data, "object");
 
         assert.strictEqual(this._axios, null);
 
-        return Promise.try(() => {
-            const axiosInstanceConfig = {
-                baseURL: this._uri,
-                // NOTE: per-instance method has no effect due to bug in axios, must use per request.
-                // TODO: remove per-call overrides once axios has been fixed.
-                // https://github.com/axios/axios/issues/723
-                method: this._method,
-                headers: headers,
-                data: data,
-            };
+        const axiosInstanceConfig = {
+            baseURL: this._uri,
+            // NOTE: per-instance method has no effect due to bug in axios, must use per request.
+            // TODO: remove per-call overrides once axios has been fixed.
+            // https://github.com/axios/axios/issues/723
+            method: this._method,
+            headers: headers,
+            data: data,
+        };
 
-            this._axios = axios.create(axiosInstanceConfig);
+        this._axios = axios.create(axiosInstanceConfig);
 
-            return undefined;
-        });
+        return undefined;
     }
 
-    _unsetConnection() {
+    async _unsetConnection() {
         assert.strictEqual(arguments.length, 0);
 
         assert.notStrictEqual(this._axios, null);
 
-        return Promise.try(() => {
-            this._axios = null;
+        this._axios = null;
 
-            return undefined;
-        });
+        return undefined;
     }
 
-    _startInterval() {
+    async _startInterval() {
         assert.strictEqual(arguments.length, 0);
 
         assert.notStrictEqual(this._axios, null);
 
-        return Promise.try(() => {
-            this._intervalId = setInterval(this._poll.bind(this), this._interval);
+        this._intervalId = setInterval(this._poll.bind(this), this._interval);
 
-            return undefined;
-        });
+        return undefined;
     }
 
-    connect() {
+    async connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._axios, null);
         assert.strictEqual(this._intervalId, null);
 
-        return Promise.all([
+        const [headers, data] = await Promise.all([
             this._getAllHeaders(),
             this._getAllData(),
-        ])
-            .then(([headers, data]) => this._setConnection(headers, data))
-            .then(() => {
-                if (this._atBegin === true) {
-                    return this._poll();
-                }
+        ]);
 
-                return undefined;
-            })
-            .then(() => this._startInterval());
+        this._setConnection(headers, data);
+
+        if (this._atBegin === true) {
+            return this._poll();
+        }
+
+        return this._startInterval();
     }
 
-    _stopInterval() {
+    async _stopInterval() {
         assert.notStrictEqual(this._axios, null);
         assert.notStrictEqual(this._intervalId, null);
 
-        return Promise.try(() => {
-            clearInterval(this._intervalId);
+        clearInterval(this._intervalId);
 
-            this._intervalId = null;
-        });
+        this._intervalId = null;
     }
 
-    disconnect() {
+    async disconnect() {
         assert.notStrictEqual(this._axios, null);
         assert.notStrictEqual(this._intervalId, null);
 
-        return Promise.resolve()
-            .then(() => this._stopInterval())
-            .then(() => this._unsetConnection());
+        await this._stopInterval();
+        return this._unsetConnection();
     }
 
-    force(resetInterval) {
+    async force(resetInterval) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof resetInterval, "boolean");
 
         assert.notStrictEqual(this._axios, null);
         assert.notStrictEqual(this._intervalId, null);
 
-        return Promise.resolve()
-            .tap(() => {
-                this._logger.trace(resetInterval, "force");
-            })
-            .then(() => this._poll())
-            .then(() => {
-                if (resetInterval === true) {
-                    return this._stopInterval()
-                        .then(() => this._startInterval());
-                }
+        this._logger.trace(resetInterval, "force");
+        await this._poll();
 
-                return undefined;
-            });
+        if (resetInterval === true) {
+            return this._stopInterval()
+                .then(() => this._startInterval());
+        }
+
+        return undefined;
     }
 
-    _poll() {
+    async _poll() {
         assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._axios, null);
 
-        return Promise.resolve(this._axios.request({
-            // NOTE: per-instance method has no effect due to bug in axios, must use per request.
-            // TODO: remove per-call overrides once axios has been fixed.
-            // https://github.com/axios/axios/issues/723
-            method: this._method,
-        }))
-            .tap((response) => {
-                this._logger.trace(response.data, response.status, response.statusText, "_poll");
-            })
-            .get("data")
-            .then((data) => {
-                // TODO: try-catch for bad handlers.
-                return this._dataHandler(data);
-            })
-            .catch((error) => {
-                this._logger.error(error, "Masking polling error", "_poll");
-
-                return undefined;
+        try {
+            const response = await this._axios.request({
+                // NOTE: per-instance method has no effect due to bug in axios, must use per request.
+                // TODO: remove per-call overrides once axios has been fixed.
+                // https://github.com/axios/axios/issues/723
+                method: this._method,
             });
+
+            this._logger.trace(response.data, response.status, response.statusText, "_poll");
+
+            const data = response.data;
+
+            return this._dataHandler(data);
+        } catch (error) {
+            this._logger.error(error, "Masking polling error", "_poll");
+
+            return undefined;
+        }
     };
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
 
         return Promise.filter(
@@ -263,24 +242,22 @@ export default class PollingConnection {
         );
     }
 
-    listen(handler, filter) {
+    async listen(handler, filter) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof handler, "function");
         assert.strictEqual(typeof filter, "function");
 
-        return Promise.try(() => {
-            const dataHandler = {
-                handler: handler,
-                filter: filter,
-            };
+        const dataHandler = {
+            handler: handler,
+            filter: filter,
+        };
 
-            this._dataHandlers.push(dataHandler);
+        this._dataHandlers.push(dataHandler);
 
-            const killSwitch = () => {
-                this._dataHandlers = this._dataHandlers.filter((_dataHandler) => _dataHandler !== dataHandler);
-            };
+        const killSwitch = () => {
+            this._dataHandlers = this._dataHandlers.filter((_dataHandler) => _dataHandler !== dataHandler);
+        };
 
-            return killSwitch;
-        });
+        return killSwitch;
     }
 }

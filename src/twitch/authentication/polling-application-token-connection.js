@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PollingConnection from "../polling/polling-connection";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class PollingApplicationTokenConnection extends PollingConnection {
     constructor(logger, applicationClientId, applicationClientSecret, scopes, interval, atBegin, uri, method, defaultHeaders, defaultData) {
@@ -54,28 +53,24 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         this._scopes = scopes;
     }
 
-    _getHeaders() {
+    async _getHeaders() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            const headers = {};
+        const headers = {};
 
-            return headers;
-        });
+        return headers;
     }
 
-    _getData() {
+    async _getData() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            const data = {
-                client_id: this._applicationClientId,
-                client_secret: this._applicationClientSecret,
-                grant_type: "client_credentials",
-                scope: this._scopes.join(" "),
-            };
+        const data = {
+            client_id: this._applicationClientId,
+            client_secret: this._applicationClientSecret,
+            grant_type: "client_credentials",
+            scope: this._scopes.join(" "),
+        };
 
-            return data;
-        });
+        return data;
     }
 }

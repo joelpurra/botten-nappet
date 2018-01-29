@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IrcManager from "../irc-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class GreetingIrcHandler extends IrcManager {
     constructor(logger, connection, username) {
@@ -52,7 +51,7 @@ export default class GreetingIrcHandler extends IrcManager {
         ];
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
@@ -72,33 +71,31 @@ export default class GreetingIrcHandler extends IrcManager {
         this._connection._send(message);
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
+        if (typeof data !== "object") {
+            return false;
+        }
 
-            if (typeof data.message !== "string") {
-                return false;
-            }
+        if (typeof data.message !== "string") {
+            return false;
+        }
 
-            if (data.username === this._username) {
-                return false;
-            }
+        if (data.username === this._username) {
+            return false;
+        }
 
-            const tokenizedMessage = data.message
-                .toLowerCase()
-                .split(/[^a-z]+/)
-                .join(" ");
+        const tokenizedMessage = data.message
+            .toLowerCase()
+            .split(/[^a-z]+/)
+            .join(" ");
 
-            const isGreeting = this._greetings.some((greeting) => {
-                return greeting.test(tokenizedMessage);
-            });
-
-            return isGreeting;
+        const isGreeting = this._greetings.some((greeting) => {
+            return greeting.test(tokenizedMessage);
         });
+
+        return isGreeting;
     }
 }

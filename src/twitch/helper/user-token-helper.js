@@ -70,135 +70,127 @@ export default class UserTokenHelper {
         this._appClientSecret = appClientSecret;
     }
 
-    _getUserAuthorizationUrl(randomCSRF) {
+    async _getUserAuthorizationUrl(randomCSRF) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof randomCSRF, "string");
         assert(randomCSRF.length > 0);
 
-        return Promise.try(() => {
-            // TODO: configure scopes per request or per activity/subclass.
-            // https://dev.twitch.tv/docs/authentication#scopes
-            const scopes = [
-                "channel_feed_read",
-                "channel_subscriptions",
-                "chat_login",
-            ];
-            const serializedScopes = scopes.join(" ");
+        // TODO: configure scopes per request or per activity/subclass.
+        // https://dev.twitch.tv/docs/authentication#scopes
+        const scopes = [
+            "channel_feed_read",
+            "channel_subscriptions",
+            "chat_login",
+        ];
+        const serializedScopes = scopes.join(" ");
 
-            const params = {
-                client_id: this._appClientId,
-                redirect_uri: this._appOAuthRedirectUrl,
-                response_type: "code",
-                scope: serializedScopes,
-                force_verify: "true",
-                state: randomCSRF,
-            };
+        const params = {
+            client_id: this._appClientId,
+            redirect_uri: this._appOAuthRedirectUrl,
+            response_type: "code",
+            scope: serializedScopes,
+            force_verify: "true",
+            state: randomCSRF,
+        };
 
-            const serializedParams = this._requestHelper.twitchQuerystringSerializer(params);
+        const serializedParams = this._requestHelper.twitchQuerystringSerializer(params);
 
-            const url = `${this._oauthAuthorizationUri}?${serializedParams}`;
+        const url = `${this._oauthAuthorizationUri}?${serializedParams}`;
 
-            return url;
-        });
+        return url;
     }
 
-    _parseCodeFromAnswer(answer, randomCSRF) {
+    async _parseCodeFromAnswer(answer, randomCSRF) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof answer, "string");
         assert(answer.length > 0);
         assert.strictEqual(typeof randomCSRF, "string");
         assert(randomCSRF.length > 0);
 
-        return Promise.try(() => {
-            const paramsRx = /\?(.+)$/i;
+        const paramsRx = /\?(.+)$/i;
 
-            let code = null;
+        let code = null;
 
-            if (paramsRx.test(answer)) {
-                const matches = paramsRx.exec(answer);
+        if (paramsRx.test(answer)) {
+            const matches = paramsRx.exec(answer);
 
-                const querystring = matches[1];
+            const querystring = matches[1];
 
-                const params = qs.parse(querystring);
+            const params = qs.parse(querystring);
 
-                // NOTE: security check.
-                if (params.state !== randomCSRF) {
-                    throw new Error("Random CSRF mismatch.");
-                }
-
-                code = params.code;
-            } else {
-                code = answer;
+            // NOTE: security check.
+            if (params.state !== randomCSRF) {
+                throw new Error("Random CSRF mismatch.");
             }
 
-            return code;
-        })
-            .tap((code) => {
-                assert.strictEqual(typeof code, "string");
-                assert(code.length > 0);
-            });
+            code = params.code;
+        } else {
+            code = answer;
+        }
+
+        assert.strictEqual(typeof code, "string");
+        assert(code.length > 0);
+
+        return code;
     }
 
-    _promptForCodeOrUrl() {
+    async _promptForCodeOrUrl() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout,
-            });
-
-            return new Promise((resolve, reject) => {
-                try {
-                    rl.question("Paste the code or full url: ", (answer) => resolve(answer));
-                } catch (error) {
-                    reject(error);
-                }
-            })
-                .tap(() => {
-                    rl.close();
-                })
-                .tap((answer) => {
-                    assert.strictEqual(typeof answer, "string");
-                    assert(answer.length > 0);
-                });
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
         });
+
+        return new Promise((resolve, reject) => {
+            try {
+                rl.question("Paste the code or full url: ", (answer) => resolve(answer));
+            } catch (error) {
+                reject(error);
+            }
+        })
+            .tap(() => {
+                rl.close();
+            })
+            .tap((answer) => {
+                assert.strictEqual(typeof answer, "string");
+                assert(answer.length > 0);
+            });
     }
 
-    _promptToOpenAuthorizationUrl(userAuthorizationUrl) {
+    async _promptToOpenAuthorizationUrl(userAuthorizationUrl) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof userAuthorizationUrl, "string");
         assert(userAuthorizationUrl.length > 0);
         assert(userAuthorizationUrl.startsWith("https://"));
 
-        return Promise.try(() => {
-            /* eslint-disable no-console */
-            console.info("Open this url and authorize the application:", userAuthorizationUrl);
-            /* eslint-enable no-console */
+        /* eslint-disable no-console */
+        console.info("Open this url and authorize the application:", userAuthorizationUrl);
+        /* eslint-enable no-console */
 
-            return undefined;
-        });
+        return undefined;
     }
 
-    _getUserAuthorizationCode() {
+    async _getUserAuthorizationCode() {
         assert.strictEqual(arguments.length, 0);
 
         // TODO: replace with an https server.
-        return Promise.resolve()
-            .then(() => this._csrfHelper.getRandomCSRF())
-            .then((randomCSRF) => {
-                return this._getUserAuthorizationUrl(randomCSRF)
-                    .then((userAuthorizationUrl) => this._promptToOpenAuthorizationUrl(userAuthorizationUrl))
-                    .then(() => this._promptForCodeOrUrl())
-                    .then((answer) => this._parseCodeFromAnswer(answer, randomCSRF))
-                    .tap((code) => {
-                        assert.strictEqual(typeof code, "string");
-                        assert(code.length > 0);
-                    });
-            });
+        const randomCSRF = await this._csrfHelper.getRandomCSRF();
+
+        const userAuthorizationUrl = await this._getUserAuthorizationUrl(randomCSRF);
+
+        await this._promptToOpenAuthorizationUrl(userAuthorizationUrl);
+
+        const answer = await this._promptForCodeOrUrl();
+        const code = await this._parseCodeFromAnswer(answer, randomCSRF);
+
+        assert.strictEqual(typeof code, "string");
+        assert(code.length > 0);
+
+        return code;
     }
 
-    _getUserTokenFromUserTerminalPrompt() {
+    async _getUserTokenFromUserTerminalPrompt() {
         assert.strictEqual(arguments.length, 0);
 
         // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
@@ -210,61 +202,60 @@ export default class UserTokenHelper {
         // };
 
         // TODO: replace with an https server.
-        return Promise.resolve()
-            .then(() => this._getUserAuthorizationCode())
-            .tap((code) => {
-                assert.strictEqual(typeof code, "string");
-                assert(code.length > 0);
-            })
-            .then((code) => {
-                const data = {
-                    client_id: this._appClientId,
-                    client_secret: this._appClientSecret,
-                    code: code,
-                    grant_type: "authorization_code",
-                    redirect_uri: this._appOAuthRedirectUrl,
-                };
+        const code = await this._getUserAuthorizationCode();
 
-                const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
+        assert.strictEqual(typeof code, "string");
+        assert(code.length > 0);
 
-                // TODO: use an https class.
-                return Promise.resolve(axios.post(this._oauthTokenUri, serializedData))
-                // NOTE: axios response data.
-                    .get("data");
-            })
-            .tap((rawToken) => {
-                this._logger.trace(rawToken, "_getUserTokenFromUserTerminalPrompt");
-            });
+        const data = {
+            client_id: this._appClientId,
+            client_secret: this._appClientSecret,
+            code: code,
+            grant_type: "authorization_code",
+            redirect_uri: this._appOAuthRedirectUrl,
+        };
+
+        const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
+
+        // TODO: use an https class.
+        const response = await axios.post(this._oauthTokenUri, serializedData);
+
+        // NOTE: axios response data.
+        const rawToken = response.data;
+
+        this._logger.trace(rawToken, "_getUserTokenFromUserTerminalPrompt");
+
+        return rawToken;
     }
 
-    _getUserTokenFromDatabase(username) {
+    async _getUserTokenFromDatabase(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return Promise.resolve(this._userStorageHelper.getByUsername(username))
-            .then((user) => {
-                const isValidUserToken = (
-                    user
-                      && user.twitchToken !== null
-                      && typeof user.twitchToken === "object"
-                      && user.twitchToken.token !== null
-                      && typeof user.twitchToken.token === "object"
-                      && typeof user.twitchToken.token.access_token === "string"
-                );
+        const user = await this._userStorageHelper.getByUsername(username);
 
-                if (isValidUserToken) {
-                    return user.twitchToken;
-                }
+        const isValidUserToken = (
+            user
+              && user.twitchToken !== null
+              && typeof user.twitchToken === "object"
+              && user.twitchToken.token !== null
+              && typeof user.twitchToken.token === "object"
+              && typeof user.twitchToken.token.access_token === "string"
+        );
 
-                return null;
-            })
-            .tap((token) => {
-                this._logger.trace(token, "_getUserTokenFromDatabase");
-            });
+        let token = null;
+
+        if (isValidUserToken) {
+            token = user.twitchToken;
+        }
+
+        this._logger.trace(token, "_getUserTokenFromDatabase");
+
+        return token;
     }
 
-    store(username, rawToken) {
+    async store(username, rawToken) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
@@ -272,71 +263,75 @@ export default class UserTokenHelper {
         assert.strictEqual(typeof rawToken, "object");
         assert.strictEqual(typeof rawToken.access_token, "string");
 
-        return Promise.resolve()
-            .then(() => this._userStorageHelper.storeToken(username, rawToken))
-            .get("twitchToken")
-            .tap((tokenAfterStoring) => {
-                this._logger.trace(tokenAfterStoring, "store");
-            });
+        const userAfterStoring = await this._userStorageHelper.storeToken(username, rawToken);
+
+        const augmentedToken = userAfterStoring.twitchToken;
+
+        this._logger.trace(augmentedToken, "store");
+
+        return augmentedToken;
     }
 
-    forget(username) {
+    async forget(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return Promise.resolve()
-            .then(() => this._userStorageHelper.storeToken(username, null))
-            .tap((userAfterStoring) => {
-                this._logger.trace(userAfterStoring, "forgetUserToken");
-            });
+        const userAfterStoring = await this._userStorageHelper.storeToken(username, null);
+
+        this._logger.trace(userAfterStoring, "forgetUserToken");
+
+        return userAfterStoring;
     }
 
-    get(username) {
+    async get(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return Promise.resolve()
-            .then(() => this._getUserTokenFromDatabase(username))
-            .then((tokenFromDatabase) => {
-                if (tokenFromDatabase) {
-                    return tokenFromDatabase;
-                }
+        let result = null;
 
-                return this._getUserTokenFromUserTerminalPrompt()
-                    .then((rawToken) => this.store(username, rawToken));
-            })
-            .tap((token) => {
-                this._logger.trace(token, "getUserToken");
-            });
+        const tokenFromDatabase = await this._getUserTokenFromDatabase(username);
+
+        if (tokenFromDatabase) {
+            result = tokenFromDatabase;
+        } else {
+            const rawToken = await this._getUserTokenFromUserTerminalPrompt();
+            const tokenFromUserTerminalPrompt = await this.store(username, rawToken);
+
+            result = tokenFromUserTerminalPrompt;
+        }
+
+        this._logger.trace(result, "getUserToken");
+
+        return result;
     }
 
-    refresh(tokenToRefresh) {
+    async refresh(tokenToRefresh) {
         assert.strictEqual(arguments.length, 1);
         assert.notStrictEqual(tokenToRefresh, null);
         assert.strictEqual(typeof tokenToRefresh, "object");
         assert.strictEqual(typeof tokenToRefresh.token, "object");
 
-        return Promise.try(() => {
-            const data = {
-                grant_type: "refresh_token",
-                refresh_token: tokenToRefresh.token.refresh_token,
-                client_id: this._appClientId,
-                client_secret: this._appClientSecret,
-            };
+        const data = {
+            grant_type: "refresh_token",
+            refresh_token: tokenToRefresh.token.refresh_token,
+            client_id: this._appClientId,
+            client_secret: this._appClientSecret,
+        };
 
-            const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
+        const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
 
-            // TODO: use an https class.
-            return Promise.resolve(axios.post(this._oauthTokenUri, serializedData))
-            // NOTE: axios response data.
-                .get("data");
-        })
-            .tap((rawRefreshedToken) => {
-                const wasUpdated = deepStrictEqual(rawRefreshedToken, tokenToRefresh);
+        // TODO: use an https class.
+        const response = await axios.post(this._oauthTokenUri, serializedData);
 
-                this._logger.trace(rawRefreshedToken, tokenToRefresh, wasUpdated, "get");
-            });
+        // NOTE: axios response data.
+        const rawRefreshedToken = response.data;
+
+        const wasUpdated = deepStrictEqual(rawRefreshedToken, tokenToRefresh);
+
+        this._logger.trace(rawRefreshedToken, tokenToRefresh, wasUpdated, "get");
+
+        return rawRefreshedToken;
     }
 }
