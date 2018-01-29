@@ -49,13 +49,20 @@ export default class UserTokenManager {
 
                             return Promise.resolve()
                                 .then(() => this._userTokenHelper.refresh(userToken))
-                                .tap((rawRefreshedToken) => this._userTokenHelper.store(username, rawRefreshedToken))
-                                .then((user) => {
-                                    return this._userTokenHelper.forget(username)
-                                    // TODO: user-wrappers with username for the generic token functions?
-                                        .then(() => this._tokenHelper.revoke(userToken))
-                                    // NOTE: recursive. Hope recursion ends at some point.
-                                        .then(() => this.get(username));
+                                .then((rawRefreshedToken) => {
+                                    return this._tokenHelper.validate(rawRefreshedToken)
+                                        .then((isRefreshedTokenValid) => {
+                                            if (isRefreshedTokenValid) {
+                                                return this._userTokenHelper.store(username, rawRefreshedToken)
+                                                    .then(() => rawRefreshedToken);
+                                            }
+
+                                            return this._userTokenHelper.forget(username)
+                                            // TODO: user-wrappers with username for the generic token functions?
+                                                .then(() => this._tokenHelper.revoke(rawRefreshedToken))
+                                            // NOTE: recursive. Hope recursion ends at some point.
+                                                .then(() => this.get(username));
+                                        });
                                 });
                         });
                 });
