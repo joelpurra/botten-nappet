@@ -22,6 +22,7 @@ import PinoLogger from "./src/util/pino-logger";
 import ShutdownManager from "./src/util/shutdown-manager";
 import DatabaseConnection from "./src/storage/database-connection";
 import UserRepository from "./src/storage/repository/user-repository";
+import UserStorageManager from "./src/storage/manager/user-storage-manager";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
 import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
@@ -38,7 +39,6 @@ import TwitchUserTokenManager from "./src/twitch/authentication/user-token-manag
 import TwitchRequestHelper from "./src/twitch/helper/request-helper";
 import TwitchTokenHelper from "./src/twitch/helper/token-helper";
 import TwitchUserHelper from "./src/twitch/helper/user-helper";
-import TwitchUserStorageHelper from "./src/twitch/helper/user-storage-helper";
 import TwitchUserTokenHelper from "./src/twitch/helper/user-token-helper";
 import TwitchCSRFHelper from "./src/twitch/helper/csrf-helper";
 
@@ -169,12 +169,12 @@ const main = async() => {
                 twitchApplicationAccessTokenProvider
             );
 
-            const twitchUserStorageHelper = new TwitchUserStorageHelper(rootLogger, UserRepository);
+            const userStorageManager = new UserStorageManager(rootLogger, UserRepository);
 
             const twitchUserTokenHelper = new TwitchUserTokenHelper(
                 rootLogger,
                 twitchCSRFHelper,
-                twitchUserStorageHelper,
+                userStorageManager,
                 twitchRequestHelper,
                 twitchOAuthAuthorizationUri,
                 twitchAppOAuthRedirectUrl,

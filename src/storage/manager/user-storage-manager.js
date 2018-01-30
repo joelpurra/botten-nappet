@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const assert = require("power-assert");
 
-export default class UserStorageHelper {
+export default class UserStorageManager {
     constructor(
         logger,
         UserRepository
@@ -29,7 +29,7 @@ export default class UserStorageHelper {
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof UserRepository, "function");
 
-        this._logger = logger.child("UserStorageHelper");
+        this._logger = logger.child("UserStorageManager");
         this._UserRepository = UserRepository;
     }
 
