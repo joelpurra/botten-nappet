@@ -64,23 +64,21 @@ export default class ApplicationTokenManager extends ConnectionManager {
             });
     }
 
-    start() {
+    async start() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.resolve()
-            .then(() => super.start())
-            .then(() => this._connection.force(true));
+        await super.start();
+        return this._connection.force(true);
     }
 
-    stop() {
+    async stop() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.resolve()
-            .then(() => this._revokeTokenIfSet(this._applicationAccessToken))
-            .then(() => super.stop());
+        await this._revokeTokenIfSet(this._applicationAccessToken);
+        return super.stop();
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
@@ -92,102 +90,95 @@ export default class ApplicationTokenManager extends ConnectionManager {
         ]);
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
+        if (typeof data !== "object") {
+            return false;
+        }
 
-            if (typeof data.access_token !== "string") {
-                return false;
-            }
+        if (typeof data.access_token !== "string") {
+            return false;
+        }
 
-            return true;
-        });
+        return true;
     }
 
-    _setToken(data) {
+    async _setToken(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            this._rawToken = data;
-            this._applicationAccessToken = data.access_token;
-        })
-            .then(() => this._tokenHasBeenSet())
-            .return(undefined);
+        this._rawToken = data;
+        this._applicationAccessToken = data.access_token;
+
+        await this._tokenHasBeenSet();
+
+        return undefined;
     }
 
-    _sendRevocation(data) {
+    async _sendRevocation(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            const axiosInstanceConfig = {
-                baseURL: this._revocationUri,
-                // NOTE: per-instance method has no effect due to bug in axios, must use per request.
-                // TODO: remove per-call overrides once axios has been fixed.
-                // https://github.com/axios/axios/issues/723
-                method: this._revocationMethod,
-                headers: this._revocationHeaders,
-                data: data,
-            };
-
-            const axiosInstance = axios.create(axiosInstanceConfig);
-
-            return axiosInstance.request({
+        const axiosInstanceConfig = {
+            baseURL: this._revocationUri,
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
-                method: this._revocationMethod,
-            });
+            method: this._revocationMethod,
+            headers: this._revocationHeaders,
+            data: data,
+        };
+
+        const axiosInstance = axios.create(axiosInstanceConfig);
+
+        const response = await axiosInstance.request({
+            // NOTE: per-instance method has no effect due to bug in axios, must use per request.
+            // TODO: remove per-call overrides once axios has been fixed.
+            // https://github.com/axios/axios/issues/723
+            method: this._revocationMethod,
         });
+
+        return response;
     }
 
-    _revokeToken(token) {
+    async _revokeToken(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "string");
         assert(token.length > 0);
 
-        return Promise.try(() => {
-            const data = {
-                client_id: this._clientId,
-                token: token,
-            };
+        const data = {
+            client_id: this._clientId,
+            token: token,
+        };
 
-            this._logger.trace(data, "_revokeToken");
+        this._logger.trace(data, "_revokeToken");
 
-            return this._sendRevocation(data);
-        });
+        return this._sendRevocation(data);
     }
 
-    _revokeTokenIfSet(token) {
+    async _revokeTokenIfSet(token) {
         assert.strictEqual(arguments.length, 1);
 
-        return Promise.try(() => {
-            if (typeof token === "string") {
-                return this._revokeToken(token);
-            }
+        if (typeof token === "string") {
+            return this._revokeToken(token);
+        }
 
-            return undefined;
-        });
+        return undefined;
     }
 
-    get() {
+    async get() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.resolve(this._applicationAccessToken);
+        return this._applicationAccessToken;
     }
 
-    getOrWait() {
+    async getOrWait() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            return this._waitForFirstTokenPromise
-                .then(() => this.get());
-        });
+        await this._waitForFirstTokenPromise;
+
+        return this.get();
     }
 }

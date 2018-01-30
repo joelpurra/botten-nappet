@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IrcManager from "../irc-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class LoggingIrcHandler extends IrcManager {
     constructor(logger, connection) {
@@ -34,17 +33,17 @@ export default class LoggingIrcHandler extends IrcManager {
         this._logger = logger.child("LoggingIrcHandler");
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
         this._logger.trace(data, "_dataHandler");
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.resolve(true);
+        return true;
     }
 }

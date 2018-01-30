@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class UserTokenManager {
     constructor(logger, tokenHelper, userTokenHelper) {
@@ -33,32 +32,31 @@ export default class UserTokenManager {
         this._userTokenHelper = userTokenHelper;
     }
 
-    get(username) {
+    async get(username) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof username, "string");
         assert(username.length > 0);
 
-        return Promise.try(() => {
-            return this._userTokenHelper.get(username)
-                .then((userToken) => {
-                    return this._tokenHelper.validate(userToken)
-                        .then((isValid) => {
-                            if (isValid) {
-                                return userToken;
-                            }
+        const userToken = await this._userTokenHelper.get(username);
+        const isValid = await this._tokenHelper.validate(userToken);
 
-                            return Promise.resolve()
-                                .then(() => this._userTokenHelper.refresh(userToken))
-                                .tap((rawRefreshedToken) => this._userTokenHelper.store(username, rawRefreshedToken))
-                                .then((user) => {
-                                    return this._userTokenHelper.forget(username)
-                                    // TODO: user-wrappers with username for the generic token functions?
-                                        .then(() => this._tokenHelper.revoke(userToken))
-                                    // NOTE: recursive. Hope recursion ends at some point.
-                                        .then(() => this.get(username));
-                                });
-                        });
-                });
-        });
+        if (isValid) {
+            return userToken;
+        }
+
+        const rawRefreshedToken = await this._userTokenHelper.refresh(userToken);
+        const isRefreshedTokenValid = await this._tokenHelper.validate(rawRefreshedToken);
+
+        if (isRefreshedTokenValid) {
+            return this._userTokenHelper.store(username, rawRefreshedToken);
+        }
+
+        await this._userTokenHelper.forget(username);
+
+        // TODO: user-wrappers with username for the generic token functions?
+        await this._tokenHelper.revoke(rawRefreshedToken);
+
+        // NOTE: recursive. Hope recursion ends at some point.
+        return this.get(username);
     }
 }

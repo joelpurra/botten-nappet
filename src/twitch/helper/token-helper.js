@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 const axios = require("axios");
 
@@ -50,7 +49,7 @@ export default class TokenHelper {
         this._appClientId = appClientId;
     }
 
-    _getTokenValidation(token) {
+    async _getTokenValidation(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
         assert.strictEqual(typeof token.token, "object");
@@ -75,121 +74,120 @@ export default class TokenHelper {
         //     },
         // };
 
-        return Promise.try(() => {
-            const accessToken = token.token.access_token;
+        const accessToken = token.token.access_token;
 
-            // TODO: use an https class.
-            return Promise.resolve(axios.get(
-                this._oauthTokenVerificationUri,
-                {
-                    headers: {
-                        Accept: "application/vnd.twitchtv.v5+json",
-                        "Client-ID": this._appClientId,
-                        Authorization: `OAuth ${accessToken}`,
-                    },
-                }
-            ))
-            // NOTE: axios response data.
-                .get("data")
-            // NOTE: twitch response data.
-                .get("token")
-                .tap((tokenValidation) => {
-                    this._logger.trace(token, tokenValidation, "_getTokenValidation");
-                });
-        });
+        // TODO: use an https class.
+        const response = await axios.get(
+            this._oauthTokenVerificationUri,
+            {
+                headers: {
+                    Accept: "application/vnd.twitchtv.v5+json",
+                    "Client-ID": this._appClientId,
+                    Authorization: `OAuth ${accessToken}`,
+                },
+            }
+        );
+
+        // NOTE: axios response data.
+        const data = response.data;
+
+        // NOTE: twitch response data.
+        const tokenValidation = data.token;
+
+        this._logger.trace(token, tokenValidation, "_getTokenValidation");
+
+        return tokenValidation;
     }
 
-    revoke(token) {
+    async revoke(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
         assert.strictEqual(typeof token.token, "object");
 
         // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
 
-        return Promise.try(() => {
-            const accessToken = token.token.access_token;
+        const accessToken = token.token.access_token;
 
-            const params = {
-                client_id: this._appClientId,
-                token: accessToken,
-            };
+        const params = {
+            client_id: this._appClientId,
+            token: accessToken,
+        };
 
-            // TODO: use an https class.
-            return Promise.resolve(axios.post(
-                this._oauthTokenRevocationUri,
-                {
-                    paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
-                    params: params,
-                }
-            ))
-            // NOTE: axios response data.
-                .get("data")
-                .tap((twitchResponse) => {
-                    this._logger.trace(token, twitchResponse, "revoke");
-                });
-        });
+        // TODO: use an https class.
+        const response = await axios.post(
+            this._oauthTokenRevocationUri,
+            params,
+            {
+                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+            }
+        );
+
+        // NOTE: axios response data.
+        const data = response.data;
+
+        this._logger.trace(token, data, "revoke");
+
+        return data;
     }
 
-    isExpired(token) {
+    async isExpired(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
         assert.strictEqual(typeof token.token, "object");
 
-        return Promise.try(() => {
-            if (token.expiresApproximatelyAt === null) {
-                return true;
-            }
+        if (token.expiresApproximatelyAt === null) {
+            return true;
+        }
 
-            if (token.expiresApproximatelyAt < Date.now()) {
-                return true;
-            }
+        if (token.expiresApproximatelyAt < Date.now()) {
+            return true;
+        }
 
-            return false;
-        });
+        return false;
     }
 
-    validate(token) {
+    async validate(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
         assert.strictEqual(typeof token.token, "object");
 
         // TODO: only allow a single outstanding token validation per user.
         // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
-        return Promise.try(() => {
-            return this._getTokenValidation(token)
-            // NOTE: twitch response data.
-                .get("valid")
-                .tap((valid) => {
-                    this._logger.trace(token, valid, "validate");
-                });
-        });
+        const tokenValidation = await this._getTokenValidation(token);
+
+        // NOTE: twitch response data.
+        const valid = tokenValidation.valid;
+
+        this._logger.trace(token, valid, "validate");
+
+        return valid;
     }
 
-    getUserIdByAccessToken(token) {
+    async getUserIdByAccessToken(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
 
-        return Promise.try(() => {
-            return this._getTokenValidation(token)
-            // NOTE: twitch response data.
-                .get("user_id")
-                .tap((userId) => {
-                    this._logger.trace(token, userId, "getUserIdByAccessToken");
-                });
-        });
+        const tokenValidation = await this._getTokenValidation(token);
+
+        // NOTE: twitch response data.
+        const userId = tokenValidation.user_id;
+
+        this._logger.trace(token, userId, "getUserIdByAccessToken");
+
+        return userId;
     }
 
-    getUserNameByAccessToken(token) {
+    async getUserNameByAccessToken(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
 
-        return Promise.try(() => {
-            return this._getTokenValidation(token)
-            // NOTE: twitch response data.
-                .get("user_name")
-                .tap((userName) => {
-                    this._logger.trace(token, userName, "getUserNameByAccessToken");
-                });
-        });
+        const tokenValidation = await this._getTokenValidation(token);
+
+        // NOTE: twitch response data.
+        const userName = tokenValidation.user_name;
+
+        this._logger.trace(token, userName, "getUserNameByAccessToken");
+
+        return userName;
     }
 }

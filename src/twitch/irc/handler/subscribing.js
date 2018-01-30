@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IrcManager from "../irc-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class SubscribingIrcHandler extends IrcManager {
     constructor(logger, connection) {
@@ -34,7 +33,7 @@ export default class SubscribingIrcHandler extends IrcManager {
         this._logger = logger.child("SubscribingIrcHandler");
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
@@ -54,28 +53,26 @@ export default class SubscribingIrcHandler extends IrcManager {
         this._connection._send(message);
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
+        if (typeof data !== "object") {
+            return false;
+        }
 
-            if (data.command !== "USERNOTICE") {
-                return false;
-            }
+        if (data.command !== "USERNOTICE") {
+            return false;
+        }
 
-            if (typeof data.tags["msg-id"] !== "string") {
-                return false;
-            }
+        if (typeof data.tags["msg-id"] !== "string") {
+            return false;
+        }
 
-            if (data.tags["msg-id"] !== "sub" && data.tags["msg-id"] !== "resub") {
-                return false;
-            }
+        if (data.tags["msg-id"] !== "sub" && data.tags["msg-id"] !== "resub") {
+            return false;
+        }
 
-            return true;
-        });
+        return true;
     }
 }

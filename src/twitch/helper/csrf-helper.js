@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class CSRFHelper {
     constructor(logger) {
@@ -29,10 +28,10 @@ export default class CSRFHelper {
         this._logger = logger.child("CSRFHelper");
     }
 
-    getRandomCSRF() {
+    async getRandomCSRF() {
         assert.strictEqual(arguments.length, 0);
 
         // TODO: use a random string library.
-        return Promise.resolve(Math.random().toString(10));
+        return Math.random().toString(10);
     }
 }

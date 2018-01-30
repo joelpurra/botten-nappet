@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class ConnectionManager {
     constructor(logger, connection) {
@@ -33,48 +32,46 @@ export default class ConnectionManager {
         this._killSwitch = null;
     }
 
-    start(...extraListenArguments) {
+    async start(...extraListenArguments) {
         assert(arguments.length === 0 || Array.isArray(extraListenArguments));
 
-        return this._connection.listen(this._dataHandler.bind(this), this._filter.bind(this), ...extraListenArguments)
-            .then((killSwitch) => {
-                this._killSwitch = killSwitch;
+        try {
+            const killSwitch = await this._connection.listen(this._dataHandler.bind(this), this._filter.bind(this), ...extraListenArguments);
 
-                return undefined;
-            })
-            .tapCatch(() => this._executeKillSwitch());
+            this._killSwitch = killSwitch;
+        } catch (error) {
+            await this._executeKillSwitch();
+
+            throw error;
+        }
     }
 
-    stop() {
+    async stop() {
         assert.strictEqual(arguments.length, 0);
 
         // TODO: assert killSwitch?
-        return Promise.try(() => {
-            if (typeof this._killSwitch === "function") {
-                this._executeKillSwitch();
-            }
-        });
+        if (typeof this._killSwitch === "function") {
+            await this._executeKillSwitch();
+        }
     }
 
-    _dataHandler(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+    async _dataHandler(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
         assert.fail("Method should be overwritten.");
     }
 
-    _filter(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+    async _filter(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
         assert.fail("Method should be overwritten.");
     }
 
-    _executeKillSwitch() {
+    async _executeKillSwitch() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.try(() => {
-            if (typeof this._killSwitch !== "function") {
-                return;
-            }
+        if (typeof this._killSwitch !== "function") {
+            return;
+        }
 
-            const killSwitch = this._killSwitch;
-            this._killSwitch = null;
-            killSwitch();
-        });
+        const killSwitch = this._killSwitch;
+        this._killSwitch = null;
+        await killSwitch();
     }
 }

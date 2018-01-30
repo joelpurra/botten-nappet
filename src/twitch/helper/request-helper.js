@@ -19,9 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-// const Promise = require("bluebird");
 
-// const axios = require("axios");
 const qs = require("qs");
 
 export default class TokenHelper {

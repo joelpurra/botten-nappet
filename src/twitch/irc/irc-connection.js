@@ -60,7 +60,7 @@ export default class IrcConnection {
         this._dataHandlers = [];
     }
 
-    connect() {
+    async connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._ws, null);
 
@@ -154,7 +154,7 @@ export default class IrcConnection {
             });
     }
 
-    _sendCommandsAndVerifyResponse(cmds, verifier) {
+    async _sendCommandsAndVerifyResponse(cmds, verifier) {
         assert.strictEqual(arguments.length, 2);
         assert(Array.isArray(cmds));
         assert(cmds.length > 0);
@@ -199,23 +199,21 @@ export default class IrcConnection {
         });
     }
 
-    _send(data) {
+    async _send(data) {
         assert.strictEqual(arguments.length, 1);
         assert(data !== undefined && data !== null);
 
-        return Promise.try(() => {
-            let message = null;
+        let message = null;
 
-            if (typeof data === "string") {
-                message = data;
-            } else {
-                message = JSON.stringify(data);
-            }
+        if (typeof data === "string") {
+            message = data;
+        } else {
+            message = JSON.stringify(data);
+        }
 
-            this._logger.debug(data, message.length, "_send");
+        this._logger.debug(data, message.length, "_send");
 
-            this._ws.send(message);
-        });
+        this._ws.send(message);
     }
 
     _onError(error) {
@@ -230,55 +228,53 @@ export default class IrcConnection {
         this.disconnect();
     }
 
-    disconnect() {
+    async disconnect() {
         assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
-        return Promise.try(() => {
-            if (this._ws.readyState !== WebSocket.OPEN) {
-                this._logger.trace("Already disconnected.");
+        if (this._ws.readyState !== WebSocket.OPEN) {
+            this._logger.trace("Already disconnected.");
 
-                return;
-            }
+            return;
+        }
 
-            return new Promise((resolve, reject) => {
-                const hasClosed = () => {
-                    resolve();
-                };
+        return new Promise((resolve, reject) => {
+            const hasClosed = () => {
+                resolve();
+            };
 
-                this._ws.once("close", hasClosed);
+            this._ws.once("close", hasClosed);
 
-                /* eslint-disable promise/catch-or-return */
-                Promise.delay(this._maxDisconnectWaitMilliseconds)
-                    .then(() => reject(new Error("Disconnect timed out.")));
-                /* eslint-enable promise/catch-or-return */
+            /* eslint-disable promise/catch-or-return */
+            Promise.delay(this._maxDisconnectWaitMilliseconds)
+                .then(() => reject(new Error("Disconnect timed out.")));
+            /* eslint-enable promise/catch-or-return */
 
-                this._ws.close();
+            this._ws.close();
+        })
+            .catch(() => {
+                this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
+
+                // NOTE: fallback for a timed out disconnect.
+                this._ws.terminate();
+
+                return undefined;
             })
-                .catch(() => {
-                    this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
+            .then(() => {
+                this._ws = null;
 
-                    // NOTE: fallback for a timed out disconnect.
-                    this._ws.terminate();
-
-                    return undefined;
-                })
-                .then(() => {
-                    this._ws = null;
-
-                    return undefined;
-                });
-        });
+                return undefined;
+            });
     }
 
-    reconnect() {
+    async reconnect() {
         assert.strictEqual(arguments.length, 0);
 
         return this._connection.disconnect()
             .then(() => this._connection.connect());
     }
 
-    _parseMessage(rawMessage) {
+    async _parseMessage(rawMessage) {
         /* This is an example of an IRC message with tags. I split it across
           multiple lines for readability. The spaces at the beginning of each line are
           intentional to show where each set of information is parsed. */
@@ -337,17 +333,16 @@ export default class IrcConnection {
         return parsedMessage;
     }
 
-    _onMessage(message) {
+    async _onMessage(message) {
         assert.strictEqual(arguments.length, 1);
 
-        // TODO: try-catch for bad messages.
-        const data = this._parseMessage(message);
+        const data = await this._parseMessage(message);
 
         // TODO: try-catch for bad handlers.
-        this._dataHandler(data);
+        await this._dataHandler(data);
     };
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
 
         return Promise.filter(
@@ -368,25 +363,23 @@ export default class IrcConnection {
         );
     }
 
-    listen(handler, filter) {
+    async listen(handler, filter) {
         assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof handler, "function");
         assert.strictEqual(typeof filter, "function");
         assert.notStrictEqual(this._ws, null);
 
-        return Promise.try(() => {
-            const dataHandler = {
-                handler: handler,
-                filter: filter,
-            };
+        const dataHandler = {
+            handler: handler,
+            filter: filter,
+        };
 
-            this._dataHandlers.push(dataHandler);
+        this._dataHandlers.push(dataHandler);
 
-            const killSwitch = () => {
-                this._dataHandlers = this._dataHandlers.filter((_dataHandler) => _dataHandler !== dataHandler);
-            };
+        const killSwitch = () => {
+            this._dataHandlers = this._dataHandlers.filter((_dataHandler) => _dataHandler !== dataHandler);
+        };
 
-            return killSwitch;
-        });
+        return killSwitch;
     }
 }

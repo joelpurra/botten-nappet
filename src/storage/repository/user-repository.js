@@ -19,9 +19,66 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-// const Promise = require("bluebird");
 
-const Document = require("camo").Document;
+const {
+    Document,
+    EmbeddedDocument,
+} = require("camo");
+
+class RawToken extends EmbeddedDocument {
+    constructor() {
+        super();
+
+        assert.strictEqual(arguments.length, 0);
+
+        this.schema({
+            access_token: {
+                type: String,
+                unique: true,
+                required: true,
+            },
+            refresh_token: {
+                type: String,
+                unique: true,
+                required: true,
+            },
+            expires_in: {
+                type: Number,
+                required: false,
+            },
+            scope: {
+                // TODO: validate scope as a string or an array of strings>?
+                type: [String],
+                required: false,
+            },
+        });
+    }
+}
+
+class AugmentedToken extends EmbeddedDocument {
+    constructor() {
+        super();
+
+        assert.strictEqual(arguments.length, 0);
+
+        this.schema({
+            storedAt: {
+                type: Number,
+                min: 1,
+                required: true,
+            },
+            expiresApproximatelyAt: {
+                type: Number,
+                min: 1,
+                required: true,
+            },
+            token: {
+                type: RawToken,
+                required: false,
+            },
+        });
+    }
+}
 
 export default class UserRepository extends Document {
     constructor() {
@@ -33,38 +90,11 @@ export default class UserRepository extends Document {
             username: {
                 type: String,
                 match: /^[a-z0-9][a-z0-9-]/i,
+                unique: true,
+                required: true,
             },
             twitchToken: {
-                type: Object,
-                validate: (token) => {
-                    // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
-                    // const sampleResponse = {
-                    //     "access_token": "0123456789abcdefghijABCDEFGHIJ",
-                    //     "refresh_token": "eyJfaWQmNzMtNGCJ9%6VFV5LNrZFUj8oU231/3Aj",
-                    //     "expires_in": 3600,
-                    //     "scope": "viewing_activity_read",
-                    // };
-
-                    const isValid = (
-                        token !== null
-                          && typeof token === "object"
-                          && (
-                              Object.keys(token).length === 4
-                              // NOTE: in case _id is counted.
-                                || Object.keys(token).length === 5
-                          )
-                          && typeof token.access_token === "string"
-                          && token.access_token.length > 0
-                          && typeof token.refresh_token === "string"
-                          && token.refresh_token.length > 0
-                          && typeof token.expires_in === "number"
-                          && token.expires_in > 0
-                          && typeof token.scope === "string"
-                          && token.scope.length > 0
-                    );
-
-                    return isValid;
-                },
+                type: AugmentedToken,
             },
         });
     }

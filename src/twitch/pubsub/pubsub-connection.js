@@ -38,7 +38,7 @@ export default class PubSubConnection {
         this._maxDisconnectWaitMilliseconds = 10 * 1000;
     }
 
-    connect() {
+    async connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._ws, null);
 
@@ -95,23 +95,21 @@ export default class PubSubConnection {
             });
     }
 
-    _send(data) {
+    async _send(data) {
         assert.strictEqual(arguments.length, 1);
         assert(data !== undefined && data !== null);
 
-        return Promise.try(() => {
-            let message = null;
+        let message = null;
 
-            if (typeof data === "string") {
-                message = data;
-            } else {
-                message = JSON.stringify(data);
-            }
+        if (typeof data === "string") {
+            message = data;
+        } else {
+            message = JSON.stringify(data);
+        }
 
-            this._logger.debug(data, message.length, "_send");
+        this._logger.debug(data, message.length, "_send");
 
-            this._ws.send(message);
-        });
+        this._ws.send(message);
     }
 
     _onError(error) {
@@ -126,47 +124,45 @@ export default class PubSubConnection {
         this.disconnect();
     }
 
-    disconnect() {
+    async disconnect() {
         assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._ws, null);
 
-        return Promise.try(() => {
-            if (this._ws.readyState !== WebSocket.OPEN) {
-                // this._logger.warn("Already disconnected.");
-                return;
-            }
+        if (this._ws.readyState !== WebSocket.OPEN) {
+            // this._logger.warn("Already disconnected.");
+            return;
+        }
 
-            return new Promise((resolve, reject) => {
-                const hasClosed = () => {
-                    resolve();
-                };
+        return new Promise((resolve, reject) => {
+            const hasClosed = () => {
+                resolve();
+            };
 
-                this._ws.once("close", hasClosed);
+            this._ws.once("close", hasClosed);
 
-                /* eslint-disable promise/catch-or-return */
-                Promise.delay(this._maxDisconnectWaitMilliseconds)
-                    .then(() => reject(new Error("Disconnect timed out.")));
-                /* eslint-enable promise/catch-or-return */
+            /* eslint-disable promise/catch-or-return */
+            Promise.delay(this._maxDisconnectWaitMilliseconds)
+                .then(() => reject(new Error("Disconnect timed out.")));
+            /* eslint-enable promise/catch-or-return */
 
-                this._ws.close();
+            this._ws.close();
+        })
+            .catch(() => {
+                this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
+
+                // NOTE: fallback for a timed out disconnect.
+                this._ws.terminate();
+
+                return undefined;
             })
-                .catch(() => {
-                    this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
+            .then(() => {
+                this._ws = null;
 
-                    // NOTE: fallback for a timed out disconnect.
-                    this._ws.terminate();
-
-                    return undefined;
-                })
-                .then(() => {
-                    this._ws = null;
-
-                    return undefined;
-                });
-        });
+                return undefined;
+            });
     }
 
-    listen(dataHandler, filter, userAccessToken, topics) {
+    async listen(dataHandler, filter, userAccessToken, topics) {
         assert.strictEqual(arguments.length, 4);
         assert.strictEqual(typeof dataHandler, "function");
         assert.strictEqual(typeof filter, "function");

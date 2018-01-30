@@ -22,12 +22,12 @@ const assert = require("power-assert");
 
 const Promise = require("bluebird");
 
-export default class ShutdownManager {
+export default class GracefulShutdownManager {
     constructor(logger) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof logger, "object");
 
-        this._logger = logger.child("ShutdownManager");
+        this._logger = logger.child("GracefulShutdownManager");
 
         this._shutdownHandlers = [];
         this._shutdownEvents = [

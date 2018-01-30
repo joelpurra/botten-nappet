@@ -38,11 +38,10 @@ export default class PubSubManager extends ConnectionManager {
         this._topics = topics;
     }
 
-    start() {
+    async start() {
         assert.strictEqual(arguments.length, 0);
 
-        return Promise.resolve()
-            .then(() => this._userAccessTokenProvider())
-            .then((twitchUserAccessToken) => super.start(twitchUserAccessToken, this._topics));
+        const twitchUserAccessToken = await this._userAccessTokenProvider();
+        await super.start(twitchUserAccessToken, this._topics);
     }
 }

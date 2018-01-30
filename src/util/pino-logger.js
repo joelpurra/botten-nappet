@@ -20,8 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const assert = require("power-assert");
 
-// const Promise = require("bluebird");
-
 export default class PinoLogger {
     constructor(parentPinoLogger) {
         assert.strictEqual(arguments.length, 1);

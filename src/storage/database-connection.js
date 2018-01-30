@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 const connect = require("camo").connect;
 
@@ -37,26 +36,20 @@ export default class DatabaseConnection {
         this._database = null;
     }
 
-    connect() {
+    async connect() {
         assert.strictEqual(arguments.length, 0);
         assert.strictEqual(this._database, null);
 
-        return Promise.try(() => {
-            return connect(this._uri)
-                .then((db) => {
-                    this._database = db;
+        const db = await connect(this._uri);
+        this._database = db;
 
-                    return undefined;
-                });
-        });
+        return undefined;
     }
 
-    disconnect() {
+    async disconnect() {
         assert.strictEqual(arguments.length, 0);
         assert.notStrictEqual(this._database, null);
 
-        return Promise.try(() => {
-            return this._database.close();
-        });
+        return this._database.close();
     }
 }

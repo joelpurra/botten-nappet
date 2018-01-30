@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import PollingManager from "../polling-manager";
 
 const assert = require("power-assert");
-const Promise = require("bluebird");
 
 export default class FollowingPollingHandler extends PollingManager {
     constructor(logger, connection, ircConnection, ircChannel) {
@@ -42,11 +41,11 @@ export default class FollowingPollingHandler extends PollingManager {
         this._lastFollowingMessageTimestamp = Date.now();
     }
 
-    _dataHandler(data) {
+    async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        const newFollows = this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
+        const newFollows = await this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
 
         this._lastFollowingMessageTimestamp = Date.now();
 
@@ -61,28 +60,26 @@ export default class FollowingPollingHandler extends PollingManager {
         });
     }
 
-    _filter(data) {
+    async _filter(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        return Promise.try(() => {
-            if (typeof data !== "object") {
-                return false;
-            }
+        if (typeof data !== "object") {
+            return false;
+        }
 
-            if (!Array.isArray(data.follows)) {
-                return false;
-            }
+        if (!Array.isArray(data.follows)) {
+            return false;
+        }
 
-            const newFollows = this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
+        const newFollows = await this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
 
-            const shouldHandle = newFollows.length > 0;
+        const shouldHandle = newFollows.length > 0;
 
-            return shouldHandle;
-        });
+        return shouldHandle;
     }
 
-    _getNewFollows(follows, since) {
+    async _getNewFollows(follows, since) {
         const newFollows = follows.filter((follow) => {
             const followedAt = Date.parse(follow.created_at);
 
