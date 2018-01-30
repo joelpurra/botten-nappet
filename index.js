@@ -19,10 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import PinoLogger from "./src/util/pino-logger";
-import ShutdownManager from "./src/util/shutdown-manager";
+import GracefulShutdownManager from "./src/util/graceful-shutdown-manager";
 import DatabaseConnection from "./src/storage/database-connection";
 import UserRepository from "./src/storage/repository/user-repository";
 import UserStorageManager from "./src/storage/manager/user-storage-manager";
+
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
 import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
 import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
@@ -108,7 +109,7 @@ const rootPinoLogger = pino(
 
 const rootLogger = new PinoLogger(rootPinoLogger);
 const indexLogger = rootLogger.child("index");
-const shutdownManager = new ShutdownManager(rootLogger);
+const gracefulShutdownManager = new GracefulShutdownManager(rootLogger);
 const databaseConnection = new DatabaseConnection(rootLogger, databaseUri);
 const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(rootLogger, twitchAppClientId, twitchAppClientSecret, twitchAppScopes, twitchAppTokenRefreshInterval, false, twitchOAuthTokenUri, "post");
 const twitchApplicationTokenManager = new TwitchApplicationTokenManager(rootLogger, twitchPollingApplicationTokenConnection, twitchAppClientId, twitchOAuthTokenRevocationUri);
@@ -117,14 +118,14 @@ const twitchRequestHelper = new TwitchRequestHelper(rootLogger);
 const twitchTokenHelper = new TwitchTokenHelper(rootLogger, twitchRequestHelper, twitchOAuthTokenRevocationUri, twitchOAuthTokenVerificationUri, twitchAppClientId);
 
 const main = async() => {
-    await shutdownManager.start();
+    await gracefulShutdownManager.start();
     await databaseConnection.connect();
 
     indexLogger.info("Managed.");
 
     const shutdown = async(incomingError) => {
         await databaseConnection.disconnect();
-        await shutdownManager.stop();
+        await gracefulShutdownManager.stop();
 
         if (incomingError) {
             indexLogger.error("Unmanaged.", incomingError);
@@ -268,7 +269,7 @@ const main = async() => {
                 };
 
                 try {
-                    await shutdownManager.waitForShutdownSignal();
+                    await gracefulShutdownManager.waitForShutdownSignal();
 
                     await stop();
                 }
