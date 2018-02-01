@@ -42,7 +42,7 @@ export default class NewChatterIrcHandler extends IrcManager {
         // TODO: use a string templating system.
         // TODO: configure message.
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(`PRIVMSG ${data.channel} :Hiya ${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
+        this._connection._send(`PRIVMSG ${data.channel} :Hiya @${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
     }
 
     async _filter(data) {

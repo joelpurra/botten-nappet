@@ -62,9 +62,9 @@ export default class GreetingIrcHandler extends IrcManager {
         let message = null;
 
         if (data.tags.subscriber === "1") {
-            message = `PRIVMSG ${data.channel} :Hiya ${data.username}, loyal rubber ducky, how are you?`;
+            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, loyal rubber ducky, how are you?`;
         } else {
-            message = `PRIVMSG ${data.channel} :Hiya ${data.username}, how are you?`;
+            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, how are you?`;
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?
