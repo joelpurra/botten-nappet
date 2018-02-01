@@ -194,7 +194,7 @@ const main = async() => {
             };
 
             const twitchUserToken = await twitchUserTokenProvider();
-            const twitchUserId = await twitchTokenHelper.getUserIdByAccessToken(twitchUserToken);
+            const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserToken.token);
 
             // TODO: use twitchUserIdProvider instead of twitchUserId.
             // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
