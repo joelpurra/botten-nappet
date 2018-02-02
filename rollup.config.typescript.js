@@ -18,9 +18,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import babel from "rollup-plugin-babel";
+import rollupTypescript from "rollup-plugin-typescript";
+const typescript = require("typescript");
 
 export default () =>
-    babel({
-        exclude: "node_modules/**",
+    rollupTypescript({
+        typescript: typescript,
     });
