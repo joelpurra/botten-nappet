@@ -49,12 +49,11 @@ export default class TokenHelper {
         this._appClientId = appClientId;
     }
 
-    async _getTokenValidation(token) {
+    async _getTokenValidation(rawToken) {
         assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.token, "object");
-        assert.strictEqual(typeof token.token.access_token, "string");
-        assert(token.token.access_token.length > 0);
+        assert.strictEqual(typeof rawToken, "object");
+        assert.strictEqual(typeof rawToken.access_token, "string");
+        assert(rawToken.access_token.length > 0);
 
         // https://dev.twitch.tv/docs/v5#root-url
         //
@@ -74,7 +73,7 @@ export default class TokenHelper {
         //     },
         // };
 
-        const accessToken = token.token.access_token;
+        const accessToken = rawToken.access_token;
 
         // TODO: use an https class.
         const response = await axios.get(
@@ -94,19 +93,18 @@ export default class TokenHelper {
         // NOTE: twitch response data.
         const tokenValidation = data.token;
 
-        this._logger.trace(token, tokenValidation, "_getTokenValidation");
+        this._logger.trace(rawToken, tokenValidation, "_getTokenValidation");
 
         return tokenValidation;
     }
 
-    async revoke(token) {
+    async revoke(rawToken) {
         assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.token, "object");
+        assert.strictEqual(typeof rawToken, "object");
 
         // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
 
-        const accessToken = token.token.access_token;
+        const accessToken = rawToken.access_token;
 
         const params = {
             client_id: this._appClientId,
@@ -125,7 +123,7 @@ export default class TokenHelper {
         // NOTE: axios response data.
         const data = response.data;
 
-        this._logger.trace(token, data, "revoke");
+        this._logger.trace(rawToken, data, "revoke");
 
         return data;
     }
@@ -146,24 +144,23 @@ export default class TokenHelper {
         return false;
     }
 
-    async validate(token) {
+    async validate(rawToken) {
         assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.token, "object");
+        assert.strictEqual(typeof rawToken, "object");
 
         // TODO: only allow a single outstanding token validation per user.
         // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
-        const tokenValidation = await this._getTokenValidation(token);
+        const tokenValidation = await this._getTokenValidation(rawToken);
 
         // NOTE: twitch response data.
         const valid = tokenValidation.valid;
 
-        this._logger.trace(token, valid, "validate");
+        this._logger.trace(rawToken, valid, "validate");
 
         return valid;
     }
 
-    async getUserIdByAccessToken(token) {
+    async getUserIdByRawAccessToken(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
 
@@ -172,12 +169,12 @@ export default class TokenHelper {
         // NOTE: twitch response data.
         const userId = tokenValidation.user_id;
 
-        this._logger.trace(token, userId, "getUserIdByAccessToken");
+        this._logger.trace(token, userId, "getUserIdByRawAccessToken");
 
         return userId;
     }
 
-    async getUserNameByAccessToken(token) {
+    async getUserNameByRawAccessToken(token) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof token, "object");
 
@@ -186,7 +183,7 @@ export default class TokenHelper {
         // NOTE: twitch response data.
         const userName = tokenValidation.user_name;
 
-        this._logger.trace(token, userName, "getUserNameByAccessToken");
+        this._logger.trace(token, userName, "getUserNameByRawAccessToken");
 
         return userName;
     }

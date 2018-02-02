@@ -32,6 +32,8 @@ import TwitchIrcPingHandler from "./src/twitch/irc/handler/ping";
 import TwitchIrcGreetingHandler from "./src/twitch/irc/handler/greeting";
 import TwitchIrcNewChatterHandler from "./src/twitch/irc/handler/new-chatter";
 import TwitchIrcSubscribingHandler from "./src/twitch/irc/handler/subscribing";
+import TwitchIrcFollowReminderHandler from "./src/twitch/irc/handler/follow-reminder";
+import TwitchIrcTextResponseCommandHandler from "./src/twitch/irc/handler/text-response-command";
 import PollingClientIdConnection from "./src/twitch/polling/connection/polling-clientid-connection";
 import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 import TwitchPollingApplicationTokenConnection from "./src/twitch/authentication/polling-application-token-connection";
@@ -194,7 +196,7 @@ const main = async() => {
             };
 
             const twitchUserToken = await twitchUserTokenProvider();
-            const twitchUserId = await twitchTokenHelper.getUserIdByAccessToken(twitchUserToken);
+            const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserToken.token);
 
             // TODO: use twitchUserIdProvider instead of twitchUserId.
             // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
@@ -238,6 +240,8 @@ const main = async() => {
                 const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(rootLogger, twitchIrcConnection, twitchUserName);
                 const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
                 const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
+                const twitchIrcFollowReminderHandler = new TwitchIrcFollowReminderHandler(rootLogger, twitchIrcConnection);
+                const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(rootLogger, twitchIrcConnection);
                 const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(rootLogger, twitchPollingFollowingConnection, twitchIrcConnection, twitchChannelName);
 
                 const startables = [
@@ -247,6 +251,8 @@ const main = async() => {
                     twitchIrcGreetingHandler,
                     twitchIrcNewChatterHandler,
                     twitchIrcSubscribingHandler,
+                    twitchIrcFollowReminderHandler,
+                    twitchIrcTextResponseCommandHandler,
                     twitchPollingFollowingHandler,
                 ];
 

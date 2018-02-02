@@ -44,9 +44,9 @@ export default class SubscribingIrcHandler extends IrcManager {
         let message = null;
 
         if (data.tags["msg-id"] === "resub") {
-            message = `PRIVMSG ${data.channel} :Wow, ${data.tags.login}, thanks for getting your ${data.tags["msg-param-months"]} rubber duckies in a row!`;
+            message = `PRIVMSG ${data.channel} :Wow, @${data.tags.login}, thanks for getting your ${data.tags["msg-param-months"]} rubber duckies in a row!`;
         } else {
-            message = `PRIVMSG ${data.channel} :Wow, ${data.tags.login}, thanks for being my rubber ducky!`;
+            message = `PRIVMSG ${data.channel} :Wow, @${data.tags.login}, thanks for being my rubber ducky!`;
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?

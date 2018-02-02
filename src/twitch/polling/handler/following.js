@@ -54,7 +54,7 @@ export default class FollowingPollingHandler extends PollingManager {
 
             // TODO: use a string templating system.
             // TODO: configure message.
-            const message = `PRIVMSG ${this._ircChannel} :Hey ${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
+            const message = `PRIVMSG ${this._ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
 
             this._ircConnection._send(message);
         });

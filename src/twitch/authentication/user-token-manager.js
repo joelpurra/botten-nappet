@@ -38,7 +38,7 @@ export default class UserTokenManager {
         assert(username.length > 0);
 
         const userToken = await this._userTokenHelper.get(username);
-        const isValid = await this._tokenHelper.validate(userToken);
+        const isValid = await this._tokenHelper.validate(userToken.token);
 
         if (isValid) {
             return userToken;
