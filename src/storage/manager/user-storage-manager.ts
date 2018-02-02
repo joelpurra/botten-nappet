@@ -18,28 +18,35 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
+
+import IAugmentedToken from "../../twitch/authentication/iaugmented-token";
+import IRawToken from "../../twitch/authentication/iraw-token";
+import PinoLogger from "../../util/pino-logger";
+import IUser from "../iuser";
+import IUserCamo from "../iuser-camo";
+import UserRepositoryClass from "../repository/user-repository";
 
 export default class UserStorageManager {
-    constructor(
-        logger,
-        UserRepository
-    ) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof UserRepository, "function");
+    public _UserRepository: UserRepositoryClass;
+    public _logger: PinoLogger;
+    constructor(logger: PinoLogger, UserRepository: UserRepositoryClass) {
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof UserRepository, "function");
 
         this._logger = logger.child("UserStorageManager");
         this._UserRepository = UserRepository;
     }
 
-    async getByUsername(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
+    public async getByUsername(username: string) {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(username);
 
         const findUser = {
-            username: username,
+            username,
         };
 
         const user = await this._UserRepository.findOne(findUser);
@@ -49,17 +56,16 @@ export default class UserStorageManager {
         return user;
     }
 
-    async store(user) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof user, "object");
-        assert.strictEqual(typeof user.username, "string");
-        assert(user.username.length > 0);
+    public async store(user: IUser) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof user, "object");
+        assert.nonEmptyString(user.username);
 
         const findUser = {
             username: user.username,
         };
 
-        const userFromDatabase = await this._UserRepository.findOne(findUser);
+        const userFromDatabase: IUserCamo = await this._UserRepository.findOne(findUser);
 
         const userFromDatabaseWithoutId = {
             ...userFromDatabase,
@@ -68,19 +74,18 @@ export default class UserStorageManager {
         delete userFromDatabaseWithoutId._schema;
 
         // TODO: deep merge.
-        const upsertUser = {
-            ...userFromDatabaseWithoutId,
+        const upsertUser: IUser = {
+            ...userFromDatabaseWithoutId as IUser,
             ...user,
         };
         delete upsertUser._id;
-        delete upsertUser._schema;
 
         const userAfterStoring = await this._UserRepository.findOneAndUpdate(
             userFromDatabaseWithoutId,
             upsertUser,
             {
                 upsert: true,
-            }
+            },
         );
 
         this._logger.trace(userAfterStoring, "store");
@@ -88,12 +93,11 @@ export default class UserStorageManager {
         return userAfterStoring;
     }
 
-    async storeToken(username, rawToken) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
+    public async storeToken(username: string, rawToken: IRawToken): Promise<IUser> {
+        assert.hasLength(arguments, 2);
+        assert.nonEmptyString(username);
         // NOTE: rawToken can be null, to "forget" it.
-        assert.strictEqual(typeof rawToken, "object");
+        assert.equal(typeof rawToken, "object");
         // TODO: type system.
         assert(rawToken === null || typeof rawToken.access_token === "string");
         assert(rawToken === null || rawToken.access_token.length > 0);
@@ -111,15 +115,15 @@ export default class UserStorageManager {
             expiresApproximatelyAt = storedAt + rawToken.expires_in;
         }
 
-        const augmentedToken = {
-            storedAt: storedAt,
-            expiresApproximatelyAt: expiresApproximatelyAt,
+        const augmentedToken: IAugmentedToken = {
+            expiresApproximatelyAt,
+            storedAt,
             token: rawToken,
         };
 
-        const userWithToken = {
-            username: username,
+        const userWithToken: IUser = {
             twitchToken: augmentedToken,
+            username,
         };
 
         const userAfterStoring = await this.store(userWithToken);

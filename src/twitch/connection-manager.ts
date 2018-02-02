@@ -18,13 +18,23 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
 
-export default class ConnectionManager {
-    constructor(logger, connection) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+import PinoLogger from "../util/pino-logger";
+import IConnection from "./iconnection";
+
+export default abstract class ConnectionManager {
+    // TODO: make connection private.
+    protected _connection: any;
+    protected _logger: PinoLogger;
+    private _killSwitch: ((() => void) | null);
+
+    constructor(logger: PinoLogger, connection: IConnection) {
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("ConnectionManager");
         this._connection = connection;
@@ -32,11 +42,15 @@ export default class ConnectionManager {
         this._killSwitch = null;
     }
 
-    async start(...extraListenArguments) {
+    public async start(...extraListenArguments: any[]) {
         assert(arguments.length === 0 || Array.isArray(extraListenArguments));
 
         try {
-            const killSwitch = await this._connection.listen(this._dataHandler.bind(this), this._filter.bind(this), ...extraListenArguments);
+            const killSwitch = await this._connection.listen(
+                this._dataHandler.bind(this),
+                this._filter.bind(this),
+                ...extraListenArguments,
+            );
 
             this._killSwitch = killSwitch;
         } catch (error) {
@@ -46,8 +60,8 @@ export default class ConnectionManager {
         }
     }
 
-    async stop() {
-        assert.strictEqual(arguments.length, 0);
+    public async stop() {
+        assert.hasLength(arguments, 0);
 
         // TODO: assert killSwitch?
         if (typeof this._killSwitch === "function") {
@@ -55,22 +69,18 @@ export default class ConnectionManager {
         }
     }
 
-    async _dataHandler(data) {
-        assert.fail("Method should be overwritten.");
-    }
+    protected abstract async _dataHandler(data: any): Promise<void>;
+    protected abstract async _filter(data: any): Promise<boolean>;
 
-    async _filter(data) {
-        assert.fail("Method should be overwritten.");
-    }
+    private async _executeKillSwitch() {
+        assert.hasLength(arguments, 0);
 
-    async _executeKillSwitch() {
-        assert.strictEqual(arguments.length, 0);
+        const killSwitch = this._killSwitch;
 
-        if (typeof this._killSwitch !== "function") {
+        if (killSwitch === null) {
             return;
         }
 
-        const killSwitch = this._killSwitch;
         this._killSwitch = null;
         await killSwitch();
     }

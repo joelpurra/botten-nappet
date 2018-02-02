@@ -18,17 +18,25 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
-
 export default class FollowReminderIrcHandler extends IrcManager {
-    constructor(logger, connection) {
+    public _reminderMessages: string[];
+    public _reminderIntervalMilliseconds: number;
+    public _reminderIntervalId: (number | NodeJS.Timer | null);
+
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("FollowReminderIrcHandler");
         this._reminderIntervalId = null;
@@ -39,32 +47,33 @@ export default class FollowReminderIrcHandler extends IrcManager {
             "Enjoying the stream? Hit that follow button! 😀",
             "I know not everyone wants to be a follower, but keep in mind that followers receive super-handy notifications when a live stream starts 😀",
             "Want to ask a question but haven't prepared it yet? Follow and then ask it the next live stream 😀",
+
             // NOTE: per-restart calculation of the random value. Re-calculate per reminder?
             `Did you know followers are up to ${(50 + (Math.random() * 50)).toString().substring(0, 5)}% more likely to not miss the next live stream? 😀`,
         ];
     }
 
-    async start() {
-        assert.strictEqual(arguments.length, 0);
-        assert.strictEqual(this._reminderIntervalId, null);
+    public async start() {
+        assert.hasLength(arguments, 0);
+        assert.equal(this._reminderIntervalId, null);
 
         await super.start();
 
         this._reminderIntervalId = setInterval(() => this._remind(), this._reminderIntervalMilliseconds);
     }
 
-    async stop() {
-        assert.strictEqual(arguments.length, 0);
-        assert.notStrictEqual(this._reminderIntervalId, null);
+    public async stop() {
+        assert.hasLength(arguments, 0);
+        assert.not.equal(this._reminderIntervalId, null);
 
-        clearInterval(this._reminderIntervalId);
+        clearInterval(this._reminderIntervalId as NodeJS.Timer);
         this._reminderIntervalId = null;
 
         return super.stop();
     }
 
-    _getReminder() {
-        assert.strictEqual(arguments.length, 0);
+    public _getReminder() {
+        assert.hasLength(arguments, 0);
 
         // TODO: get library for random integers.
         const randomReminderMessageIndex = Math.floor(Math.random() * this._reminderMessages.length);
@@ -74,8 +83,8 @@ export default class FollowReminderIrcHandler extends IrcManager {
         return randomReminderMessage;
     }
 
-    _remind() {
-        assert.strictEqual(arguments.length, 0);
+    public _remind() {
+        assert.hasLength(arguments, 0);
 
         this._logger.trace("Sending reminder", "_remind");
 
@@ -89,16 +98,16 @@ export default class FollowReminderIrcHandler extends IrcManager {
         this._connection._send(message);
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         throw new Error("Unexpected call to _dataHandler.");
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         return false;
     }

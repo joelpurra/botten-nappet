@@ -18,38 +18,49 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
+interface ICommandAndResponse {
+    [key: string]: string;
+}
 
 export default class TextResponseCommandIrcHandler extends IrcManager {
-    constructor(logger, connection) {
+    public _commandsAndResponses: ICommandAndResponse;
+    public _commandPrefix: string;
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("TextResponseCommandIrcHandler");
 
         this._commandPrefix = "!";
         this._commandsAndResponses = {
             // TODO: command aliases.
-            help: "For bot details see https://joelpurra.com/projects/botten-nappet/",
-            commands: "For bot details see https://joelpurra.com/projects/botten-nappet/",
             bot: "For bot details see https://joelpurra.com/projects/botten-nappet/",
+            commands: "For bot details see https://joelpurra.com/projects/botten-nappet/",
+            help: "For bot details see https://joelpurra.com/projects/botten-nappet/",
         };
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         this._logger.trace("Responding to command.", data.username, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        const tokenizedMessageParts = data.message
+        const tokenizedMessageParts = data.message!
             .toLowerCase()
             .split(/[^a-z]+/)
             .map((tokenizedPart) => tokenizedPart.trim())
@@ -66,13 +77,11 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
 
         // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send(message);
-
-        return message;
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;
@@ -97,7 +106,8 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
             .filter((tokenizedPart) => tokenizedPart.length > 0);
 
         const incomingCommand = tokenizedMessageParts[0];
-        const isKnownCommand = Object.keys(this._commandsAndResponses).some((knownCommand) => incomingCommand === knownCommand);
+        const isKnownCommand = Object.keys(this._commandsAndResponses)
+            .some((knownCommand) => incomingCommand === knownCommand);
 
         return isKnownCommand;
     }

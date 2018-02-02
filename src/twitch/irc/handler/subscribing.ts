@@ -18,44 +18,55 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
-
 export default class SubscribingIrcHandler extends IrcManager {
-    constructor(logger, connection) {
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("SubscribingIrcHandler");
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: IParsedMessage): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
-        this._logger.trace("Responding to subscriber.", data.tags.login, data.message, "_dataHandler");
+        const tags = data.tags!;
+        const username = tags.login;
+
+        this._logger.trace("Responding to subscriber.", username, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
         let message = null;
 
-        if (data.tags["msg-id"] === "resub") {
-            message = `PRIVMSG ${data.channel} :Wow, @${data.tags.login}, thanks for getting your ${data.tags["msg-param-months"]} rubber duckies in a row!`;
+        const msgId = tags["msg-id"];
+        const msgParamMonths = tags["msg-param-months"];
+
+        if (msgId === "resub") {
+            message = `PRIVMSG ${data.channel} :Wow, @${username}, thanks for getting your ${msgParamMonths} rubber duckies in a row!`;
         } else {
-            message = `PRIVMSG ${data.channel} :Wow, @${data.tags.login}, thanks for being my rubber ducky!`;
+            message = `PRIVMSG ${data.channel} :Wow, @${username}, thanks for being my rubber ducky!`;
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send(message);
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: IParsedMessage): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;
@@ -65,11 +76,23 @@ export default class SubscribingIrcHandler extends IrcManager {
             return false;
         }
 
-        if (typeof data.tags["msg-id"] !== "string") {
+        const tags = data.tags;
+
+        if (tags === null) {
             return false;
         }
 
-        if (data.tags["msg-id"] !== "sub" && data.tags["msg-id"] !== "resub") {
+        if (typeof tags !== "object") {
+            return false;
+        }
+
+        const msgId = tags["msg-id"];
+
+        if (typeof msgId !== "string") {
+            return false;
+        }
+
+        if (msgId !== "sub" && msgId !== "resub") {
             return false;
         }
 

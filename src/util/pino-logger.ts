@@ -18,50 +18,97 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    Logger,
+} from "../../node_modules/@types/pino/index";
+
+import {
+    assert,
+} from "check-types";
 
 export default class PinoLogger {
-    _loggingMethods: string[];
-    _parentPinoLogger: any;
-    
-    constructor(parentPinoLogger) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof parentPinoLogger, "object");
+    private _parentPinoLogger: Logger;
+
+    constructor(parentPinoLogger: Logger) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof parentPinoLogger, "object");
 
         this._parentPinoLogger = parentPinoLogger;
-
-        this._loggingMethods = [
-            "fatal",
-            "error",
-            "warn",
-            "info",
-            "debug",
-            "trace",
-        ];
-
-        this._loggingMethods.forEach(
-            (loggingMethod) => {
-                this[loggingMethod] = (...args) => {
-                    this._parentPinoLogger[loggingMethod]({
-                        // TODO: serialize error objects etcetera.
-                        // args: this._serialize(args),
-                        args: args,
-                    });
-
-                    // TODO: configure to flush only during development/debugging.
-                    this._parentPinoLogger.flush();
-                };
-            }
-        );
     }
 
-    child(childName) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof childName, "string");
+    public fatal(...args: any[]): void {
+        this._parentPinoLogger.fatal({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public error(...args: any[]): void {
+        this._parentPinoLogger.error({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public warn(...args: any[]): void {
+        this._parentPinoLogger.warn({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public info(...args: any[]): void {
+        this._parentPinoLogger.info({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public debug(...args: any[]): void {
+        this._parentPinoLogger.debug({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public trace(...args: any[]): void {
+        this._parentPinoLogger.trace({
+            // TODO: serialize error objects etcetera.
+            // args: this._serialize(args),
+            args,
+        });
+
+        // TODO: configure to flush only during development/debugging.
+        this._parentPinoLogger.flush();
+    }
+
+    public child(childName: string): PinoLogger {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof childName, "string");
         assert(childName.length > 0);
 
         const childBindings = {
-            childName: childName,
+            childName,
         };
 
         const pinoLogger = this._parentPinoLogger.child(childBindings);

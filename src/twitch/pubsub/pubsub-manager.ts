@@ -18,30 +18,39 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../util/pino-logger";
 import ConnectionManager from "../connection-manager";
+import IConnection from "../iconnection";
 
-const assert = require("power-assert");
-
-export default class PubSubManager extends ConnectionManager {
-    constructor(logger, connection, userAccessTokenProvider, topics) {
+export default abstract class PubSubManager extends ConnectionManager {
+    public _topics: string[];
+    public _userAccessTokenProvider: any;
+    constructor(logger: PinoLogger, connection: IConnection, userAccessTokenProvider, topics: string[]) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 4);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof userAccessTokenProvider, "function");
-        assert(Array.isArray(topics));
-        assert(topics.length > 0);
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+        assert.equal(typeof userAccessTokenProvider, "function");
+        assert.array(topics);
+        assert.greater(topics.length, 0);
 
         this._logger = logger.child("PubSubManager");
         this._userAccessTokenProvider = userAccessTokenProvider;
         this._topics = topics;
     }
 
-    async start() {
-        assert.strictEqual(arguments.length, 0);
+    public async start() {
+        assert.hasLength(arguments, 0);
 
         const twitchUserAccessToken = await this._userAccessTokenProvider();
         await super.start(twitchUserAccessToken, this._topics);
     }
+
+    protected abstract async _dataHandler(topic: string, data: object): Promise<void>;
+    protected abstract async _filter(topic: string, data: object): Promise<boolean>;
 }

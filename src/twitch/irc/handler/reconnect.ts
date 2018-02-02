@@ -18,24 +18,29 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
-
 export default class ReconnectIrcHandler extends IrcManager {
-    constructor(logger, connection) {
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("ReconnectIrcHandler");
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: IParsedMessage): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         this._logger.info("Reconnecting irc upon server request.", "_dataHandler");
 
@@ -43,9 +48,9 @@ export default class ReconnectIrcHandler extends IrcManager {
         this._connection.reconnect();
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: IParsedMessage): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         return data.command === "RECONNECT";
     }

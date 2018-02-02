@@ -18,21 +18,32 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IConnection from "../../iconnection";
+import IIRCConnection from "../../irc/iirc-connection";
 import PollingManager from "../polling-manager";
 
-const assert = require("power-assert");
+type TwitchApiV5ChannelFollower = any;
+type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
 
 export default class FollowingPollingHandler extends PollingManager {
-    constructor(logger, connection, ircConnection, ircChannel) {
+    public _lastFollowingMessageTimestamp: number;
+    public _ircChannel: string;
+    public _ircConnection: IIRCConnection;
+    constructor(logger: PinoLogger, connection: IConnection, ircConnection: IIRCConnection, ircChannel: string) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 4);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof ircConnection, "object");
-        assert.strictEqual(typeof ircChannel, "string");
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+        assert.equal(typeof ircConnection, "object");
+        assert.equal(typeof ircChannel, "string");
         assert(ircChannel.startsWith("#"));
-        assert(ircChannel.length > 1);
+        assert.greater(ircChannel.length, 1);
 
         this._ircConnection = ircConnection;
         this._ircChannel = ircChannel;
@@ -41,9 +52,9 @@ export default class FollowingPollingHandler extends PollingManager {
         this._lastFollowingMessageTimestamp = Date.now();
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: any): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         const newFollows = await this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
 
@@ -54,15 +65,16 @@ export default class FollowingPollingHandler extends PollingManager {
 
             // TODO: use a string templating system.
             // TODO: configure message.
-            const message = `PRIVMSG ${this._ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
+            const message =
+                `PRIVMSG ${this._ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
 
-            this._ircConnection._send(message);
+            this._ircConnection.send(message);
         });
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: any): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;
@@ -79,7 +91,7 @@ export default class FollowingPollingHandler extends PollingManager {
         return shouldHandle;
     }
 
-    async _getNewFollows(follows, since) {
+    public async _getNewFollows(follows: TwitchApiV5ChannelFollowers, since: number) {
         const newFollows = follows.filter((follow) => {
             const followedAt = Date.parse(follow.created_at);
 

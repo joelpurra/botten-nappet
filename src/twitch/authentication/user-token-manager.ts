@@ -18,33 +18,48 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
+import PinoLogger from "../../util/pino-logger";
+import TokenHelper from "../helper/token-helper";
+import UserTokenHelper from "../helper/user-token-helper";
+import IAugmentedToken from "./iaugmented-token";
+import IRawToken from "./iraw-token";
 
 export default class UserTokenManager {
-    constructor(logger, tokenHelper, userTokenHelper) {
-        assert.strictEqual(arguments.length, 3);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof tokenHelper, "object");
-        assert.strictEqual(typeof userTokenHelper, "object");
+    public _userTokenHelper: UserTokenHelper;
+    public _tokenHelper: TokenHelper;
+    public _logger: PinoLogger;
+
+    constructor(logger: PinoLogger, tokenHelper: TokenHelper, userTokenHelper: UserTokenHelper) {
+        assert.hasLength(arguments, 3);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof tokenHelper, "object");
+        assert.equal(typeof userTokenHelper, "object");
 
         this._logger = logger.child("UserTokenManager");
         this._tokenHelper = tokenHelper;
         this._userTokenHelper = userTokenHelper;
     }
 
-    async get(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
+    public async get(username: string): Promise<IAugmentedToken> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof username, "string");
         assert(username.length > 0);
 
-        const userToken = await this._userTokenHelper.get(username);
-        const isValid = await this._tokenHelper.validate(userToken.token);
+        const augmentedToken: IAugmentedToken = await this._userTokenHelper.get(username);
+        let isValid = false;
 
-        if (isValid) {
-            return userToken;
+        if (augmentedToken.token !== null) {
+            isValid = await this._tokenHelper.validate(augmentedToken.token);
         }
 
-        const rawRefreshedToken = await this._userTokenHelper.refresh(userToken);
+        if (isValid) {
+            return augmentedToken;
+        }
+
+        const rawRefreshedToken = await this._userTokenHelper.refresh(augmentedToken);
         const isRefreshedTokenValid = await this._tokenHelper.validate(rawRefreshedToken);
 
         if (isRefreshedTokenValid) {

@@ -18,34 +18,53 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../util/pino-logger";
+import IHttpData from "../polling/ihttp-data";
+import IHttpHeaders from "../polling/ihttp-header";
 import PollingConnection from "../polling/polling-connection";
 
-const assert = require("power-assert");
-
 export default class PollingApplicationTokenConnection extends PollingConnection {
-    constructor(logger, applicationClientId, applicationClientSecret, scopes, interval, atBegin, uri, method, defaultHeaders, defaultData) {
+    public _scopes: string[];
+    public _applicationClientSecret: string;
+    public _applicationClientId: string;
+    constructor(
+        logger: PinoLogger,
+        applicationClientId: string,
+        applicationClientSecret: string,
+        scopes: string[],
+        interval: number,
+        atBegin: boolean,
+        uri: string,
+        method: string,
+        defaultHeaders?: IHttpHeaders,
+        defaultData?: IHttpData,
+    ) {
         super(logger, interval, atBegin, uri, method, defaultHeaders, defaultData);
 
         assert(arguments.length === 7 || arguments.length === 8 || arguments.length === 9);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof applicationClientId, "string");
-        assert(applicationClientId.length > 0);
-        assert.strictEqual(typeof applicationClientSecret, "string");
-        assert(applicationClientSecret.length > 0);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof applicationClientId, "string");
+        assert.greater(applicationClientId.length, 0);
+        assert.equal(typeof applicationClientSecret, "string");
+        assert.greater(applicationClientSecret.length, 0);
         assert(!isNaN(interval));
-        assert(interval > 0);
-        assert.strictEqual(typeof atBegin, "boolean");
-        assert.strictEqual(typeof uri, "string");
-        assert(uri.length > 0);
+        assert.greater(interval, 0);
+        assert.equal(typeof atBegin, "boolean");
+        assert.equal(typeof uri, "string");
+        assert.greater(uri.length, 0);
         assert(uri.startsWith("https://"));
-        assert.strictEqual(typeof method, "string");
-        assert(method.length > 0);
+        assert.equal(typeof method, "string");
+        assert.greater(method.length, 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
         assert(Array.isArray(scopes));
 
-        super._getHeaders = this._getHeaders.bind(this);
-        super._getData = this._getData.bind(this);
+        // super._getHeaders = this._getHeaders.bind(this);
+        // super._getData = this._getData.bind(this);
 
         this._logger = logger.child("PollingApplicationTokenConnection");
         this._applicationClientId = applicationClientId;
@@ -53,16 +72,16 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         this._scopes = scopes;
     }
 
-    async _getHeaders() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getHeaders() {
+        assert.equal(arguments.length, 0);
 
         const headers = {};
 
         return headers;
     }
 
-    async _getData() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getData() {
+        assert.equal(arguments.length, 0);
 
         const data = {
             client_id: this._applicationClientId,

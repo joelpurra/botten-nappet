@@ -18,23 +18,69 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
-const Promise = require("bluebird");
+import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
-const axios = require("axios");
+import axios, {
+    AxiosInstance,
+} from "axios";
 
-export default class PollingConnection {
-    constructor(logger, interval, atBegin, uri, method, defaultHeaders, defaultData) {
+import PinoLogger from "../../util/pino-logger";
+import IConnection from "../iconnection";
+import IHttpData from "./ihttp-data";
+import IHttpHeaders from "./ihttp-header";
+
+type KillSwitch = () => void;
+type DataHandler = (data: any) => void;
+type DataFilter = (data: any) => boolean;
+interface IDataHandlerObject {
+    handler: DataHandler;
+    filter: DataFilter;
+}
+
+export default abstract class PollingConnection implements IConnection {
+    protected _logger: PinoLogger;
+    private _dataHandlerObjects: IDataHandlerObject[];
+    private _intervalId: (number | NodeJS.Timer | null);
+    private _axios: (AxiosInstance | null);
+    private _intervalMinMilliseconds: number;
+    private readonly _methods: string[] = [
+        "get",
+        "delete",
+        "head",
+        "options",
+        "post",
+        "put",
+        "patch",
+    ];
+    private _defaultData: IHttpData | undefined;
+    private _defaultHeaders: IHttpHeaders | undefined;
+    private _method: string;
+    private _uri: string;
+    private _atBegin: boolean;
+    private _interval: number;
+
+    constructor(
+        logger: PinoLogger,
+        interval: number,
+        atBegin: boolean,
+        uri: string,
+        method: string,
+        defaultHeaders?: IHttpHeaders,
+        defaultData?: IHttpData,
+    ) {
         assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
-        assert.strictEqual(typeof logger, "object");
-        assert(!isNaN(interval));
-        assert(interval > 0);
-        assert.strictEqual(typeof atBegin, "boolean");
-        assert.strictEqual(typeof uri, "string");
-        assert(uri.length > 0);
+        assert.equal(typeof logger, "object");
+        assert.number(interval);
+        assert.greater(interval, 0);
+        assert.equal(typeof atBegin, "boolean");
+        assert.equal(typeof uri, "string");
+        assert.greater(uri.length, 0);
         assert(uri.startsWith("https://"));
-        assert.strictEqual(typeof method, "string");
-        assert(method.length > 0);
+        assert.equal(typeof method, "string");
+        assert.greater(method.length, 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
@@ -46,16 +92,6 @@ export default class PollingConnection {
         this._defaultHeaders = defaultHeaders;
         this._defaultData = defaultData;
 
-        this._methods = [
-            "get",
-            "delete",
-            "head",
-            "options",
-            "post",
-            "put",
-            "patch",
-        ];
-
         assert(this._methods.includes(this._method));
 
         this._intervalMinMilliseconds = 10 * 1000;
@@ -64,11 +100,11 @@ export default class PollingConnection {
 
         this._axios = null;
         this._intervalId = null;
-        this._dataHandlers = [];
+        this._dataHandlerObjects = [];
     }
 
-    async _getAllHeaders() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getAllHeaders(): Promise<IHttpHeaders> {
+        assert.equal(arguments.length, 0);
 
         const overriddenHeaders = await this._getHeaders();
 
@@ -80,12 +116,10 @@ export default class PollingConnection {
         return headers;
     }
 
-    async _getHeaders() {
-        assert.fail("Method should be overwritten.");
-    }
+    public abstract async _getHeaders(): Promise<IHttpHeaders>;
 
-    async _getAllData() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getAllData(): Promise<IHttpData> {
+        assert.equal(arguments.length, 0);
 
         const overriddenData = await this._getData();
 
@@ -97,25 +131,23 @@ export default class PollingConnection {
         return data;
     }
 
-    async _getData() {
-        assert.fail("Method should be overwritten.");
-    }
+    public abstract async _getData(): Promise<IHttpData>;
 
-    async _setConnection(headers, data) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof headers, "object");
-        assert.strictEqual(typeof data, "object");
+    public async _setConnection(headers: IHttpHeaders, data: IHttpData) {
+        assert.equal(arguments.length, 2);
+        assert.equal(typeof headers, "object");
+        assert.equal(typeof data, "object");
 
-        assert.strictEqual(this._axios, null);
+        assert.equal(this._axios, null);
 
         const axiosInstanceConfig = {
             baseURL: this._uri,
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
+            data,
+            headers,
             method: this._method,
-            headers: headers,
-            data: data,
         };
 
         this._axios = axios.create(axiosInstanceConfig);
@@ -123,30 +155,28 @@ export default class PollingConnection {
         return undefined;
     }
 
-    async _unsetConnection() {
-        assert.strictEqual(arguments.length, 0);
+    public async _unsetConnection() {
+        assert.equal(arguments.length, 0);
 
-        assert.notStrictEqual(this._axios, null);
+        assert.not.equal(this._axios, null);
 
         this._axios = null;
 
         return undefined;
     }
 
-    async _startInterval() {
-        assert.strictEqual(arguments.length, 0);
+    public async _startInterval(): Promise<void> {
+        assert.equal(arguments.length, 0);
 
-        assert.notStrictEqual(this._axios, null);
+        assert.not.equal(this._axios, null);
 
         this._intervalId = setInterval(this._poll.bind(this), this._interval);
-
-        return undefined;
     }
 
-    async connect() {
-        assert.strictEqual(arguments.length, 0);
-        assert.strictEqual(this._axios, null);
-        assert.strictEqual(this._intervalId, null);
+    public async connect(): Promise<void> {
+        assert.equal(arguments.length, 0);
+        assert.equal(this._axios, null);
+        assert.equal(this._intervalId, null);
 
         const [headers, data] = await Promise.all([
             this._getAllHeaders(),
@@ -162,29 +192,29 @@ export default class PollingConnection {
         return this._startInterval();
     }
 
-    async _stopInterval() {
-        assert.notStrictEqual(this._axios, null);
-        assert.notStrictEqual(this._intervalId, null);
+    public async _stopInterval(): Promise<void> {
+        assert.not.equal(this._axios, null);
+        assert.not.equal(this._intervalId, null);
 
-        clearInterval(this._intervalId);
+        clearInterval(this._intervalId as NodeJS.Timer);
 
         this._intervalId = null;
     }
 
-    async disconnect() {
-        assert.notStrictEqual(this._axios, null);
-        assert.notStrictEqual(this._intervalId, null);
+    public async disconnect(): Promise<void> {
+        assert.not.equal(this._axios, null);
+        assert.not.equal(this._intervalId, null);
 
         await this._stopInterval();
         return this._unsetConnection();
     }
 
-    async force(resetInterval) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof resetInterval, "boolean");
+    public async force(resetInterval: boolean): Promise<void> {
+        assert.equal(arguments.length, 1);
+        assert.equal(typeof resetInterval, "boolean");
 
-        assert.notStrictEqual(this._axios, null);
-        assert.notStrictEqual(this._intervalId, null);
+        assert.not.equal(this._axios, null);
+        assert.not.equal(this._intervalId, null);
 
         this._logger.trace(resetInterval, "force");
         await this._poll();
@@ -193,13 +223,16 @@ export default class PollingConnection {
             return this._stopInterval()
                 .then(() => this._startInterval());
         }
-
-        return undefined;
     }
 
-    async _poll() {
-        assert.strictEqual(arguments.length, 0);
-        assert.notStrictEqual(this._axios, null);
+    public async _poll(): Promise<void> {
+        assert.equal(arguments.length, 0);
+        assert.not.null(this._axios);
+
+        // TODO: better null checking?
+        if (this._axios == null) {
+            throw new ReferenceError("_axios");
+        }
 
         try {
             const response = await this._axios.request({
@@ -219,43 +252,54 @@ export default class PollingConnection {
 
             return undefined;
         }
-    };
+    }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
+    public async _dataHandler(data: any): Promise<void> {
+        assert.equal(arguments.length, 1);
 
-        return Promise.filter(
-            this._dataHandlers,
+        const applicableHandlers = await Bluebird.filter(
+            this._dataHandlerObjects,
             (dataHandler) => Promise.resolve(dataHandler.filter(data))
                 .then((shouldHandle) => {
                     if (shouldHandle !== true) {
                         return false;
                     }
 
-                    return Promise.resolve(dataHandler.handler(data));
+                    return true;
                 })
-                .then(() => undefined, (error) => {
+                .catch((error) => {
+                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.filter.name}`);
+
+                    return false;
+                }),
+        );
+
+        await Bluebird.each(
+            applicableHandlers,
+            (dataHandler) => Promise.resolve(dataHandler.handler(data))
+                .catch((error) => {
                     this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
 
                     return undefined;
-                })
+                }),
         );
     }
 
-    async listen(handler, filter) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof handler, "function");
-        assert.strictEqual(typeof filter, "function");
+    public async listen(handler: DataHandler, filter: DataFilter): Promise<KillSwitch> {
+        assert.equal(arguments.length, 2);
+        assert.equal(typeof handler, "function");
+        assert.equal(typeof filter, "function");
 
-        const dataHandler = {
-            handler: handler,
-            filter: filter,
+        const dataHandlerObject: IDataHandlerObject = {
+            filter,
+            handler,
         };
 
-        this._dataHandlers.push(dataHandler);
+        this._dataHandlerObjects.push(dataHandlerObject);
 
         const killSwitch = () => {
-            this._dataHandlers = this._dataHandlers.filter((_dataHandler) => _dataHandler !== dataHandler);
+            this._dataHandlerObjects = this._dataHandlerObjects
+                .filter((_dataHandlerObject) => _dataHandlerObject !== dataHandlerObject);
         };
 
         return killSwitch;

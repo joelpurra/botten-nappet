@@ -18,24 +18,35 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
 
-const axios = require("axios");
+import axios from "axios";
+
+import PinoLogger from "../../util/pino-logger";
+import RequestHelper from "./request-helper";
+
+type UserNameOrId = string | number;
 
 export default class UserHelper {
+    public _applicationAccessTokenProvider: any;
+    public _usersDataUri: string;
+    public _requestHelper: RequestHelper;
+    public _logger: PinoLogger;
+
     constructor(
-        logger,
-        requestHelper,
-        usersDataUri,
-        applicationAccessTokenProvider
+        logger: PinoLogger,
+        requestHelper: RequestHelper,
+        usersDataUri: string,
+        applicationAccessTokenProvider,
     ) {
-        assert.strictEqual(arguments.length, 4);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof requestHelper, "object");
-        assert.strictEqual(typeof usersDataUri, "string");
-        assert(usersDataUri.length > 0);
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof requestHelper, "object");
+        assert.nonEmptyString(usersDataUri);
         assert(usersDataUri.startsWith("https://"));
-        assert.strictEqual(typeof applicationAccessTokenProvider, "function");
+        assert.equal(typeof applicationAccessTokenProvider, "function");
 
         this._logger = logger.child("UserHelper");
         this._requestHelper = requestHelper;
@@ -43,10 +54,13 @@ export default class UserHelper {
         this._applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
 
-    async _getUsersData(...usernamesAndIds) {
+    public async _getUsersData(...usernamesAndIds: UserNameOrId[]) {
         assert(Array.isArray(usernamesAndIds));
         assert(usernamesAndIds.length > 0);
-        assert(usernamesAndIds.every((usernameOrId) => typeof usernameOrId === "string" || typeof usernameOrId === "number"));
+        assert(usernamesAndIds.every((usernameOrId) =>
+            typeof usernameOrId === "string"
+            || typeof usernameOrId === "number"),
+        );
 
         // https://dev.twitch.tv/docs/api/reference#get-users
         // const sampleResponse = {
@@ -72,26 +86,27 @@ export default class UserHelper {
         const ids = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "number");
 
         const params = {
-            login: usernames,
             id: ids,
+            login: usernames,
         };
 
         // TODO: use an https class.
-        const response = axios.get(
+        const response = await axios.get(
             this._usersDataUri,
             {
-                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
-                params: params,
                 headers: {
                     Authorization: `Bearer ${applicationAccessToken}`,
                 },
-            }
+                params,
+                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+            },
         );
 
         // NOTE: axios response data.
         const data = response.data;
 
         // NOTE: twitch response data.
+        // TODO: define type.
         const users = data.data;
 
         this._logger.trace(users, usernamesAndIds, "_getUsersData");
@@ -99,15 +114,16 @@ export default class UserHelper {
         return users;
     }
 
-    async getUserIdByUserName(username) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
+    public async getUserIdByUserName(username: string): Promise<number> {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(username);
 
         const usersData = await this._getUsersData(username);
         const firstUserData = usersData[0];
-        const id = firstUserData.id;
 
-        return id;
+        // TODO: use a number type/interface instead of safety-parsing.
+        const userId = parseInt(firstUserData.id, 10);
+
+        return userId;
     }
 }

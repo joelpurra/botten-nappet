@@ -18,33 +18,53 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
-const Promise = require("bluebird");
+import PinoLogger from "./pino-logger";
+
+type ShutdownEvent = ("beforeExit" | "exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
+type ShutdownHandler = () => void;
 
 export default class GracefulShutdownManager {
-    constructor(logger) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof logger, "object");
+    private _shutdownPromise: Promise<void>;
+    private _handleEvents: {
+        SIGBREAK: NodeJS.SignalsListener,
+        SIGHUP: NodeJS.SignalsListener,
+        SIGINT: NodeJS.SignalsListener,
+        SIGQUIT: NodeJS.SignalsListener,
+        SIGTERM: NodeJS.SignalsListener,
+        beforeExit: NodeJS.BeforeExitListener,
+        exit: NodeJS.ExitListener,
+        uncaughtException: NodeJS.UncaughtExceptionListener,
+        unhandledRejection: NodeJS.UnhandledRejectionListener,
+    };
+    private _shutdownHandlers: ShutdownHandler[];
+    private _logger: PinoLogger;
+
+    constructor(logger: PinoLogger) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof logger, "object");
 
         this._logger = logger.child("GracefulShutdownManager");
 
         this._shutdownHandlers = [];
-        this._shutdownEvents = [
-            "beforeExit",
-            "exit",
-            "SIGBREAK",
-            "SIGHUP",
-            "SIGINT",
-            "SIGQUIT",
-            "SIGTERM",
-            "uncaughtException",
-            "unhandledRejection",
-        ];
-        this._handleEvent = this._handleEvent.bind(this);
-        this._handleEvents = {};
 
-        this._shutdownPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
+        this._handleEvents = {
+            SIGBREAK: this._handleSignalEvent.bind(this),
+            SIGHUP: this._handleSignalEvent.bind(this),
+            SIGINT: this._handleSignalEvent.bind(this),
+            SIGQUIT: this._handleSignalEvent.bind(this),
+            SIGTERM: this._handleSignalEvent.bind(this),
+            beforeExit: this._handleBeforeExitEvent.bind(this),
+            exit: this._handleExitEvent.bind(this),
+            uncaughtException: this._handleUncaughtExceptionEvent.bind(this),
+            unhandledRejection: this._handleUnhandledRejectionEvent.bind(this),
+        };
+
+        this._shutdownPromise = new Promise((resolve, reject) => {
             const waitForShutdown = () => {
                 resolve();
             };
@@ -58,68 +78,88 @@ export default class GracefulShutdownManager {
             });
     }
 
-    start() {
-        assert.strictEqual(arguments.length, 0);
+    public async start() {
+        assert.hasLength(arguments, 0);
 
-        return Promise.try(() => {
-            this._shutdownEvents.forEach((shutdownEvent) => {
-                const specificShutdownEventHandler = this._handleEvent.bind(null, shutdownEvent);
-
-                this._handleEvents[shutdownEvent] = specificShutdownEventHandler;
-
-                process.on(shutdownEvent, this._handleEvents[shutdownEvent]);
-            });
-        });
+        process.on("SIGBREAK", this._handleEvents.SIGBREAK);
+        process.on("SIGHUP", this._handleEvents.SIGHUP);
+        process.on("SIGINT", this._handleEvents.SIGINT);
+        process.on("SIGQUIT", this._handleEvents.SIGQUIT);
+        process.on("SIGTERM", this._handleEvents.SIGTERM);
+        process.on("beforeExit", this._handleEvents.beforeExit);
+        process.on("exit", this._handleEvents.exit);
+        process.on("uncaughtException", this._handleEvents.uncaughtException);
+        process.on("unhandledRejection", this._handleEvents.unhandledRejection);
     }
 
-    stop() {
-        assert.strictEqual(arguments.length, 0);
+    public async stop() {
+        assert.hasLength(arguments, 0);
 
-        return Promise.try(() => {
-            this._shutdownEvents.forEach((shutdownEvent) => {
-                process.removeListener(shutdownEvent, this._handleEvents[shutdownEvent]);
-            });
-        });
+        process.removeListener("SIGBREAK", this._handleEvents.SIGBREAK);
+        process.removeListener("SIGHUP", this._handleEvents.SIGHUP);
+        process.removeListener("SIGINT", this._handleEvents.SIGINT);
+        process.removeListener("SIGQUIT", this._handleEvents.SIGQUIT);
+        process.removeListener("SIGTERM", this._handleEvents.SIGTERM);
+        process.removeListener("beforeExit", this._handleEvents.beforeExit);
+        process.removeListener("exit", this._handleEvents.exit);
+        process.removeListener("uncaughtException", this._handleEvents.uncaughtException);
+        process.removeListener("unhandledRejection", this._handleEvents.unhandledRejection);
     }
 
-    register(shutdownHandler) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof shutdownHandler, "function");
+    public async register(shutdownHandler: ShutdownHandler) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof shutdownHandler, "function");
 
-        return Promise.try(() => {
-            this._shutdownHandlers.push(shutdownHandler);
-        });
+        this._shutdownHandlers.push(shutdownHandler);
     }
 
-    shutdown() {
-        assert.strictEqual(arguments.length, 0);
+    public async shutdown() {
+        assert.hasLength(arguments, 0);
 
-        return Promise.map(
+        return Bluebird.map(
             this._shutdownHandlers,
             (shutdownHandler) => Promise.resolve(shutdownHandler())
                 .then(() => undefined, (error) => {
                     this._logger.warn(error, `Masking error in shutdownHandler ${shutdownHandler.name}`);
 
                     return undefined;
-                })
+                }),
         );
     }
 
-    waitForShutdownSignal() {
-        assert.strictEqual(arguments.length, 0);
+    public async waitForShutdownSignal() {
+        assert.hasLength(arguments, 0);
 
         return this._shutdownPromise;
     }
 
-    _handleEvent(shutdownEvent, ...args) {
+    private async _handleBeforeExitEvent(code: number): Promise<void> {
+        return this._handleEvent("beforeExit", code);
+    }
+
+    private async _handleExitEvent(code: number): Promise<void> {
+        return this._handleEvent("exit", code);
+    }
+
+    private async _handleUncaughtExceptionEvent(error: Error): Promise<void> {
+        return this._handleEvent("uncaughtException", error);
+    }
+
+    private async _handleUnhandledRejectionEvent(reason: any, promise: Promise<any>): Promise<void> {
+        return this._handleEvent("unhandledRejection", reason, promise);
+    }
+
+    private async _handleSignalEvent(signal: NodeJS.Signals): Promise<void> {
+        return this._handleEvent(signal, signal);
+    }
+
+    private async _handleEvent(shutdownEvent: ShutdownEvent, ...args: any[]): Promise<void> {
         // TODO: test/ensure that the right number of arguments are passed from each event/signal type.
-        //assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof shutdownEvent, "string");
+        // assert.hasLength(arguments, 1);
+        assert.equal(typeof shutdownEvent, "string");
 
-        return Promise.try(() => {
-            this._logger.debug(shutdownEvent, "Received shutdown event", args);
+        this._logger.debug(shutdownEvent, "Received shutdown event", ...args);
 
-            this.shutdown();
-        });
+        this.shutdown();
     }
 }

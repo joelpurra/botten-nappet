@@ -18,34 +18,47 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import axios from "axios";
+
+import PinoLogger from "../../util/pino-logger";
 import ConnectionManager from "../connection-manager";
-
-const assert = require("power-assert");
-const Promise = require("bluebird");
-
-const axios = require("axios");
+import IConnection from "../iconnection";
+import IRawToken from "./iraw-token";
 
 export default class ApplicationTokenManager extends ConnectionManager {
-    constructor(logger, connection, clientId, revocationUri) {
+    public _waitForFirstTokenPromise: Promise<undefined>;
+    public _tokenHasBeenSet: (() => void) | null;
+    public _applicationAccessToken: string | null;
+    public _rawOAuthToken: IRawToken | null;
+    public _oauthTokenRevocationHeaders: {};
+    public _oauthTokenRevocationMethod: string;
+    public _oauthTokenRevocationUri: string;
+    public _clientId: string;
+
+    constructor(logger: PinoLogger, connection: IConnection, clientId: string, oauthTokenRevocationUri: string) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 4);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof clientId, "string");
-        assert(clientId.length > 0);
-        assert.strictEqual(typeof revocationUri, "string");
-        assert(revocationUri.length > 0);
-        assert(revocationUri.startsWith("https://"));
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+        assert.equal(typeof clientId, "string");
+        assert.greater(clientId.length, 0);
+        assert.equal(typeof oauthTokenRevocationUri, "string");
+        assert.greater(oauthTokenRevocationUri.length, 0);
+        assert(oauthTokenRevocationUri.startsWith("https://"));
 
         this._logger = logger.child("ApplicationTokenManager");
         this._clientId = clientId;
-        this._revocationUri = revocationUri;
+        this._oauthTokenRevocationUri = oauthTokenRevocationUri;
 
-        this._revocationMethod = "post";
-        this._revocationHeaders = {};
+        this._oauthTokenRevocationMethod = "post";
+        this._oauthTokenRevocationHeaders = {};
 
-        this._rawToken = null;
+        this._rawOAuthToken = null;
         this._applicationAccessToken = null;
 
         this._tokenHasBeenSet = null;
@@ -64,35 +77,35 @@ export default class ApplicationTokenManager extends ConnectionManager {
             });
     }
 
-    async start() {
-        assert.strictEqual(arguments.length, 0);
+    public async start() {
+        assert.hasLength(arguments, 0);
 
         await super.start();
         return this._connection.force(true);
     }
 
-    async stop() {
-        assert.strictEqual(arguments.length, 0);
+    public async stop() {
+        assert.hasLength(arguments, 0);
 
         await this._revokeTokenIfSet(this._applicationAccessToken);
         return super.stop();
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: any): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         this._logger.trace(data, "_dataHandler");
 
-        return Promise.all([
+        await Promise.all([
             this._revokeTokenIfSet(this._applicationAccessToken),
             this._setToken(data),
         ]);
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: any) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;
@@ -105,30 +118,31 @@ export default class ApplicationTokenManager extends ConnectionManager {
         return true;
     }
 
-    async _setToken(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _setToken(data: IRawToken) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
-        this._rawToken = data;
+        this._rawOAuthToken = data;
         this._applicationAccessToken = data.access_token;
 
-        await this._tokenHasBeenSet();
+        await this._tokenHasBeenSet!();
 
         return undefined;
     }
 
-    async _sendRevocation(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _sendRevocation(params: object): Promise<object> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof params, "object");
 
+        // TODO: use TokenHelper.revoke().
         const axiosInstanceConfig = {
-            baseURL: this._revocationUri,
+            baseURL: this._oauthTokenRevocationUri,
+            headers: this._oauthTokenRevocationHeaders,
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
-            method: this._revocationMethod,
-            headers: this._revocationHeaders,
-            data: data,
+            method: this._oauthTokenRevocationMethod,
+            params,
         };
 
         const axiosInstance = axios.create(axiosInstanceConfig);
@@ -137,29 +151,32 @@ export default class ApplicationTokenManager extends ConnectionManager {
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
-            method: this._revocationMethod,
+            method: this._oauthTokenRevocationMethod,
         });
 
-        return response;
+        // TODO: check if {status:"ok"};
+        const data = response.data;
+
+        return data;
     }
 
-    async _revokeToken(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "string");
-        assert(token.length > 0);
+    public async _revokeToken(token: string): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof token, "string");
+        assert.greater(token.length, 0);
 
         const data = {
             client_id: this._clientId,
-            token: token,
+            token,
         };
 
         this._logger.trace(data, "_revokeToken");
 
-        return this._sendRevocation(data);
+        await this._sendRevocation(data);
     }
 
-    async _revokeTokenIfSet(token) {
-        assert.strictEqual(arguments.length, 1);
+    public async _revokeTokenIfSet(token: string | null): Promise<void> {
+        assert.hasLength(arguments, 1);
 
         if (typeof token === "string") {
             return this._revokeToken(token);
@@ -168,17 +185,19 @@ export default class ApplicationTokenManager extends ConnectionManager {
         return undefined;
     }
 
-    async get() {
-        assert.strictEqual(arguments.length, 0);
+    public async get(): Promise<string | null> {
+        assert.hasLength(arguments, 0);
 
         return this._applicationAccessToken;
     }
 
-    async getOrWait() {
-        assert.strictEqual(arguments.length, 0);
+    public async getOrWait(): Promise<string> {
+        assert.hasLength(arguments, 0);
 
         await this._waitForFirstTokenPromise;
 
-        return this.get();
+        const token = await this.get();
+
+        return token!;
     }
 }

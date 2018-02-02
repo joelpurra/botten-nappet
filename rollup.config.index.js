@@ -30,6 +30,24 @@ const inputName = "index.ts";
 const outputName = "dist/index.js";
 
 export default {
+    external: [
+        "axios",
+        "bluebird",
+        "camo",
+        "check-types",
+        "fs",
+        "pino",
+        "qs",
+        "readline",
+        "ws",
+    ],
+    input: inputName,
+    output: {
+        file: outputName,
+        format: "cjs",
+        name: inputName,
+        sourcemap: true,
+    },
     plugins: [
         json(),
         typescript(),
@@ -38,11 +56,4 @@ export default {
         license(inputName),
         filesize(),
     ],
-    input: inputName,
-    output: {
-        format: "cjs",
-        sourcemap: true,
-        name: inputName,
-        file: outputName,
-    },
 };

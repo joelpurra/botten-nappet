@@ -18,25 +18,33 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
 
-const qs = require("qs");
+import qs, {
+    IStringifyOptions,
+} from "qs";
 
-export default class TokenHelper {
-    constructor(logger) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof logger, "object");
+import PinoLogger from "../../util/pino-logger";
 
-        this._logger = logger.child("TokenHelper");
+export default class RequestHelper {
+    private _logger: PinoLogger;
+
+    constructor(logger: PinoLogger) {
+        assert.equal(arguments.length, 1);
+        assert.equal(typeof logger, "object");
+
+        this._logger = logger.child("RequestHelper");
     }
 
-    twitchQuerystringSerializer(params) {
+    public twitchQuerystringSerializer(params: object) {
         // TODO: move to utility class.
-        const qsConfig = {
+        const qsConfig: IStringifyOptions = {
             // NOTE: "repeat" for the "new" Twitch api (v6?).
             arrayFormat: "repeat",
         };
 
         return qs.stringify(params, qsConfig);
-    };
+    }
 }

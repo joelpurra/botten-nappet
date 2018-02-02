@@ -18,12 +18,16 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IConnection from "../../iconnection";
 import PubSubManager from "../pubsub-manager";
 
-const assert = require("power-assert");
-
 export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger, connection, userAccessTokenProvider, userId) {
+    constructor(logger: PinoLogger, connection: IConnection, userAccessTokenProvider, userId: number) {
         const topics = [
             `channel-bits-events-v1.${userId}`,
             `channel-subscribe-events-v1.${userId}`,
@@ -33,30 +37,30 @@ export default class LoggingPubSubHandler extends PubSubManager {
 
         super(logger, connection, userAccessTokenProvider, topics);
 
-        assert.strictEqual(arguments.length, 4);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof userAccessTokenProvider, "function");
-        assert(!isNaN(userId));
-        assert(userId > 0);
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+        assert.equal(typeof userAccessTokenProvider, "function");
+        assert.number(userId);
+        assert.greater(userId, 0);
 
         this._logger = logger.child("LoggingPubSubHandler");
     }
 
-    async _dataHandler(topic, data) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof topic, "string");
-        assert(topic.length > 0);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(topic: string, data: object) {
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof topic, "string");
+        assert.greater(topic.length, 0);
+        assert.equal(typeof data, "object");
 
         this._logger.trace(data, "_dataHandler");
     }
 
-    async _filter(topic, data) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof topic, "string");
-        assert(topic.length > 0);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(topic: string, data: object) {
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof topic, "string");
+        assert.greater(topic.length, 0);
+        assert.equal(typeof data, "object");
 
         return true;
     }

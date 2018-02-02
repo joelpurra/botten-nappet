@@ -22,22 +22,41 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../util/pino-logger";
+import {
+    DocumentSchema,
+    EmbeddedDocument,
+    SchemaType,
+} from "camo";
 
-export default class CSRFHelper {
-    public _logger: PinoLogger;
+import RawTokenEmbeddedDocument from "./raw-token-embedded-document";
 
-    constructor(logger: PinoLogger) {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof logger, "object");
+interface IAugmentedTokenSchema extends DocumentSchema {
+    expiresApproximatelyAt: SchemaType;
+    storedAt: SchemaType;
+    token: SchemaType;
+}
 
-        this._logger = logger.child("CSRFHelper");
-    }
+export default class AugmentedTokenEmbeddedDocument extends EmbeddedDocument {
+    constructor() {
+        super();
 
-    public async getRandomCSRF() {
-        assert.equal(arguments.length, 0);
+        assert.hasLength(arguments, 0);
 
-        // TODO: use a random string library.
-        return Math.random().toString(10);
+        super.schema({
+            expiresApproximatelyAt: {
+                min: 1,
+                required: true,
+                type: Number,
+            },
+            storedAt: {
+                min: 1,
+                required: true,
+                type: Number,
+            },
+            token: {
+                required: false,
+                type: RawTokenEmbeddedDocument,
+            },
+        });
     }
 }

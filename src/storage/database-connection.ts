@@ -18,15 +18,29 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
 
-const connect = require("camo").connect;
+import {
+    connect,
+} from "camo";
+import PinoLogger from "../util/pino-logger";
+
+interface ICamoDatabaseConnection {
+    // TODO: update and/or patch @types/camo.
+    close: () => void;
+}
 
 export default class DatabaseConnection {
-    constructor(logger, uri) {
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof uri, "string");
+    public _database: ICamoDatabaseConnection | null;
+    public _uri: string;
+    public _logger: PinoLogger;
+
+    constructor(logger: PinoLogger, uri: string) {
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof uri, "string");
         assert(uri.length > 0);
         assert(uri.startsWith("nedb://"));
 
@@ -36,20 +50,20 @@ export default class DatabaseConnection {
         this._database = null;
     }
 
-    async connect() {
-        assert.strictEqual(arguments.length, 0);
-        assert.strictEqual(this._database, null);
+    public async connect() {
+        assert.hasLength(arguments, 0);
+        assert.equal(this._database, null);
 
         const db = await connect(this._uri);
-        this._database = db;
+        this._database = db as ICamoDatabaseConnection;
 
         return undefined;
     }
 
-    async disconnect() {
-        assert.strictEqual(arguments.length, 0);
-        assert.notStrictEqual(this._database, null);
+    public async disconnect() {
+        assert.hasLength(arguments, 0);
+        assert.not.equal(this._database, null);
 
-        return this._database.close();
+        return this._database!.close();
     }
 }

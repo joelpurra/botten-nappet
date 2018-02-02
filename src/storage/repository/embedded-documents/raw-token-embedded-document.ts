@@ -23,38 +23,43 @@ import {
 } from "check-types";
 
 import {
-    Document,
     DocumentSchema,
+    EmbeddedDocument,
     SchemaType,
 } from "camo";
 
-import AugmentedTokenEmbeddedDocument from "./embedded-documents/augmented-token-embedded-document";
-
-interface IUserSchema extends DocumentSchema {
-    twitchToken: SchemaType;
-    username: SchemaType;
+interface IRawTokenSchema extends DocumentSchema {
+    access_token: SchemaType;
+    expires_in: SchemaType;
+    refresh_token: SchemaType;
+    scope: SchemaType;
 }
 
-export default class UserRepository extends Document<IUserSchema> {
-
-    public static collectionName() {
-        return "user";
-    }
-
+export default class RawTokenEmbeddedDocument extends EmbeddedDocument {
     constructor() {
         super();
 
         assert.hasLength(arguments, 0);
 
         super.schema({
-            twitchToken: {
-                type: AugmentedTokenEmbeddedDocument,
-            },
-            username: {
-                match: /^[a-z0-9][a-z0-9-]/i,
+            access_token: {
                 required: true,
                 type: String,
                 unique: true,
+            },
+            expires_in: {
+                required: false,
+                type: Number,
+            },
+            refresh_token: {
+                required: true,
+                type: String,
+                unique: true,
+            },
+            scope: {
+                required: false,
+                // TODO: validate scope as a string or an array of strings>?
+                type: [String],
             },
         });
     }

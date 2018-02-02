@@ -18,19 +18,26 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
-
 export default class GreetingIrcHandler extends IrcManager {
-    constructor(logger, connection, username) {
+    private _greetings: RegExp[];
+    private _username: string;
+    constructor(logger: PinoLogger, connection: IIRCConnection, username: string) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 3);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
+        assert.hasLength(arguments, 3);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+        assert.equal(typeof username, "string");
+        assert.greater(username.length, 0);
 
         this._logger = logger.child("GreetingIrcHandler");
         this._username = username;
@@ -51,9 +58,9 @@ export default class GreetingIrcHandler extends IrcManager {
         ];
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    protected async _dataHandler(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         this._logger.trace("Responding to greeting.", data.username, data.message, "_dataHandler");
 
@@ -61,7 +68,7 @@ export default class GreetingIrcHandler extends IrcManager {
         // TODO: configure message.
         let message = null;
 
-        if (data.tags.subscriber === "1") {
+        if (data.tags!.subscriber === "1") {
             message = `PRIVMSG ${data.channel} :Hiya @${data.username}, loyal rubber ducky, how are you?`;
         } else {
             message = `PRIVMSG ${data.channel} :Hiya @${data.username}, how are you?`;
@@ -71,9 +78,9 @@ export default class GreetingIrcHandler extends IrcManager {
         this._connection._send(message);
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    protected async _filter(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;

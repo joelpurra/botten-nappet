@@ -18,29 +18,38 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const assert = require("power-assert");
+import {
+    assert,
+} from "check-types";
 
-const axios = require("axios");
+import axios from "axios";
+
+import PinoLogger from "../../util/pino-logger";
+import IAugmentedToken from "../authentication/iaugmented-token";
+import IRawToken from "../authentication/iraw-token";
+import RequestHelper from "./request-helper";
 
 export default class TokenHelper {
+    private _appClientId: string;
+    private _oauthTokenVerificationUri: string;
+    private _oauthTokenRevocationUri: string;
+    private _requestHelper: RequestHelper;
+    private _logger: PinoLogger;
     constructor(
-        logger,
-        requestHelper,
-        oauthTokenRevocationUri,
-        oauthTokenVerificationUri,
-        appClientId
+        logger: PinoLogger,
+        requestHelper: RequestHelper,
+        oauthTokenRevocationUri: string,
+        oauthTokenVerificationUri: string,
+        appClientId: string,
     ) {
-        assert.strictEqual(arguments.length, 5);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof requestHelper, "object");
-        assert.strictEqual(typeof oauthTokenRevocationUri, "string");
-        assert(oauthTokenRevocationUri.length > 0);
+        assert.hasLength(arguments, 5);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof requestHelper, "object");
+        assert.nonEmptyString(oauthTokenRevocationUri);
         assert(oauthTokenRevocationUri.startsWith("https://"));
-        assert.strictEqual(typeof oauthTokenVerificationUri, "string");
-        assert(oauthTokenVerificationUri.length > 0);
+        assert.nonEmptyString(oauthTokenVerificationUri);
         assert(oauthTokenVerificationUri.startsWith("https://"));
-        assert.strictEqual(typeof appClientId, "string");
-        assert(appClientId.length > 0);
+        assert.nonEmptyString(appClientId);
 
         this._logger = logger.child("TokenHelper");
         this._requestHelper = requestHelper;
@@ -49,11 +58,103 @@ export default class TokenHelper {
         this._appClientId = appClientId;
     }
 
-    async _getTokenValidation(rawToken) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof rawToken, "object");
-        assert.strictEqual(typeof rawToken.access_token, "string");
-        assert(rawToken.access_token.length > 0);
+    public async revoke(rawToken: IRawToken): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof rawToken, "object");
+
+        // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
+
+        const accessToken = rawToken.access_token;
+
+        const params = {
+            client_id: this._appClientId,
+            token: accessToken,
+        };
+
+        // TODO: use an https class.
+        const response = await axios.post(
+            this._oauthTokenRevocationUri,
+            params,
+            {
+                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+            },
+        );
+
+        // NOTE: axios response data.
+        const data = response.data;
+
+        // TODO: what if it's not ok?
+        // TODO: define type/interface.
+        const ok = data.status === "ok";
+
+        this._logger.trace(rawToken, data, "revoke");
+    }
+
+    public async isExpired(token: IAugmentedToken): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof token, "object");
+        assert.equal(typeof token.token, "object");
+
+        if (token.expiresApproximatelyAt === null) {
+            return true;
+        }
+
+        if (token.expiresApproximatelyAt < Date.now()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public async validate(rawToken: IRawToken): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof rawToken, "object");
+
+        // TODO: only allow a single outstanding token validation per user.
+        // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
+        const tokenValidation = await this._getTokenValidation(rawToken);
+
+        // NOTE: twitch response data.
+        const valid = tokenValidation.valid;
+
+        this._logger.trace(rawToken, valid, "validate");
+
+        return valid;
+    }
+
+    public async getUserIdByRawAccessToken(token: IRawToken): Promise<number> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof token, "object");
+
+        const tokenValidation = await this._getTokenValidation(token);
+
+        // NOTE: twitch response data.
+        // TODO: use a number type/interface instead of safety-parsing.
+        const userId = parseInt(tokenValidation.user_id, 10);
+
+        this._logger.trace(token, userId, "getUserIdByRawAccessToken");
+
+        return userId;
+    }
+
+    public async getUserNameByRawAccessToken(token: IRawToken): Promise<string> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof token, "object");
+
+        const tokenValidation = await this._getTokenValidation(token);
+
+        // NOTE: twitch response data.
+        const userName = tokenValidation.user_name;
+
+        this._logger.trace(token, userName, "getUserNameByRawAccessToken");
+
+        return userName;
+    }
+
+    private async _getTokenValidation(rawToken: IRawToken) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof rawToken, "object");
+        assert.nonEmptyString(rawToken.access_token);
 
         // https://dev.twitch.tv/docs/v5#root-url
         //
@@ -80,111 +181,23 @@ export default class TokenHelper {
             this._oauthTokenVerificationUri,
             {
                 headers: {
-                    Accept: "application/vnd.twitchtv.v5+json",
+                    "Accept": "application/vnd.twitchtv.v5+json",
+                    "Authorization": `OAuth ${accessToken}`,
                     "Client-ID": this._appClientId,
-                    Authorization: `OAuth ${accessToken}`,
                 },
-            }
+            },
         );
 
         // NOTE: axios response data.
         const data = response.data;
 
         // NOTE: twitch response data.
+        // TODO: verify data format.
         const tokenValidation = data.token;
 
         this._logger.trace(rawToken, tokenValidation, "_getTokenValidation");
 
+        // TODO: define type/interface.
         return tokenValidation;
-    }
-
-    async revoke(rawToken) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof rawToken, "object");
-
-        // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
-
-        const accessToken = rawToken.access_token;
-
-        const params = {
-            client_id: this._appClientId,
-            token: accessToken,
-        };
-
-        // TODO: use an https class.
-        const response = await axios.post(
-            this._oauthTokenRevocationUri,
-            params,
-            {
-                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
-            }
-        );
-
-        // NOTE: axios response data.
-        const data = response.data;
-
-        this._logger.trace(rawToken, data, "revoke");
-
-        return data;
-    }
-
-    async isExpired(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-        assert.strictEqual(typeof token.token, "object");
-
-        if (token.expiresApproximatelyAt === null) {
-            return true;
-        }
-
-        if (token.expiresApproximatelyAt < Date.now()) {
-            return true;
-        }
-
-        return false;
-    }
-
-    async validate(rawToken) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof rawToken, "object");
-
-        // TODO: only allow a single outstanding token validation per user.
-        // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
-        const tokenValidation = await this._getTokenValidation(rawToken);
-
-        // NOTE: twitch response data.
-        const valid = tokenValidation.valid;
-
-        this._logger.trace(rawToken, valid, "validate");
-
-        return valid;
-    }
-
-    async getUserIdByRawAccessToken(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-
-        const tokenValidation = await this._getTokenValidation(token);
-
-        // NOTE: twitch response data.
-        const userId = tokenValidation.user_id;
-
-        this._logger.trace(token, userId, "getUserIdByRawAccessToken");
-
-        return userId;
-    }
-
-    async getUserNameByRawAccessToken(token) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof token, "object");
-
-        const tokenValidation = await this._getTokenValidation(token);
-
-        // NOTE: twitch response data.
-        const userName = tokenValidation.user_name;
-
-        this._logger.trace(token, userName, "getUserNameByRawAccessToken");
-
-        return userName;
     }
 }

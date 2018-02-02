@@ -18,42 +18,61 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
+import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
-const assert = require("power-assert");
-
 export default class NewChatterIrcHandler extends IrcManager {
-    constructor(logger, connection) {
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 2);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof connection, "object");
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
 
         this._logger = logger.child("NewChatterIrcHandler");
     }
 
-    async _dataHandler(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _dataHandler(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
-        this._logger.trace("Responding to new chatter.", data.tags.login, data.message, "_dataHandler");
+        const tags = data.tags!;
+        const username = tags.login;
+        const channel = data.channel;
+
+        this._logger.trace("Responding to new chatter.", username, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
+        const message = `PRIVMSG ${channel} :Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
+
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(`PRIVMSG ${data.channel} :Hiya @${data.tags.login}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`);
+        this._connection._send(message);
     }
 
-    async _filter(data) {
-        assert.strictEqual(arguments.length, 1);
-        assert.strictEqual(typeof data, "object");
+    public async _filter(data: IParsedMessage) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
 
         if (typeof data !== "object") {
             return false;
         }
 
         if (data.command !== "USERNOTICE") {
+            return false;
+        }
+
+        if (data.tags === null) {
+            return false;
+        }
+
+        if (typeof data.tags !== "object") {
             return false;
         }
 

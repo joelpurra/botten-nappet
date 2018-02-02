@@ -18,57 +18,65 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import PinoLogger from "../../../util/pino-logger";
 import PollingConnection from "../polling-connection";
 
-const assert = require("power-assert");
-const Promise = require("bluebird");
-
 export default class PollingClientIdConnection extends PollingConnection {
-    constructor(logger, applicationClientId, interval, atBegin, uri, method, defaultHeaders, defaultData) {
+    public _applicationClientId: string;
+    constructor(
+        logger: PinoLogger,
+        applicationClientId: string,
+        interval: number,
+        atBegin: boolean,
+        uri: string,
+        method: string,
+        defaultHeaders?: IHttpHeaders,
+        defaultData?: IHttpData,
+    ) {
         super(logger, interval, atBegin, uri, method, defaultHeaders, defaultData);
 
         assert(arguments.length === 6 || arguments.length === 7 || arguments.length === 8);
-        assert.strictEqual(typeof logger, "object");
-        assert.strictEqual(typeof applicationClientId, "string");
-        assert(applicationClientId.length > 0);
-        assert(!isNaN(interval));
-        assert(interval > 0);
-        assert.strictEqual(typeof atBegin, "boolean");
-        assert.strictEqual(typeof uri, "string");
-        assert(uri.length > 0);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof applicationClientId, "string");
+        assert.greater(applicationClientId.length, 0);
+        assert.number(interval);
+        assert.greater(interval, 0);
+        assert.equal(typeof atBegin, "boolean");
+        assert.equal(typeof uri, "string");
+        assert.greater(uri.length, 0);
         assert(uri.startsWith("https://"));
-        assert.strictEqual(typeof method, "string");
-        assert(method.length > 0);
+        assert.equal(typeof method, "string");
+        assert.greater(method.length, 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        super._getHeaders = this._getHeaders.bind(this);
-        super._getData = this._getData.bind(this);
+        // super._getHeaders = this._getHeaders.bind(this);
+        // super._getData = this._getData.bind(this);
 
         this._logger = logger.child("PollingClientIdConnection");
         this._applicationClientId = applicationClientId;
     }
 
-    _getHeaders() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getHeaders(): Promise<object> {
+        assert.hasLength(arguments, 0);
 
-        return Promise.try(() => {
-            const headers = {
-                Accept: "application/vnd.twitchtv.v5+json",
-                "Client-ID": `${this._applicationClientId}`,
-            };
+        const headers = {
+            "Accept": "application/vnd.twitchtv.v5+json",
+            "Client-ID": `${this._applicationClientId}`,
+        };
 
-            return headers;
-        });
+        return headers;
     }
 
-    _getData() {
-        assert.strictEqual(arguments.length, 0);
+    public async _getData(): Promise<object> {
+        assert.hasLength(arguments, 0);
 
-        return Promise.try(() => {
-            const data = {};
+        const data = {};
 
-            return data;
-        });
+        return data;
     }
 }
