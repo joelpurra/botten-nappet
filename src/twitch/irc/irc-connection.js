@@ -348,19 +348,20 @@ export default class IrcConnection {
         return Promise.filter(
             this._dataHandlers,
             (dataHandler) => Promise.resolve(dataHandler.filter(data))
-                .then((shouldHandle) => {
-                    if (shouldHandle !== true) {
-                        return false;
-                    }
+                .catch((error) => {
+                    this._logger.warn(error, `Masking error in filter ${dataHandler.filter.name} on ${dataHandler.name}`);
 
-                    return Promise.resolve(dataHandler.handler(data));
+                    // NOTE: assume that the handler shold not be executed when the filter crashes.
+                    return false;
                 })
-                .then(() => undefined, (error) => {
-                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
+        )
+            .each((dataHandler) => Promise.resolve(dataHandler.handler(data)
+                .catch((error) => {
+                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name} on ${dataHandler.name}`);
 
                     return undefined;
-                })
-        );
+                })))
+            .return(undefined);
     }
 
     async listen(handler, filter) {

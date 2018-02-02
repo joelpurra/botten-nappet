@@ -22,53 +22,52 @@ import IrcManager from "../irc-manager";
 
 const assert = require("power-assert");
 
-export default class GreetingIrcHandler extends IrcManager {
-    constructor(logger, connection, username) {
+export default class TextResponseCommandIrcHandler extends IrcManager {
+    constructor(logger, connection) {
         super(logger, connection);
 
-        assert.strictEqual(arguments.length, 3);
+        assert.strictEqual(arguments.length, 2);
         assert.strictEqual(typeof logger, "object");
         assert.strictEqual(typeof connection, "object");
-        assert.strictEqual(typeof username, "string");
-        assert(username.length > 0);
 
-        this._logger = logger.child("GreetingIrcHandler");
-        this._username = username;
+        this._logger = logger.child("TextResponseCommandIrcHandler");
 
-        this._greetings = [
-            /\bhello\b/,
-            /\bhi\b/,
-            /\bhiya\b/,
-            /\bhey\b/,
-            /\bhowdy\b/,
-            /\baloha\b/,
-            /\b(o )?hai\b/,
-            /\bgood (morning|evening|day)\b/,
-            /\bwhat ?s up\b/,
-            /\bwh?a+z+(u+p+)?\b/,
-            /\byo\b/,
-            /\bay+\b/,
-        ];
+        this._commandPrefix = "!";
+        this._commandsAndResponses = {
+            // TODO: command aliases.
+            help: "For bot details see https://joelpurra.com/projects/botten-nappet/",
+            commands: "For bot details see https://joelpurra.com/projects/botten-nappet/",
+            bot: "For bot details see https://joelpurra.com/projects/botten-nappet/",
+        };
     }
 
     async _dataHandler(data) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof data, "object");
 
-        this._logger.trace("Responding to greeting.", data.username, data.message, "_dataHandler");
+        this._logger.trace("Responding to command.", data.username, data.message, "_dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        let message = null;
+        const tokenizedMessageParts = data.message
+            .toLowerCase()
+            .split(/[^a-z]+/)
+            .map((tokenizedPart) => tokenizedPart.trim())
+            .filter((tokenizedPart) => tokenizedPart.length > 0);
 
-        if (data.tags.subscriber === "1") {
-            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, loyal rubber ducky, how are you?`;
-        } else {
-            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, how are you?`;
-        }
+        const incomingCommand = tokenizedMessageParts[0];
+
+        // TODO: use command arguments for more advanced commands.
+        // const incomingCommandArguments = tokenizedMessageParts.slice(1);
+
+        const response = this._commandsAndResponses[incomingCommand];
+
+        const message = `PRIVMSG ${data.channel} :@${data.username}: ${response}`;
 
         // TODO: handle errors, re-reconnect, or shut down server?
         this._connection._send(message);
+
+        return message;
     }
 
     async _filter(data) {
@@ -87,22 +86,19 @@ export default class GreetingIrcHandler extends IrcManager {
             return false;
         }
 
-        if (data.username === this._username) {
+        if (!data.message.startsWith(this._commandPrefix)) {
             return false;
         }
 
-        const tokenizedMessage = data.message
+        const tokenizedMessageParts = data.message
             .toLowerCase()
             .split(/[^a-z]+/)
             .map((tokenizedPart) => tokenizedPart.trim())
-            .filter((tokenizedPart) => tokenizedPart.length > 0)
-            .join(" ")
-            .trim();
+            .filter((tokenizedPart) => tokenizedPart.length > 0);
 
-        const isGreeting = this._greetings.some((greeting) => {
-            return greeting.test(tokenizedMessage);
-        });
+        const incomingCommand = tokenizedMessageParts[0];
+        const isKnownCommand = Object.keys(this._commandsAndResponses).some((knownCommand) => incomingCommand === knownCommand);
 
-        return isGreeting;
+        return isKnownCommand;
     }
 }
