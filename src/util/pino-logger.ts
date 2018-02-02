@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 const assert = require("power-assert");
 
 export default class PinoLogger {
+    _loggingMethods: string[];
+    _parentPinoLogger: any;
+    
     constructor(parentPinoLogger) {
         assert.strictEqual(arguments.length, 1);
         assert.strictEqual(typeof parentPinoLogger, "object");
@@ -68,7 +71,7 @@ export default class PinoLogger {
         return childLogger;
     }
 
-    // _valueReplacer(/* eslint-disable no-unused-vars */key/* eslint-enable no-unused-vars */, value) {
+    // _valueReplacer(key, value) {
     //     if (value !== null && typeof value === "object" && value.stack) {
     //         return value.toString();
     //     }

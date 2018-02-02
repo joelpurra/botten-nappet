@@ -245,10 +245,8 @@ export default class IrcConnection {
 
             this._ws.once("close", hasClosed);
 
-            /* eslint-disable promise/catch-or-return */
             Promise.delay(this._maxDisconnectWaitMilliseconds)
                 .then(() => reject(new Error("Disconnect timed out.")));
-            /* eslint-enable promise/catch-or-return */
 
             this._ws.close();
         })

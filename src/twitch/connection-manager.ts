@@ -55,11 +55,11 @@ export default class ConnectionManager {
         }
     }
 
-    async _dataHandler(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+    async _dataHandler(data) {
         assert.fail("Method should be overwritten.");
     }
 
-    async _filter(/* eslint-disable no-unused-vars */data/* eslint-enable no-unused-vars */) {
+    async _filter(data) {
         assert.fail("Method should be overwritten.");
     }
 

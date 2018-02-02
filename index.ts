@@ -102,7 +102,7 @@ const rootPinoLogger = pino(
         name: applicationName,
         level: loggingLevel,
         extreme: true,
-        onTerminated: (/* eslint-disable no-unused-vars */eventName, error/* eslint-enable no-unused-vars */) => {
+        onTerminated: (eventName, error) => {
             // NOTE: override onTerminated to prevent pino from calling process.exit().
         },
     },
@@ -306,9 +306,7 @@ const run = async() => {
 
         process.exitCode = 0;
     } catch (error) {
-        /* eslint-disable no-console */
         console.error("Error.", error);
-        /* eslint-enable no-console */
 
         process.exitCode = 1;
     }

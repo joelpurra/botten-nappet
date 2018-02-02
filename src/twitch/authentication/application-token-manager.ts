@@ -50,7 +50,7 @@ export default class ApplicationTokenManager extends ConnectionManager {
 
         this._tokenHasBeenSet = null;
 
-        this._waitForFirstTokenPromise = new Promise((resolve, /* eslint-disable no-unused-vars */reject/* eslint-enable no-unused-vars */) => {
+        this._waitForFirstTokenPromise = new Promise((resolve, reject) => {
             const waitForToken = () => {
                 resolve();
             };

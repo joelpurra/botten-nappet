@@ -164,9 +164,7 @@ export default class UserTokenHelper {
         assert(userAuthorizationUrl.length > 0);
         assert(userAuthorizationUrl.startsWith("https://"));
 
-        /* eslint-disable no-console */
         console.info("Open this url and authorize the application:", userAuthorizationUrl);
-        /* eslint-enable no-console */
 
         return undefined;
     }
