@@ -51,6 +51,14 @@
     "ws": "^4.0.0"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.20",
+    "@types/camo": "^0.12.0",
+    "@types/nedb": "^1.8.5",
+    "@types/node": "^9.4.0",
+    "@types/pino": "^4.7.1",
+    "@types/power-assert": "^1.4.29",
+    "@types/qs": "^6.5.1",
+    "@types/ws": "^4.0.0",
     "eslint": "^4.15.0",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-plugin-import": "^2.8.0",
