@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Node",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "NodeBreak",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:break"
+      ],
+      "console": "integratedTerminal"
+    },
+    // {
+    //   "type": "chrome",
+    //   "request": "attach",
+    //   "name": "Chrome",
+    //   "port": 9222,
+    //   "url": "http://localhost:3000",
+    //   "webRoot": "${workspaceRoot}/client",
+    //   "trace": "verbose"
+    // },
+    // {
+    //   "type": "chrome",
+    //   "request": "launch",
+    //   "name": "Chrome Canary",
+    //   "port": 9222,
+    //   "url": "http://localhost:3000",
+    //   "webRoot": "${workspaceRoot}/client",
+    //   "runtimeExecutable": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
+    //   "trace": "verbose"
+    // }
+  ],
+  // "compounds": [
+  //   {
+  //     "name": "Full-stack",
+  //     "configurations": [
+  //       "Node",
+  //       "Chrome"
+  //     ]
+  //   }
+  // ]
+}

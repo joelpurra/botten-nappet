@@ -20,30 +20,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json from "rollup-plugin-json";
 
-import babel from "./rollup.config.babel.js";
+import typescript from "./rollup.config.typescript.js";
 // TODO: enable for production builds?
 // import uglify from "./rollup.config.uglify.js";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "index";
-const fileExtension = ".js";
-const fileName = `${inputName}${fileExtension}`;
+const inputName = "index.ts";
+const outputName = "dist/index.js";
 
 export default {
+    external: [
+        "axios",
+        "bluebird",
+        "camo",
+        "check-types",
+        "fs",
+        "pino",
+        "qs",
+        "readline",
+        "ws",
+    ],
+    input: inputName,
+    output: {
+        file: outputName,
+        format: "cjs",
+        name: inputName,
+        sourcemap: true,
+    },
     plugins: [
         json(),
-        babel(),
+        typescript(),
         // TODO: enable for production builds?
         // uglify(),
         license(inputName),
         filesize(),
     ],
-    input: `${fileName}`,
-    output: {
-        format: "cjs",
-        sourcemap: true,
-        name: inputName,
-        file: `dist/${fileName}`,
-    },
 };
