@@ -38,6 +38,7 @@ export default {
         "fs",
         "pino",
         "qs",
+        "rxjs",
         "readline",
         "ws",
     ],
