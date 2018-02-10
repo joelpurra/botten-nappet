@@ -35,6 +35,18 @@ import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
+import Rx,
+{
+    ConnectableObservable, Observer, Subscription,
+} from "rxjs";
+
+import {
+    NextObserver,
+} from "rxjs/internal/observer";
+
+import {
+    WebSocketSubject,
+} from "rxjs/internal/observable/dom/WebSocketSubject";
 
 import http from "http";
 import WebSocket from "ws";
@@ -53,9 +65,10 @@ interface IDataHandlerObject {
 }
 
 export default class IrcConnection implements IIRCConnection {
+    private _sharedWebSocketObservable: Rx.Observable<any> | null;
+    private _websocketSubcription: Rx.Subscription | null;
     private _dataHandlerObjects: IDataHandlerObject[];
-    private _maxDisconnectWaitMilliseconds: number;
-    private _ws: WebSocket | null;
+    private _websocketSubject: WebSocketSubject<any> | null;
     private _userAccessTokenProvider: any;
     private _username: string;
     private _channel: string;
@@ -66,12 +79,13 @@ export default class IrcConnection implements IIRCConnection {
         assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof uri, "string");
-        assert.greater(uri.length, 0);
+        assert.nonEmptyString(uri);
         assert(uri.startsWith("wss://"));
         assert.equal(typeof channel, "string");
-        assert.greater(channel.length, 0);
+        assert.nonEmptyString(channel);
+        assert(channel.startsWith("#"));
         assert.equal(typeof username, "string");
-        assert.greater(username.length, 0);
+        assert.nonEmptyString(username);
         assert.equal(typeof userAccessTokenProvider, "function");
 
         this._logger = logger.child("IrcConnection");
@@ -80,169 +94,116 @@ export default class IrcConnection implements IIRCConnection {
         this._username = username;
         this._userAccessTokenProvider = userAccessTokenProvider;
 
-        this._ws = null;
-        this._maxDisconnectWaitMilliseconds = 10 * 1000;
+        this._websocketSubject = null;
+        this._websocketSubcription = null;
+        this._sharedWebSocketObservable = null;
         this._dataHandlerObjects = [];
     }
 
-    public async connect() {
+    public async connect(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.equal(this._ws, null);
+        assert.null(this._websocketSubject);
+        assert.null(this._websocketSubcription);
 
-        this._ws = new WebSocket(this._uri, "irc");
+        const userAccessToken = await this._userAccessTokenProvider();
 
-        return new Promise((resolve, reject) => {
-            const onOpen = () => {
-                Promise.resolve()
-                    .then(() => this._userAccessTokenProvider())
-                    .then((userAccessToken) => {
-                        unregisterListeners();
+        const openedObserver: Observer<string> = {
+            complete: () => {
+                this._logger.trace("complete", "openedObserver");
+            },
+            error: (error) => {
+                // TODO: handle errors.
+                this._logger.error(error, "error", "openedObserver");
+            },
+            next: (message) => {
+                this._logger.trace(message, "next", "openedObserver");
 
-                        // TODO: make capabilities configurable/subclassable?
-                        const capabilities = [
-                            "twitch.tv/tags",
-                            "twitch.tv/commands",
-                            "twitch.tv/membership",
-                        ];
+                // TODO: convert rest of application to use obserables.
+                this._onMessage(message);
+            },
+        };
 
-                        const capabilitiesString = capabilities.join(" ");
+        const openObserver: Observer<Event> = {
+            complete: () => {
+                this._logger.trace("complete", "openObserver");
+            },
+            error: (error) => {
+                this._logger.error(error, "error", "openObserver");
+            },
+            next: (event) => {
+                // this._logger.trace(event, "next", "openObserver");
+                this._logger.debug("next", "openObserver");
 
-                        const setupConnectionCommands = [
-                            {
-                                cmds: [
-                                    `CAP REQ :${capabilitiesString}`,
-                                ],
-                                verifier: (message: string) => message.includes("CAP * ACK"),
-                            },
+                this._sendLoginCommands(userAccessToken)
+                    .subscribe(connectedSubject);
+            },
+        };
 
-                            {
-                                cmds: [
-                                    // NOTE: the user access token needs to have an "oauth:" prefix.
-                                    `PASS oauth:${userAccessToken}`,
-                                    `NICK ${this._username}`,
-                                ],
-                                // NOTE: the "001" message might change, but for now it's a hardcoded return value.
-                                // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
-                                verifier: (message: string) => message.includes("001"),
-                            },
+        const closeObserver: Observer<Event> = {
+            complete: () => {
+                this._logger.trace("complete", "closeObserver");
 
-                            {
-                                cmds: [
-                                    `JOIN ${this._channel}`,
-                                ],
-                                verifier: (message: string) => message.includes(`JOIN ${this._channel}`),
-                            },
-                        ];
+                this._websocketSubcription = null;
+                this._websocketSubject = null;
+            },
+            error: (error) => {
+                // TODO: handle errors.
+                this._logger.error(error, "error", "closeObserver");
+            },
+            next: (event) => {
+                // this._logger.trace(event, "next", "closeObserver");
+                this._logger.debug("next", "closeObserver");
+            },
+        };
 
-                        return Bluebird.mapSeries(
-                            setupConnectionCommands,
-                            ({ cmds, verifier }) => this._sendCommandsAndVerifyResponse(cmds, verifier),
-                        )
-                            .then(() => {
-                                resolve();
+        // TODO: log sending data through the websocket.
+        this._websocketSubject = Rx.Observable.webSocket({
+            WebSocketCtor: WebSocket as any,
+            protocol: "irc",
+            url: this._uri,
 
-                                return undefined;
-                            });
-                    })
-                    .catch((error) => {
-                        reject(error);
+            resultSelector: (messageEvent) => messageEvent.data,
 
-                        return undefined;
-                    });
-            };
+            closeObserver,
+            openObserver,
+            // closingObserver: ...
+        });
 
-            const onError = (error: IWebSocketError) => {
-                unregisterListeners();
+        this._sharedWebSocketObservable = this._websocketSubject.share();
+        this._websocketSubcription = this._sharedWebSocketObservable.subscribe(openedObserver);
 
-                this.disconnect();
+        const connectedSubject = new Rx.Subject<void>();
 
-                reject(error);
-            };
+        const connectedPromise = Bluebird.resolve(connectedSubject.asObservable().toPromise());
 
-            const registerListeners = () => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
-                }
-
-                this._ws.once("open", onOpen);
-                this._ws.once("error", onError);
-            };
-
-            const unregisterListeners = () => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
-                }
-
-                this._ws.removeListener("open", onOpen);
-                this._ws.removeListener("error", onError);
-            };
-
-            registerListeners();
-        })
-            .then(() => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
-                }
-
-                this._ws.on("error", this._onError.bind(this));
-                this._ws.on("unexpected-response", this._onUnexpectedResponse.bind(this));
-                this._ws.on("close", this._onClose.bind(this));
-                this._ws.on("message", this._onMessage.bind(this));
-
-                return undefined;
-            });
-    }
-
-    public async disconnect() {
-        assert.hasLength(arguments, 0);
-        assert.not.equal(this._ws, null);
-
-        if (!(this._ws instanceof WebSocket)) {
-            throw new TypeError("this._ws must be WebSocket");
-        }
-
-        if (this._ws.readyState !== WebSocket.OPEN) {
-            this._logger.trace("Already disconnected.");
-
-            return;
-        }
-
-        return new Promise((resolve, reject) => {
-            if (!(this._ws instanceof WebSocket)) {
-                throw new TypeError("this._ws must be WebSocket");
-            }
-
-            const hasClosed = () => {
-                resolve();
-            };
-
-            this._ws.once("close", hasClosed);
-
-            Bluebird.delay(this._maxDisconnectWaitMilliseconds)
-                .then(() => reject(new Error("Disconnect timed out.")));
-
-            this._ws.close();
-        })
-            .catch(() => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
-                }
-
-                this._logger.warn(`Could not disconnect within ${this._maxDisconnectWaitMilliseconds} milliseconds.`);
-
-                // NOTE: fallback for a timed out disconnect.
-                this._ws.terminate();
-
-                return undefined;
+        return connectedPromise
+            .tap(() => {
+                this._logger.debug("connectedPromise");
             })
-            .then(() => {
-                this._ws = null;
-
-                return undefined;
+            .tapCatch((error) => {
+                this._logger.error(error, "connectedPromise");
             });
     }
 
-    public async reconnect() {
+    public async disconnect(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.not.null(this._websocketSubject);
+        assert.not.null(this._websocketSubcription);
+
+        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+            throw new TypeError("this._websocketSubject must be WebSocketSubject");
+        }
+
+        if (!(this._websocketSubcription instanceof Subscription)) {
+            throw new TypeError("this._websocketSubcription must be Subscription");
+        }
+
+        // TODO: is this the right way to close the unrelying websocket?
+        this._websocketSubcription.unsubscribe();
+        this._websocketSubject.complete();
+    }
+
+    public async reconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
 
         return this.disconnect()
@@ -257,7 +218,7 @@ export default class IrcConnection implements IIRCConnection {
         assert.hasLength(arguments, 2);
         assert.equal(typeof handler, "function");
         assert.equal(typeof filter, "function");
-        assert.not.equal(this._ws, null);
+        assert.not.equal(this._websocketSubject, null);
 
         const dataHandlerObject: IDataHandlerObject = {
             filter,
@@ -274,65 +235,94 @@ export default class IrcConnection implements IIRCConnection {
         return killSwitch;
     }
 
-    private async _sendCommandsAndVerifyResponse(cmds: string[], verifier: (message: string) => boolean) {
+    private _sendLoginCommands(userAccessToken: string): Rx.Observable<void> {
+        // TODO: make capabilities configurable/subclassable?
+        const capabilities = [
+            "twitch.tv/tags",
+            "twitch.tv/commands",
+            "twitch.tv/membership",
+        ];
+
+        const capabilitiesString = capabilities.join(" ");
+
+        const setupConnectionCommands = [
+            {
+                cmds: [
+                    `CAP REQ :${capabilitiesString}`,
+                ],
+                verifier: (message: string) => message.includes("CAP * ACK"),
+            },
+
+            {
+                cmds: [
+                    // NOTE: the user access token needs to have an "oauth:" prefix.
+                    `PASS oauth:${userAccessToken}`,
+                    `NICK ${this._username}`,
+                ],
+                // NOTE: the "001" message might change, but for now it's a hardcoded return value.
+                // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
+                verifier: (message: string) => message.includes("001"),
+            },
+
+            {
+                cmds: [
+                    `JOIN ${this._channel}`,
+                ],
+                verifier: (message: string) => message.includes(`JOIN ${this._channel}`),
+            },
+        ];
+
+        const commandObservables = Rx.Observable.from(setupConnectionCommands)
+            .map(({ cmds, verifier }) => {
+                return this._sendCommandsAndVerifyResponse(cmds, verifier);
+            })
+            .mergeAll();
+
+        const allLoginCommandsObservable = Rx.Observable.concat(commandObservables);
+
+        return allLoginCommandsObservable;
+    }
+
+    private _sendCommandsAndVerifyResponse(
+        cmds: string[],
+        verifier: (message: string) => boolean,
+    ): Rx.Observable<void> {
         assert.hasLength(arguments, 2);
-        assert(Array.isArray(cmds));
-        assert.greater(cmds.length, 0);
+        assert.nonEmptyArray(cmds);
         assert.equal(typeof verifier, "function");
 
-        return new Promise((resolve, reject) => {
-            const errorHandler = (error: IWebSocketError) => {
-                unregisterListeners();
+        assert.not.null(this._websocketSubject);
 
-                reject(error);
-            };
+        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+            throw new TypeError("this._websocketSubject must be WebSocketSubject");
+        }
 
-            const messageHandler = (message: string) => {
-                const matchingMessage = verifier(message);
+        const loginCommandsObservable = Rx.Observable.from(cmds)
+            .do((val) => this._logger.trace(val, "loginCommandsObservable"))
+            .map((cmd) => {
+                // TODO: is this a hack? Should loginCommandsObservable be subscribed to _websocketSubject?
+                // NOTE: could be performed separately, outside of this map function?
+                this._websocketSubject!.next(cmd);
 
-                if (matchingMessage) {
-                    unregisterListeners();
-
-                    resolve();
-                }
-            };
-
-            const registerListeners = () => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
+                if (!(this._sharedWebSocketObservable instanceof Rx.Observable)) {
+                    throw new TypeError("this._openedWebSocketSubject must be WebSocketSubject");
                 }
 
-                this._ws.on("error", errorHandler);
-                this._ws.on("message", messageHandler);
-            };
+                return this._sharedWebSocketObservable
+                    .filter(verifier)
+                    .mergeAll<void>();
+            });
 
-            const unregisterListeners = () => {
-                if (!(this._ws instanceof WebSocket)) {
-                    throw new TypeError("this._ws must be WebSocket");
-                }
-
-                this._ws.removeListener("error", errorHandler);
-                this._ws.removeListener("message", messageHandler);
-            };
-
-            registerListeners();
-
-            Bluebird.mapSeries(
-                cmds,
-                (cmd) => this._send(cmd),
-            )
-                .catch((error) => {
-                    reject(error);
-                });
-        });
+        return loginCommandsObservable;
     }
 
     private async _send(data: any) {
         assert.hasLength(arguments, 1);
         assert(data !== undefined && data !== null);
+        assert.not.null(this._websocketSubject);
 
-        if (!(this._ws instanceof WebSocket)) {
-            throw new TypeError("this._ws must be WebSocket");
+        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+            throw new TypeError("this._websocketSubject must be WebSocketSubject");
         }
 
         let message = null;
@@ -345,19 +335,7 @@ export default class IrcConnection implements IIRCConnection {
 
         this._logger.debug(data, message.length, "_send");
 
-        this._ws.send(message);
-    }
-
-    private _onError(error: IWebSocketError) {
-        this._logger.error(error, "_onError");
-    }
-
-    private _onUnexpectedResponse(request: http.ClientRequest, response: http.IncomingMessage): void {
-        this._logger.error(request, response, "_onUnexpectedResponse");
-    }
-
-    private _onClose(code: number, reason: string): void {
-        this.disconnect();
+        this._websocketSubject.next(message);
     }
 
     private async _parseMessage(rawMessage: string): Promise<IParsedMessage> {
@@ -396,21 +374,21 @@ export default class IrcConnection implements IIRCConnection {
             parsedMessage.tags = parsedMessage.originalTags
                 .split(";")
                 .reduce(
-                (obj: any, tag) => {
-                    const parts = tag.split("=");
-                    const key = parts[0];
-                    const value = parts[1];
+                    (obj: any, tag) => {
+                        const parts = tag.split("=");
+                        const key = parts[0];
+                        const value = parts[1];
 
-                    // NOTE: handle the case of having repeated tag keys.
-                    // NOTE: this means a parsed tag value can be either a string or an array of strings.
-                    obj[key] = obj[key]
-                        ? new Array().concat(obj[key])
-                            .concat(value)
-                        : value;
+                        // NOTE: handle the case of having repeated tag keys.
+                        // NOTE: this means a parsed tag value can be either a string or an array of strings.
+                        obj[key] = obj[key]
+                            ? new Array().concat(obj[key])
+                                .concat(value)
+                            : value;
 
-                    return obj;
-                },
-                {},
+                        return obj;
+                    },
+                    {},
             );
         } else if (rawMessage.startsWith("PING")) {
             parsedMessage.command = "PING";
