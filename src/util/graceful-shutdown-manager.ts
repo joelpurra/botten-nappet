@@ -35,7 +35,7 @@ import {
 
 import PinoLogger from "./pino-logger";
 
-type ShutdownEvent = ("beforeExit" | "exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
+type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
 type ShutdownHandler = () => void;
 
 export default class GracefulShutdownManager {
@@ -48,7 +48,6 @@ export default class GracefulShutdownManager {
         SIGINT: Rx.Subscription | null,
         SIGQUIT: Rx.Subscription | null,
         SIGTERM: Rx.Subscription | null,
-        beforeExit: Rx.Subscription | null,
         exit: Rx.Subscription | null,
         uncaughtException: Rx.Subscription | null,
         unhandledRejection: Rx.Subscription | null,
@@ -62,7 +61,6 @@ export default class GracefulShutdownManager {
         this._logger = logger.child("GracefulShutdownManager");
 
         this._handleSignalEvent = this._handleSignalEvent.bind(this);
-        this._handleBeforeExitEvent = this._handleBeforeExitEvent.bind(this);
         this._handleExitEvent = this._handleExitEvent.bind(this);
         this._handleUncaughtExceptionEvent = this._handleUncaughtExceptionEvent.bind(this);
         this._handleUnhandledRejectionEvent = this._handleUnhandledRejectionEvent.bind(this);
@@ -73,7 +71,6 @@ export default class GracefulShutdownManager {
             SIGINT: null,
             SIGQUIT: null,
             SIGTERM: null,
-            beforeExit: null,
             exit: null,
             uncaughtException: null,
             unhandledRejection: null,
@@ -93,7 +90,6 @@ export default class GracefulShutdownManager {
         assert.null(this._subscriptions.SIGINT);
         assert.null(this._subscriptions.SIGQUIT);
         assert.null(this._subscriptions.SIGTERM);
-        assert.null(this._subscriptions.beforeExit);
         assert.null(this._subscriptions.exit);
         assert.null(this._subscriptions.uncaughtException);
         assert.null(this._subscriptions.unhandledRejection);
@@ -126,9 +122,6 @@ export default class GracefulShutdownManager {
         this._subscriptions.SIGTERM = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGTERM")
             .subscribe(this._handleSignalEvent);
 
-        this._subscriptions.beforeExit = Rx.Observable.fromEvent<number>(processAsEventTargetLike, "beforeExit")
-            .subscribe(this._handleBeforeExitEvent);
-
         this._subscriptions.exit = Rx.Observable.fromEvent<number>(processAsEventTargetLike, "exit")
             .subscribe(this._handleExitEvent);
 
@@ -151,7 +144,6 @@ export default class GracefulShutdownManager {
         assert.not.null(this._subscriptions.SIGINT);
         assert.not.null(this._subscriptions.SIGQUIT);
         assert.not.null(this._subscriptions.SIGTERM);
-        assert.not.null(this._subscriptions.beforeExit);
         assert.not.null(this._subscriptions.exit);
         assert.not.null(this._subscriptions.uncaughtException);
         assert.not.null(this._subscriptions.unhandledRejection);
@@ -161,7 +153,6 @@ export default class GracefulShutdownManager {
         this._subscriptions.SIGINT!.unsubscribe();
         this._subscriptions.SIGQUIT!.unsubscribe();
         this._subscriptions.SIGTERM!.unsubscribe();
-        this._subscriptions.beforeExit!.unsubscribe();
         this._subscriptions.exit!.unsubscribe();
         this._subscriptions.uncaughtException!.unsubscribe();
         this._subscriptions.unhandledRejection!.unsubscribe();
@@ -179,11 +170,12 @@ export default class GracefulShutdownManager {
         this._shutdownSubject!.next();
     }
 
-    public get shutdownObserver() {
+    public get shutdownObservable(): Rx.Observable<void> {
         assert.hasLength(arguments, 0);
         assert.not.null(this._shutdownObservable);
 
-        return this._shutdownObservable;
+        // TODO: better null handling.
+        return this._shutdownObservable!;
     }
 
     public async waitForShutdownSignal() {
@@ -191,10 +183,6 @@ export default class GracefulShutdownManager {
         assert.not.null(this._shutdownPromise);
 
         return this._shutdownPromise;
-    }
-
-    private async _handleBeforeExitEvent(code: number): Promise<void> {
-        return this._handleEvent("beforeExit", code);
     }
 
     private async _handleExitEvent(code: number): Promise<void> {

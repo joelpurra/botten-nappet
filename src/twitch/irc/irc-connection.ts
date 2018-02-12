@@ -18,18 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// NOTE: parts of file come from official Twitch example code.
+// NOTE: parts of the _parseMessage function comes from official Twitch example code; see license note.
 // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
-
-/*
-Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
-    http://aws.amazon.com/apache2.0/
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-    This file is what connects to chat and parses messages as they come along. The chat client connects via a
-    Web Socket to Twitch chat. The important part events are onopen and onmessage.
-*/
 
 import Bluebird from "bluebird";
 import {
@@ -37,45 +27,42 @@ import {
 } from "check-types";
 import Rx,
 {
-    ConnectableObservable, Observer, Subscription,
+    ConnectableObservable,
+    Observer,
+    Subscription,
 } from "rxjs";
-
-import {
-    NextObserver,
-} from "rxjs/internal/observer";
-
 import {
     WebSocketSubject,
 } from "rxjs/internal/observable/dom/WebSocketSubject";
+import {
+    NextObserver,
+} from "rxjs/internal/observer";
 
 import http from "http";
 import WebSocket from "ws";
 
 import PinoLogger from "../../util/pino-logger";
+import { UserAccessTokenProviderType } from "../authentication/provider-types";
 import IWebSocketError from "../iweb-socket-error";
+import IWebSocketCommand from "../websocket/iwebsocket-command";
+import WebSocketConnection from "../websocket/websocket-connection";
 import IIRCConnection from "./iirc-connection";
 import IParsedMessage from "./iparsed-message";
 
-type KillSwitch = () => void;
-type DataHandler = (data: any) => void;
-type DataFilter = (data: any) => boolean;
-interface IDataHandlerObject {
-    handler: DataHandler;
-    filter: DataFilter;
-}
-
-export default class IrcConnection implements IIRCConnection {
-    private _sharedWebSocketObservable: Rx.Observable<any> | null;
-    private _websocketSubcription: Rx.Subscription | null;
-    private _dataHandlerObjects: IDataHandlerObject[];
-    private _websocketSubject: WebSocketSubject<any> | null;
-    private _userAccessTokenProvider: any;
+export default class IrcConnection extends WebSocketConnection<IParsedMessage, string> implements IIRCConnection {
+    private _userAccessTokenProvider: UserAccessTokenProviderType;
     private _username: string;
     private _channel: string;
-    private _uri: string;
-    private _logger: PinoLogger;
 
-    constructor(logger: PinoLogger, uri: string, channel: string, username: string, userAccessTokenProvider) {
+    constructor(
+        logger: PinoLogger,
+        uri: string,
+        channel: string,
+        username: string,
+        userAccessTokenProvider: UserAccessTokenProviderType,
+    ) {
+        super(logger, uri, "irc");
+
         assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof uri, "string");
@@ -89,153 +76,19 @@ export default class IrcConnection implements IIRCConnection {
         assert.equal(typeof userAccessTokenProvider, "function");
 
         this._logger = logger.child("IrcConnection");
-        this._uri = uri;
+
         this._channel = channel;
         this._username = username;
         this._userAccessTokenProvider = userAccessTokenProvider;
-
-        this._websocketSubject = null;
-        this._websocketSubcription = null;
-        this._sharedWebSocketObservable = null;
-        this._dataHandlerObjects = [];
     }
 
-    public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-        assert.null(this._websocketSubject);
-        assert.null(this._websocketSubcription);
+    public get channel(): string {
+        return this._channel;
+    }
 
+    protected async _getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IParsedMessage>>> {
         const userAccessToken = await this._userAccessTokenProvider();
 
-        const openedObserver: Observer<string> = {
-            complete: () => {
-                this._logger.trace("complete", "openedObserver");
-            },
-            error: (error) => {
-                // TODO: handle errors.
-                this._logger.error(error, "error", "openedObserver");
-            },
-            next: (message) => {
-                this._logger.trace(message, "next", "openedObserver");
-
-                // TODO: convert rest of application to use obserables.
-                this._onMessage(message);
-            },
-        };
-
-        const openObserver: Observer<Event> = {
-            complete: () => {
-                this._logger.trace("complete", "openObserver");
-            },
-            error: (error) => {
-                this._logger.error(error, "error", "openObserver");
-            },
-            next: (event) => {
-                // this._logger.trace(event, "next", "openObserver");
-                this._logger.debug("next", "openObserver");
-
-                this._sendLoginCommands(userAccessToken)
-                    .subscribe(connectedSubject);
-            },
-        };
-
-        const closeObserver: Observer<Event> = {
-            complete: () => {
-                this._logger.trace("complete", "closeObserver");
-
-                this._websocketSubcription = null;
-                this._websocketSubject = null;
-            },
-            error: (error) => {
-                // TODO: handle errors.
-                this._logger.error(error, "error", "closeObserver");
-            },
-            next: (event) => {
-                // this._logger.trace(event, "next", "closeObserver");
-                this._logger.debug("next", "closeObserver");
-            },
-        };
-
-        // TODO: log sending data through the websocket.
-        this._websocketSubject = Rx.Observable.webSocket({
-            WebSocketCtor: WebSocket as any,
-            protocol: "irc",
-            url: this._uri,
-
-            resultSelector: (messageEvent) => messageEvent.data,
-
-            closeObserver,
-            openObserver,
-            // closingObserver: ...
-        });
-
-        this._sharedWebSocketObservable = this._websocketSubject.share();
-        this._websocketSubcription = this._sharedWebSocketObservable.subscribe(openedObserver);
-
-        const connectedSubject = new Rx.Subject<void>();
-
-        const connectedPromise = Bluebird.resolve(connectedSubject.asObservable().toPromise());
-
-        return connectedPromise
-            .tap(() => {
-                this._logger.debug("connectedPromise");
-            })
-            .tapCatch((error) => {
-                this._logger.error(error, "connectedPromise");
-            });
-    }
-
-    public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-        assert.not.null(this._websocketSubject);
-        assert.not.null(this._websocketSubcription);
-
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
-        }
-
-        if (!(this._websocketSubcription instanceof Subscription)) {
-            throw new TypeError("this._websocketSubcription must be Subscription");
-        }
-
-        // TODO: is this the right way to close the unrelying websocket?
-        this._websocketSubcription.unsubscribe();
-        this._websocketSubject.complete();
-    }
-
-    public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
-        return this.disconnect()
-            .then(() => this.connect());
-    }
-
-    public async send(data: any): Promise<void> {
-        return this._send(data);
-    }
-
-    public async listen(handler: DataHandler, filter: DataFilter): Promise<KillSwitch> {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof handler, "function");
-        assert.equal(typeof filter, "function");
-        assert.not.equal(this._websocketSubject, null);
-
-        const dataHandlerObject: IDataHandlerObject = {
-            filter,
-            handler,
-        };
-
-        this._dataHandlerObjects.push(dataHandlerObject);
-
-        const killSwitch = () => {
-            this._dataHandlerObjects = this._dataHandlerObjects
-                .filter((_dataHandler) => _dataHandler !== dataHandlerObject);
-        };
-
-        return killSwitch;
-    }
-
-    private _sendLoginCommands(userAccessToken: string): Rx.Observable<void> {
         // TODO: make capabilities configurable/subclassable?
         const capabilities = [
             "twitch.tv/tags",
@@ -245,100 +98,50 @@ export default class IrcConnection implements IIRCConnection {
 
         const capabilitiesString = capabilities.join(" ");
 
-        const setupConnectionCommands = [
+        const setupConnectionCommands: Array<IWebSocketCommand<IParsedMessage>> = [
             {
-                cmds: [
+                commands: [
                     `CAP REQ :${capabilitiesString}`,
                 ],
-                verifier: (message: string) => message.includes("CAP * ACK"),
+                verifier: (message) => message.original.includes("CAP * ACK"),
             },
 
             {
-                cmds: [
+                commands: [
                     // NOTE: the user access token needs to have an "oauth:" prefix.
                     `PASS oauth:${userAccessToken}`,
                     `NICK ${this._username}`,
                 ],
                 // NOTE: the "001" message might change, but for now it's a hardcoded return value.
                 // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
-                verifier: (message: string) => message.includes("001"),
+                verifier: (message) => message.original.includes("001"),
             },
 
             {
-                cmds: [
+                commands: [
                     `JOIN ${this._channel}`,
                 ],
-                verifier: (message: string) => message.includes(`JOIN ${this._channel}`),
+                verifier: (message) => message.original.includes(`JOIN ${this._channel}`),
             },
         ];
 
-        const commandObservables = Rx.Observable.from(setupConnectionCommands)
-            .map(({ cmds, verifier }) => {
-                return this._sendCommandsAndVerifyResponse(cmds, verifier);
-            })
-            .mergeAll();
-
-        const allLoginCommandsObservable = Rx.Observable.concat(commandObservables);
-
-        return allLoginCommandsObservable;
+        return setupConnectionCommands;
     }
 
-    private _sendCommandsAndVerifyResponse(
-        cmds: string[],
-        verifier: (message: string) => boolean,
-    ): Rx.Observable<void> {
-        assert.hasLength(arguments, 2);
-        assert.nonEmptyArray(cmds);
-        assert.equal(typeof verifier, "function");
+    protected async _parseMessage(rawMessage: string): Promise<IParsedMessage> {
+        // NOTE: parts of the _parseMessage function comes from official Twitch example code; see license note.
+        // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
-        assert.not.null(this._websocketSubject);
+        /*
+        Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+        Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
+            http://aws.amazon.com/apache2.0/
+        or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
-        }
+            This file is what connects to chat and parses messages as they come along. The chat client connects via a
+            Web Socket to Twitch chat. The important part events are onopen and onmessage.
+        */
 
-        const loginCommandsObservable = Rx.Observable.from(cmds)
-            .do((val) => this._logger.trace(val, "loginCommandsObservable"))
-            .map((cmd) => {
-                // TODO: is this a hack? Should loginCommandsObservable be subscribed to _websocketSubject?
-                // NOTE: could be performed separately, outside of this map function?
-                this._websocketSubject!.next(cmd);
-
-                if (!(this._sharedWebSocketObservable instanceof Rx.Observable)) {
-                    throw new TypeError("this._openedWebSocketSubject must be WebSocketSubject");
-                }
-
-                return this._sharedWebSocketObservable
-                    .filter(verifier)
-                    .mergeAll<void>();
-            });
-
-        return loginCommandsObservable;
-    }
-
-    private async _send(data: any) {
-        assert.hasLength(arguments, 1);
-        assert(data !== undefined && data !== null);
-        assert.not.null(this._websocketSubject);
-
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
-        }
-
-        let message = null;
-
-        if (typeof data === "string") {
-            message = data;
-        } else {
-            message = JSON.stringify(data);
-        }
-
-        this._logger.debug(data, message.length, "_send");
-
-        this._websocketSubject.next(message);
-    }
-
-    private async _parseMessage(rawMessage: string): Promise<IParsedMessage> {
         // This is an example of an IRC message with tags. I split it across
         // multiple lines for readability.
 
@@ -396,39 +199,5 @@ export default class IrcConnection implements IIRCConnection {
         }
 
         return parsedMessage;
-    }
-
-    private async _onMessage(message: string) {
-        assert.hasLength(arguments, 1);
-
-        const data = await this._parseMessage(message);
-
-        // TODO: try-catch for bad handlers.
-        await this._dataHandler(data);
-    }
-
-    private async _dataHandler(data: any) {
-        assert.hasLength(arguments, 1);
-
-        const applicableHandlers = await Bluebird.filter(
-            this._dataHandlerObjects,
-            (dataHandler) => Promise.resolve(dataHandler.filter(data))
-                .catch((error) => {
-                    this._logger.warn(error, `Masking error in filter ${dataHandler.filter.name}`);
-
-                    // NOTE: assume that the handler shold not be executed when the filter crashes.
-                    return false;
-                }),
-        );
-
-        await Bluebird.each(
-            applicableHandlers,
-            (dataHandler) => Promise.resolve(dataHandler.handler(data))
-                .catch((error) => {
-                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
-
-                    return undefined;
-                }),
-        );
     }
 }

@@ -23,35 +23,46 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
-import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
-import IrcManager from "../irc-manager";
+import IPubSubConnection from "../ipubsub-connection";
+import IPubSubResponse from "../ipubsub-response";
+import PubSubManager from "../pubsub-manager";
 
-export default class PingIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class ReconnectPubSubHandler extends PubSubManager {
+    constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("PingIrcHandler");
+        this._logger = logger.child("ReconnectPubSubHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage): Promise<void> {
+    public async _dataHandler(data: IPubSubResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace("Responding to PING.", "_dataHandler");
+        this._logger.trace(data, "_dataHandler");
+
+        this._logger.info("Reconnecting.");
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.send("PONG :" + data.message);
+        this._connection.reconnect();
     }
 
-    public async _filter(data: IParsedMessage): Promise<boolean> {
+    public async _filter(data: IPubSubResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        return data.command === "PING";
+        if (typeof data.type !== "string") {
+            return false;
+        }
+
+        // https://dev.twitch.tv/docs/pubsub#connection-management
+        if (data.type !== "RECONNECT") {
+            return false;
+        }
+
+        return true;
     }
 }

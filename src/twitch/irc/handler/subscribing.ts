@@ -61,16 +61,12 @@ export default class SubscribingIrcHandler extends IrcManager {
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(message);
+        this._connection.send(message);
     }
 
     public async _filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (typeof data !== "object") {
-            return false;
-        }
 
         if (data.command !== "USERNOTICE") {
             return false;

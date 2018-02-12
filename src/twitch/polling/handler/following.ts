@@ -25,16 +25,22 @@ import {
 import PinoLogger from "../../../util/pino-logger";
 import IConnection from "../../iconnection";
 import IIRCConnection from "../../irc/iirc-connection";
+import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
 type TwitchApiV5ChannelFollower = any;
 type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
 
-export default class FollowingPollingHandler extends PollingManager {
+export default class FollowingPollingHandler extends PollingManager<any, void> {
     public _lastFollowingMessageTimestamp: number;
     public _ircChannel: string;
     public _ircConnection: IIRCConnection;
-    constructor(logger: PinoLogger, connection: IConnection, ircConnection: IIRCConnection, ircChannel: string) {
+    constructor(
+        logger: PinoLogger,
+        connection: IPollingConnection<any, void>,
+        ircConnection: IIRCConnection,
+        ircChannel: string,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 4);
@@ -91,7 +97,10 @@ export default class FollowingPollingHandler extends PollingManager {
         return shouldHandle;
     }
 
-    public async _getNewFollows(follows: TwitchApiV5ChannelFollowers, since: number) {
+    public async _getNewFollows(
+        follows: TwitchApiV5ChannelFollowers,
+        since: number,
+    ): Promise<TwitchApiV5ChannelFollowers> {
         const newFollows = follows.filter((follow) => {
             const followedAt = Date.parse(follow.created_at);
 

@@ -23,10 +23,13 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
+import IHttpData from "../ihttp-data";
+import IHttpHeaders from "../ihttp-header";
 import PollingConnection from "../polling-connection";
 
-export default class PollingClientIdConnection extends PollingConnection {
+export default class PollingClientIdConnection extends PollingConnection<any, void> {
     public _applicationClientId: string;
+
     constructor(
         logger: PinoLogger,
         applicationClientId: string,
@@ -61,7 +64,7 @@ export default class PollingClientIdConnection extends PollingConnection {
         this._applicationClientId = applicationClientId;
     }
 
-    public async _getHeaders(): Promise<object> {
+    public async _getHeaders(): Promise<IHttpHeaders> {
         assert.hasLength(arguments, 0);
 
         const headers = {
@@ -72,7 +75,7 @@ export default class PollingClientIdConnection extends PollingConnection {
         return headers;
     }
 
-    public async _getData(): Promise<object> {
+    public async _getData(): Promise<IHttpData> {
         assert.hasLength(arguments, 0);
 
         const data = {};

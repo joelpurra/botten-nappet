@@ -23,45 +23,33 @@ import {
 } from "check-types";
 
 import PinoLogger from "../../../util/pino-logger";
-import IConnection from "../../iconnection";
+import IPubSubConnection from "../ipubsub-connection";
 import PubSubManager from "../pubsub-manager";
 
 export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IConnection, userAccessTokenProvider, userId: number) {
-        const topics = [
-            `channel-bits-events-v1.${userId}`,
-            `channel-subscribe-events-v1.${userId}`,
-            `channel-commerce-events-v1.${userId}`,
-            `whispers.${userId}`,
-        ];
+    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+        super(logger, connection);
 
-        super(logger, connection, userAccessTokenProvider, topics);
-
-        assert.hasLength(arguments, 4);
+        assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof userAccessTokenProvider, "function");
-        assert.number(userId);
-        assert.greater(userId, 0);
 
         this._logger = logger.child("LoggingPubSubHandler");
     }
 
-    public async _dataHandler(topic: string, data: object) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof topic, "string");
-        assert.greater(topic.length, 0);
+    public async _dataHandler(data: object): Promise<void> {
+        assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
+        // TODO: verify that the data contains both the topic and the actual message data.
         this._logger.trace(data, "_dataHandler");
     }
 
-    public async _filter(topic: string, data: object) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof topic, "string");
-        assert.greater(topic.length, 0);
+    public async _filter(data: object): Promise<boolean> {
+        assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
+        // TODO: verify that the data contains both the topic and the actual message data.
         return true;
     }
 }

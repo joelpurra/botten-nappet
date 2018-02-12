@@ -26,8 +26,8 @@ import PinoLogger from "../../util/pino-logger";
 import ConnectionManager from "../connection-manager";
 import IConnection from "../iconnection";
 
-export default abstract class PollingManager extends ConnectionManager {
-    constructor(logger: PinoLogger, connection: IConnection) {
+export default abstract class PollingManager<T, V> extends ConnectionManager<T, V> {
+    constructor(logger: PinoLogger, connection: IConnection<T, V>) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);

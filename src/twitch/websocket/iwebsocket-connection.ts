@@ -22,9 +22,7 @@ import {
     Observable,
 } from "rxjs/internal/Observable";
 
-import IWebSocketConnection from "../websocket/iwebsocket-connection";
-import IParsedMessage from "./iparsed-message";
+import IConnection from "../iconnection";
 
-export default interface IIRCConnection extends IWebSocketConnection<IParsedMessage, string> {
-    readonly channel: string;
+export default interface IWebSocketConnection<T, V> extends IConnection<T, V> {
 }

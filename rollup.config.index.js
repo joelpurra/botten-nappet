@@ -39,6 +39,7 @@ export default {
         "pino",
         "qs",
         "readline",
+        "rxios",
         "rxjs",
         "rxjs/internal/observable/dom/WebSocketSubject",
         "ws",

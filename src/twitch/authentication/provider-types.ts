@@ -18,13 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    Observable,
-} from "rxjs/internal/Observable";
+import IAugmentedToken from "./iaugmented-token";
+import IRawToken from "./iraw-token";
 
-import IWebSocketConnection from "../websocket/iwebsocket-connection";
-import IParsedMessage from "./iparsed-message";
-
-export default interface IIRCConnection extends IWebSocketConnection<IParsedMessage, string> {
-    readonly channel: string;
-}
+export type AugmentedTokenProviderType = () => Promise<IAugmentedToken>;
+export type UserAccessTokenProviderType = () => Promise<string>;
+export type ApplicationAccessTokenProviderType = () => Promise<string>;

@@ -26,20 +26,25 @@ import axios from "axios";
 
 import PinoLogger from "../../util/pino-logger";
 import ConnectionManager from "../connection-manager";
-import IConnection from "../iconnection";
+import IPollingConnection from "../polling/ipolling-connection";
 import IRawToken from "./iraw-token";
 
-export default class ApplicationTokenManager extends ConnectionManager {
-    public _waitForFirstTokenPromise: Promise<undefined>;
-    public _tokenHasBeenSet: (() => void) | null;
-    public _applicationAccessToken: string | null;
-    public _rawOAuthToken: IRawToken | null;
-    public _oauthTokenRevocationHeaders: {};
-    public _oauthTokenRevocationMethod: string;
-    public _oauthTokenRevocationUri: string;
-    public _clientId: string;
+export default class ApplicationTokenManager extends ConnectionManager<IRawToken, void> {
+    private _waitForFirstTokenPromise: Promise<undefined>;
+    private _tokenHasBeenSet: (() => void) | null;
+    private _applicationAccessToken: string | null;
+    private _rawOAuthToken: IRawToken | null;
+    private _oauthTokenRevocationHeaders: {};
+    private _oauthTokenRevocationMethod: string;
+    private _oauthTokenRevocationUri: string;
+    private _clientId: string;
 
-    constructor(logger: PinoLogger, connection: IConnection, clientId: string, oauthTokenRevocationUri: string) {
+    constructor(
+        logger: PinoLogger,
+        connection: IPollingConnection<IRawToken, void>,
+        clientId: string,
+        oauthTokenRevocationUri: string,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 4);
@@ -81,7 +86,10 @@ export default class ApplicationTokenManager extends ConnectionManager {
         assert.hasLength(arguments, 0);
 
         await super.start();
-        return this._connection.force(true);
+
+        const pollingConnection = this._connection as IPollingConnection<IRawToken, void>;
+
+        return pollingConnection.send(undefined);
     }
 
     public async stop() {
@@ -91,7 +99,7 @@ export default class ApplicationTokenManager extends ConnectionManager {
         return super.stop();
     }
 
-    public async _dataHandler(data: any): Promise<void> {
+    public async _dataHandler(data: IRawToken): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -103,7 +111,7 @@ export default class ApplicationTokenManager extends ConnectionManager {
         ]);
     }
 
-    public async _filter(data: any) {
+    public async _filter(data: IRawToken): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

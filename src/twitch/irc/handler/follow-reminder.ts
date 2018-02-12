@@ -24,6 +24,7 @@ import {
 
 import PinoLogger from "../../../util/pino-logger";
 import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
 export default class FollowReminderIrcHandler extends IrcManager {
@@ -59,6 +60,7 @@ export default class FollowReminderIrcHandler extends IrcManager {
 
         await super.start();
 
+        // TODO: use an observable interval?
         this._reminderIntervalId = setInterval(() => this._remind(), this._reminderIntervalMilliseconds);
     }
 
@@ -92,20 +94,20 @@ export default class FollowReminderIrcHandler extends IrcManager {
         // TODO: configure message.
         const reminder = this._getReminder();
 
-        const message = `PRIVMSG ${this._connection._channel} :${reminder}`;
+        const message = `PRIVMSG ${this._connection.channel} :${reminder}`;
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(message);
+        this._connection.send(message);
     }
 
-    public async _dataHandler(data) {
+    public async _dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         throw new Error("Unexpected call to _dataHandler.");
     }
 
-    public async _filter(data) {
+    public async _filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
