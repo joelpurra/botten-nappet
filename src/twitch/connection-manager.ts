@@ -21,67 +21,57 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     assert,
 } from "check-types";
+import Rx, {
+    Subscription,
+} from "rxjs";
+import {
+    NextObserver,
+} from "rxjs/internal/Observer";
 
 import PinoLogger from "../util/pino-logger";
 import IConnection from "./iconnection";
 
-export default abstract class ConnectionManager {
+export default abstract class ConnectionManager<T, V> {
     // TODO: make connection private.
-    protected _connection: any;
+    protected _connection: IConnection<T, V>;
+    private _dataHandlerSubscription: Subscription | null;
     protected _logger: PinoLogger;
-    private _killSwitch: ((() => void) | null);
 
-    constructor(logger: PinoLogger, connection: IConnection) {
+    constructor(logger: PinoLogger, connection: IConnection<T, V>) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
         this._logger = logger.child("ConnectionManager");
         this._connection = connection;
-
-        this._killSwitch = null;
+        this._dataHandlerSubscription = null;
     }
 
-    public async start(...extraListenArguments: any[]) {
-        assert(arguments.length === 0 || Array.isArray(extraListenArguments));
+    public async start(): Promise<void> {
+        assert(arguments.length === 0);
+        assert.null(this._dataHandlerSubscription);
 
-        try {
-            const killSwitch = await this._connection.listen(
-                this._dataHandler.bind(this),
-                this._filter.bind(this),
-                ...extraListenArguments,
-            );
+        const filter: ((data: T) => Promise<boolean>) = this._filter.bind(this);
+        const dataHandler: ((data: T) => Promise<void>) = this._dataHandler.bind(this);
 
-            this._killSwitch = killSwitch;
-        } catch (error) {
-            await this._executeKillSwitch();
+        const filteredDataObservable = this._connection.dataObservable
+            .concatFilter((data: T) => Rx.Observable.from(filter(data)));
 
-            throw error;
-        }
+        const dataHandlerObserver: NextObserver<T> = {
+            next: (data: T) => dataHandler(data),
+        };
+
+        this._dataHandlerSubscription = filteredDataObservable.subscribe(dataHandlerObserver);
     }
 
-    public async stop() {
+    public async stop(): Promise<void> {
         assert.hasLength(arguments, 0);
+        assert.not.null(this._dataHandlerSubscription);
 
-        // TODO: assert killSwitch?
-        if (typeof this._killSwitch === "function") {
-            await this._executeKillSwitch();
-        }
+        // TODO: better null handling.
+        this._dataHandlerSubscription!.unsubscribe();
     }
 
-    protected abstract async _dataHandler(data: any): Promise<void>;
-    protected abstract async _filter(data: any): Promise<boolean>;
-
-    private async _executeKillSwitch() {
-        assert.hasLength(arguments, 0);
-
-        const killSwitch = this._killSwitch;
-
-        if (killSwitch === null) {
-            return;
-        }
-
-        this._killSwitch = null;
-        await killSwitch();
-    }
+    protected abstract async _dataHandler(data: T): Promise<void>;
+    protected abstract async _filter(data: T): Promise<boolean>;
 }

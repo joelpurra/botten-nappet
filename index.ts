@@ -23,6 +23,9 @@ import {
     assert,
 } from "check-types";
 
+// NOTE: this is a hack, modifying the global Rx.Observable.prototype.
+import "./lib/rxjs-extensions/async-filter";
+
 import fs from "fs";
 
 import pino from "pino";
@@ -35,7 +38,13 @@ import PinoLogger from "./src/util/pino-logger";
 
 import TwitchApplicationTokenManager from "./src/twitch/authentication/application-token-manager";
 import TwitchPollingApplicationTokenConnection from "./src/twitch/authentication/polling-application-token-connection";
+import {
+    ApplicationAccessTokenProviderType,
+    AugmentedTokenProviderType,
+    UserAccessTokenProviderType,
+} from "./src/twitch/authentication/provider-types";
 import TwitchUserTokenManager from "./src/twitch/authentication/user-token-manager";
+
 import TwitchCSRFHelper from "./src/twitch/helper/csrf-helper";
 import TwitchRequestHelper from "./src/twitch/helper/request-helper";
 import TwitchTokenHelper from "./src/twitch/helper/token-helper";
@@ -52,6 +61,8 @@ import TwitchIrcConnection from "./src/twitch/irc/irc-connection";
 import PollingClientIdConnection from "./src/twitch/polling/connection/polling-clientid-connection";
 import TwitchPollingFollowingHandler from "./src/twitch/polling/handler/following";
 import TwitchPubSubLoggingHandler from "./src/twitch/pubsub/handler/logging";
+import TwitchPubSubPingHandler from "./src/twitch/pubsub/handler/ping";
+import TwitchPubSubReconnectHandler from "./src/twitch/pubsub/handler/reconnect";
 import TwitchPubSubConnection from "./src/twitch/pubsub/pubsub-connection";
 
 const BOTTEN_NAPPET_DEFAULT_LOGGING_LEVEL = "error";
@@ -82,7 +93,7 @@ const twitchOAuthTokenVerificationUri = "https://api.twitch.tv/kraken";
 const twitchUsersDataUri = "https://api.twitch.tv/helix/users";
 const twitchPubSubWebSocketUri = "wss://pubsub-edge.twitch.tv/";
 const twitchIrcWebSocketUri = "wss://irc-ws.chat.twitch.tv:443/";
-const followingPollingLimit = 10;
+const followingPollingLimit = 5;
 const twitchAppScopes = [
     "channel_feed_read",
 ];
@@ -181,7 +192,8 @@ const main = async () => {
         };
 
         try {
-            const twitchApplicationAccessTokenProvider = async () => twitchApplicationTokenManager.getOrWait();
+            const twitchApplicationAccessTokenProvider: ApplicationAccessTokenProviderType =
+                async () => twitchApplicationTokenManager.getOrWait();
 
             const twitchUserHelper = new TwitchUserHelper(
                 rootLogger,
@@ -206,24 +218,36 @@ const main = async () => {
 
             const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchTokenHelper, twitchUserTokenHelper);
 
-            const twitchAugmentedTokenProvider = async () => userTokenManager.get(twitchUserName);
-            const twitchUserAccessTokenProvider = async () => {
-                const augmentedToken = await twitchAugmentedTokenProvider();
+            const twitchAugmentedTokenProvider: AugmentedTokenProviderType =
+                async () => userTokenManager.get(twitchUserName);
+            const twitchUserAccessTokenProvider: UserAccessTokenProviderType =
+                async () => {
+                    const augmentedToken = await twitchAugmentedTokenProvider();
 
-                return augmentedToken.token.access_token;
-            };
+                    return augmentedToken.token.access_token;
+                };
 
             const twitchAugmentedToken = await twitchAugmentedTokenProvider();
             const twitchUserRawToken = twitchAugmentedToken.token;
             const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken);
 
-            // TODO: use twitchUserIdProvider instead of twitchUserId.
-            // const twitchUserIdProvider = () => Promise.resolve(twitchUserId);
+            const allPubSubTopicsForTwitchUserId = [
+                `channel-bits-events-v1.${twitchUserId}`,
+                `channel-subscribe-events-v1.${twitchUserId}`,
+                `channel-commerce-events-v1.${twitchUserId}`,
+                `whispers.${twitchUserId}`,
+            ];
 
             const followingPollingUri =
                 `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${followingPollingLimit}`;
 
-            const twitchPubSubConnection = new TwitchPubSubConnection(rootLogger, twitchPubSubWebSocketUri);
+            const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
+                rootLogger,
+                twitchPubSubWebSocketUri,
+                allPubSubTopicsForTwitchUserId,
+                twitchUserAccessTokenProvider,
+            );
+
             const twitchIrcConnection = new TwitchIrcConnection(
                 rootLogger,
                 twitchIrcWebSocketUri,
@@ -232,13 +256,21 @@ const main = async () => {
                 twitchUserAccessTokenProvider,
             );
 
-            // TODO: use twitchUserIdProvider instead of twitchUserId.
+            const twitchPubSubPingHandler = new TwitchPubSubPingHandler(
+                rootLogger,
+                twitchAllPubSubTopicsForTwitchUserIdConnection,
+            );
+
+            const twitchPubSubReconnectHandler = new TwitchPubSubReconnectHandler(
+                rootLogger,
+                twitchAllPubSubTopicsForTwitchUserIdConnection,
+            );
+
             const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(
                 rootLogger,
-                twitchPubSubConnection,
-                twitchUserAccessTokenProvider,
-                twitchUserId,
+                twitchAllPubSubTopicsForTwitchUserIdConnection,
             );
+
             const twitchPollingFollowingConnection = new PollingClientIdConnection(
                 rootLogger,
                 twitchAppClientId,
@@ -249,7 +281,7 @@ const main = async () => {
             );
 
             const connectables = [
-                twitchPubSubConnection,
+                twitchAllPubSubTopicsForTwitchUserIdConnection,
                 twitchIrcConnection,
                 twitchPollingFollowingConnection,
             ];
@@ -298,6 +330,8 @@ const main = async () => {
                 );
 
                 const startables = [
+                    twitchPubSubPingHandler,
+                    twitchPubSubReconnectHandler,
                     twitchPubSubLoggingHandler,
                     twitchIrcLoggingHandler,
                     twitchIrcPingHandler,

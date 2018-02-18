@@ -24,33 +24,20 @@ import {
 
 import PinoLogger from "../../util/pino-logger";
 import ConnectionManager from "../connection-manager";
-import IConnection from "../iconnection";
+import IPubSubConnection from "./ipubsub-connection";
+import IPubSubResponse from "./ipubsub-response";
 
-export default abstract class PubSubManager extends ConnectionManager {
-    public _topics: string[];
-    public _userAccessTokenProvider: any;
-    constructor(logger: PinoLogger, connection: IConnection, userAccessTokenProvider, topics: string[]) {
+export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, string> {
+    constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 4);
+        assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof userAccessTokenProvider, "function");
-        assert.array(topics);
-        assert.greater(topics.length, 0);
 
         this._logger = logger.child("PubSubManager");
-        this._userAccessTokenProvider = userAccessTokenProvider;
-        this._topics = topics;
     }
 
-    public async start() {
-        assert.hasLength(arguments, 0);
-
-        const twitchUserAccessToken = await this._userAccessTokenProvider();
-        await super.start(twitchUserAccessToken, this._topics);
-    }
-
-    protected abstract async _dataHandler(topic: string, data: object): Promise<void>;
-    protected abstract async _filter(topic: string, data: object): Promise<boolean>;
+    protected abstract async _dataHandler(data: IPubSubResponse): Promise<void>;
+    protected abstract async _filter(data: IPubSubResponse): Promise<boolean>;
 }

@@ -26,8 +26,9 @@ import PinoLogger from "../../util/pino-logger";
 import IHttpData from "../polling/ihttp-data";
 import IHttpHeaders from "../polling/ihttp-header";
 import PollingConnection from "../polling/polling-connection";
+import IRawToken from "./iraw-token";
 
-export default class PollingApplicationTokenConnection extends PollingConnection {
+export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken, void> {
     public _scopes: string[];
     public _applicationClientSecret: string;
     public _applicationClientId: string;
@@ -73,7 +74,7 @@ export default class PollingApplicationTokenConnection extends PollingConnection
     }
 
     public async _getHeaders() {
-        assert.equal(arguments.length, 0);
+        assert.hasLength(arguments, 0);
 
         const headers = {};
 
@@ -81,7 +82,7 @@ export default class PollingApplicationTokenConnection extends PollingConnection
     }
 
     public async _getData() {
-        assert.equal(arguments.length, 0);
+        assert.hasLength(arguments, 0);
 
         const data = {
             client_id: this._applicationClientId,

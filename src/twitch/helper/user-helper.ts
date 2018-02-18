@@ -25,12 +25,13 @@ import {
 import axios from "axios";
 
 import PinoLogger from "../../util/pino-logger";
+import { ApplicationAccessTokenProviderType } from "../authentication/provider-types";
 import RequestHelper from "./request-helper";
 
 type UserNameOrId = string | number;
 
 export default class UserHelper {
-    public _applicationAccessTokenProvider: any;
+    public _applicationAccessTokenProvider: ApplicationAccessTokenProviderType;
     public _usersDataUri: string;
     public _requestHelper: RequestHelper;
     public _logger: PinoLogger;
@@ -39,7 +40,7 @@ export default class UserHelper {
         logger: PinoLogger,
         requestHelper: RequestHelper,
         usersDataUri: string,
-        applicationAccessTokenProvider,
+        applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
     ) {
         assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");

@@ -38,7 +38,7 @@ export default class NewChatterIrcHandler extends IrcManager {
         this._logger = logger.child("NewChatterIrcHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage) {
+    public async _dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -53,16 +53,12 @@ export default class NewChatterIrcHandler extends IrcManager {
         const message = `PRIVMSG ${channel} :Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(message);
+        this._connection.send(message);
     }
 
-    public async _filter(data: IParsedMessage) {
+    public async _filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (typeof data !== "object") {
-            return false;
-        }
 
         if (data.command !== "USERNOTICE") {
             return false;

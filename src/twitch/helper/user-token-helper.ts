@@ -30,8 +30,8 @@ import qs from "qs";
 import IUser from "../../storage/iuser";
 import UserStorageManager from "../../storage/manager/user-storage-manager";
 import PinoLogger from "../../util/pino-logger";
+import IAugmentedToken from "../authentication/iaugmented-token";
 import IRawToken from "../authentication/iraw-token";
-import IAugmentedToken from "../authentication/iuser-token";
 import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 
@@ -312,13 +312,15 @@ export default class UserTokenHelper {
         assert.hasLength(arguments, 1);
         assert.not.null(tokenToRefresh);
         assert.equal(typeof tokenToRefresh, "object");
+        assert.not.null(tokenToRefresh.token);
         assert.equal(typeof tokenToRefresh.token, "object");
 
         const data = {
             client_id: this._appClientId,
             client_secret: this._appClientSecret,
             grant_type: "refresh_token",
-            refresh_token: tokenToRefresh.token.refresh_token,
+            // TODO: better null handling.
+            refresh_token: tokenToRefresh.token!.refresh_token,
         };
 
         const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
