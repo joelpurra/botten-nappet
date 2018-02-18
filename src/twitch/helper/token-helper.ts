@@ -30,11 +30,12 @@ import IRawToken from "../authentication/iraw-token";
 import RequestHelper from "./request-helper";
 
 export default class TokenHelper {
-    private _appClientId: string;
-    private _oauthTokenVerificationUri: string;
-    private _oauthTokenRevocationUri: string;
-    private _requestHelper: RequestHelper;
-    private _logger: PinoLogger;
+    private appClientId: string;
+    private oauthTokenVerificationUri: string;
+    private oauthTokenRevocationUri: string;
+    private requestHelper: RequestHelper;
+    private logger: PinoLogger;
+
     constructor(
         logger: PinoLogger,
         requestHelper: RequestHelper,
@@ -51,11 +52,11 @@ export default class TokenHelper {
         assert(oauthTokenVerificationUri.startsWith("https://"));
         assert.nonEmptyString(appClientId);
 
-        this._logger = logger.child("TokenHelper");
-        this._requestHelper = requestHelper;
-        this._oauthTokenRevocationUri = oauthTokenRevocationUri;
-        this._oauthTokenVerificationUri = oauthTokenVerificationUri;
-        this._appClientId = appClientId;
+        this.logger = logger.child("TokenHelper");
+        this.requestHelper = requestHelper;
+        this.oauthTokenRevocationUri = oauthTokenRevocationUri;
+        this.oauthTokenVerificationUri = oauthTokenVerificationUri;
+        this.appClientId = appClientId;
     }
 
     public async revoke(rawToken: IRawToken): Promise<void> {
@@ -67,16 +68,16 @@ export default class TokenHelper {
         const accessToken = rawToken.access_token;
 
         const params = {
-            client_id: this._appClientId,
+            client_id: this.appClientId,
             token: accessToken,
         };
 
         // TODO: use an https class.
         const response = await axios.post(
-            this._oauthTokenRevocationUri,
+            this.oauthTokenRevocationUri,
             params,
             {
-                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+                paramsSerializer: this.requestHelper.twitchQuerystringSerializer,
             },
         );
 
@@ -87,7 +88,7 @@ export default class TokenHelper {
         // TODO: define type/interface.
         const ok = data.status === "ok";
 
-        this._logger.trace(rawToken, data, "revoke");
+        this.logger.trace(rawToken, data, "revoke");
     }
 
     public async isExpired(token: IAugmentedToken): Promise<boolean> {
@@ -112,12 +113,12 @@ export default class TokenHelper {
 
         // TODO: only allow a single outstanding token validation per user.
         // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
-        const tokenValidation = await this._getTokenValidation(rawToken);
+        const tokenValidation = await this.getTokenValidation(rawToken);
 
         // NOTE: twitch response data.
         const valid = tokenValidation.valid;
 
-        this._logger.trace(rawToken, valid, "validate");
+        this.logger.trace(rawToken, valid, "validate");
 
         return valid;
     }
@@ -127,13 +128,13 @@ export default class TokenHelper {
         assert.equal(typeof token, "object");
         assert.not.null(token);
 
-        const tokenValidation = await this._getTokenValidation(token);
+        const tokenValidation = await this.getTokenValidation(token);
 
         // NOTE: twitch response data.
         // TODO: use a number type/interface instead of safety-parsing.
         const userId = parseInt(tokenValidation.user_id, 10);
 
-        this._logger.trace(token, userId, "getUserIdByRawAccessToken");
+        this.logger.trace(token, userId, "getUserIdByRawAccessToken");
 
         return userId;
     }
@@ -142,17 +143,17 @@ export default class TokenHelper {
         assert.hasLength(arguments, 1);
         assert.equal(typeof token, "object");
 
-        const tokenValidation = await this._getTokenValidation(token);
+        const tokenValidation = await this.getTokenValidation(token);
 
         // NOTE: twitch response data.
         const userName = tokenValidation.user_name;
 
-        this._logger.trace(token, userName, "getUserNameByRawAccessToken");
+        this.logger.trace(token, userName, "getUserNameByRawAccessToken");
 
         return userName;
     }
 
-    private async _getTokenValidation(rawToken: IRawToken) {
+    private async getTokenValidation(rawToken: IRawToken) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof rawToken, "object");
         assert.nonEmptyString(rawToken.access_token);
@@ -179,12 +180,12 @@ export default class TokenHelper {
 
         // TODO: use an https class.
         const response = await axios.get(
-            this._oauthTokenVerificationUri,
+            this.oauthTokenVerificationUri,
             {
                 headers: {
                     "Accept": "application/vnd.twitchtv.v5+json",
                     "Authorization": `OAuth ${accessToken}`,
-                    "Client-ID": this._appClientId,
+                    "Client-ID": this.appClientId,
                 },
             },
         );
@@ -196,7 +197,7 @@ export default class TokenHelper {
         // TODO: verify data format.
         const tokenValidation = data.token;
 
-        this._logger.trace(rawToken, tokenValidation, "_getTokenValidation");
+        this.logger.trace(rawToken, tokenValidation, "getTokenValidation");
 
         // TODO: define type/interface.
         return tokenValidation;

@@ -35,17 +35,17 @@ export default class LoggingIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("LoggingIrcHandler");
+        this.logger = logger.child("LoggingIrcHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace(data, "_dataHandler");
+        this.logger.trace(data, "dataHandler");
     }
 
-    public async _filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

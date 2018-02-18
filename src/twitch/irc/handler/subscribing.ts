@@ -35,17 +35,17 @@ export default class SubscribingIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("SubscribingIrcHandler");
+        this.logger = logger.child("SubscribingIrcHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         const tags = data.tags!;
         const username = tags.login;
 
-        this._logger.trace("Responding to subscriber.", username, data.message, "_dataHandler");
+        this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
@@ -55,16 +55,18 @@ export default class SubscribingIrcHandler extends IrcManager {
         const msgParamMonths = tags["msg-param-months"];
 
         if (msgId === "resub") {
+            /* tslint:disable:max-line-length */
             message = `PRIVMSG ${data.channel} :Wow, @${username}, thanks for getting your ${msgParamMonths} rubber duckies in a row!`;
+            /* tslint:enable:max-line-length */
         } else {
             message = `PRIVMSG ${data.channel} :Wow, @${username}, thanks for becoming my newest rubber ducky!`;
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.send(message);
+        this.connection.send(message);
     }
 
-    public async _filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

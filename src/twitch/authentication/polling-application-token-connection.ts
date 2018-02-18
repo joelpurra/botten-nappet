@@ -29,9 +29,10 @@ import PollingConnection from "../polling/polling-connection";
 import IRawToken from "./iraw-token";
 
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken, void> {
-    public _scopes: string[];
-    public _applicationClientSecret: string;
-    public _applicationClientId: string;
+    private scopes: string[];
+    private applicationClientSecret: string;
+    private applicationClientId: string;
+
     constructor(
         logger: PinoLogger,
         applicationClientId: string,
@@ -64,16 +65,13 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
         assert(Array.isArray(scopes));
 
-        // super._getHeaders = this._getHeaders.bind(this);
-        // super._getData = this._getData.bind(this);
-
-        this._logger = logger.child("PollingApplicationTokenConnection");
-        this._applicationClientId = applicationClientId;
-        this._applicationClientSecret = applicationClientSecret;
-        this._scopes = scopes;
+        this.logger = logger.child("PollingApplicationTokenConnection");
+        this.applicationClientId = applicationClientId;
+        this.applicationClientSecret = applicationClientSecret;
+        this.scopes = scopes;
     }
 
-    public async _getHeaders() {
+    protected async getHeaders() {
         assert.hasLength(arguments, 0);
 
         const headers = {};
@@ -81,14 +79,14 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         return headers;
     }
 
-    public async _getData() {
+    protected async getData() {
         assert.hasLength(arguments, 0);
 
         const data = {
-            client_id: this._applicationClientId,
-            client_secret: this._applicationClientSecret,
+            client_id: this.applicationClientId,
+            client_secret: this.applicationClientSecret,
             grant_type: "client_credentials",
-            scope: this._scopes.join(" "),
+            scope: this.scopes.join(" "),
         };
 
         return data;

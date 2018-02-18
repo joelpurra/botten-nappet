@@ -30,14 +30,14 @@ import IPollingConnection from "../polling/ipolling-connection";
 import IRawToken from "./iraw-token";
 
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken, void> {
-    private _waitForFirstTokenPromise: Promise<undefined>;
-    private _tokenHasBeenSet: (() => void) | null;
-    private _applicationAccessToken: string | null;
-    private _rawOAuthToken: IRawToken | null;
-    private _oauthTokenRevocationHeaders: {};
-    private _oauthTokenRevocationMethod: string;
-    private _oauthTokenRevocationUri: string;
-    private _clientId: string;
+    private waitForFirstTokenPromise: Promise<undefined>;
+    private tokenHasBeenSet: (() => void) | null;
+    private applicationAccessToken: string | null;
+    private rawOAuthToken: IRawToken | null;
+    private oauthTokenRevocationHeaders: {};
+    private oauthTokenRevocationMethod: string;
+    private oauthTokenRevocationUri: string;
+    private clientId: string;
 
     constructor(
         logger: PinoLogger,
@@ -56,27 +56,27 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         assert.greater(oauthTokenRevocationUri.length, 0);
         assert(oauthTokenRevocationUri.startsWith("https://"));
 
-        this._logger = logger.child("ApplicationTokenManager");
-        this._clientId = clientId;
-        this._oauthTokenRevocationUri = oauthTokenRevocationUri;
+        this.logger = logger.child("ApplicationTokenManager");
+        this.clientId = clientId;
+        this.oauthTokenRevocationUri = oauthTokenRevocationUri;
 
-        this._oauthTokenRevocationMethod = "post";
-        this._oauthTokenRevocationHeaders = {};
+        this.oauthTokenRevocationMethod = "post";
+        this.oauthTokenRevocationHeaders = {};
 
-        this._rawOAuthToken = null;
-        this._applicationAccessToken = null;
+        this.rawOAuthToken = null;
+        this.applicationAccessToken = null;
 
-        this._tokenHasBeenSet = null;
+        this.tokenHasBeenSet = null;
 
-        this._waitForFirstTokenPromise = new Promise((resolve, reject) => {
+        this.waitForFirstTokenPromise = new Promise((resolve, reject) => {
             const waitForToken = () => {
                 resolve();
             };
 
-            this._tokenHasBeenSet = waitForToken;
+            this.tokenHasBeenSet = waitForToken;
         })
             .then(() => {
-                this._logger.info("Received first token.", "_waitForFirstTokenPromise");
+                this.logger.info("Received first token.", "waitForFirstTokenPromise");
 
                 return undefined;
             });
@@ -87,7 +87,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
         await super.start();
 
-        const pollingConnection = this._connection as IPollingConnection<IRawToken, void>;
+        const pollingConnection = this.connection as IPollingConnection<IRawToken, void>;
 
         return pollingConnection.send(undefined);
     }
@@ -95,23 +95,54 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     public async stop() {
         assert.hasLength(arguments, 0);
 
-        await this._revokeTokenIfSet(this._applicationAccessToken);
+        await this.revokeTokenIfSet(this.applicationAccessToken);
         return super.stop();
     }
 
-    public async _dataHandler(data: IRawToken): Promise<void> {
+    public async revokeToken(token: string): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof token, "string");
+        assert.greater(token.length, 0);
+
+        const data = {
+            client_id: this.clientId,
+            token,
+        };
+
+        this.logger.trace(data, "revokeToken");
+
+        await this.sendRevocation(data);
+    }
+
+    public async get(): Promise<string | null> {
+        assert.hasLength(arguments, 0);
+
+        return this.applicationAccessToken;
+    }
+
+    public async getOrWait(): Promise<string> {
+        assert.hasLength(arguments, 0);
+
+        await this.waitForFirstTokenPromise;
+
+        const token = await this.get();
+
+        return token!;
+    }
+
+    protected async dataHandler(data: IRawToken): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace(data, "_dataHandler");
+        this.logger.trace(data, "dataHandler");
 
         await Promise.all([
-            this._revokeTokenIfSet(this._applicationAccessToken),
-            this._setToken(data),
+            this.revokeTokenIfSet(this.applicationAccessToken),
+            this.setToken(data),
         ]);
     }
 
-    public async _filter(data: IRawToken): Promise<boolean> {
+    protected async filter(data: IRawToken): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -126,30 +157,30 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return true;
     }
 
-    public async _setToken(data: IRawToken) {
+    private async setToken(data: IRawToken) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._rawOAuthToken = data;
-        this._applicationAccessToken = data.access_token;
+        this.rawOAuthToken = data;
+        this.applicationAccessToken = data.access_token;
 
-        await this._tokenHasBeenSet!();
+        await this.tokenHasBeenSet!();
 
         return undefined;
     }
 
-    public async _sendRevocation(params: object): Promise<object> {
+    private async sendRevocation(params: object): Promise<object> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof params, "object");
 
         // TODO: use TokenHelper.revoke().
         const axiosInstanceConfig = {
-            baseURL: this._oauthTokenRevocationUri,
-            headers: this._oauthTokenRevocationHeaders,
+            baseURL: this.oauthTokenRevocationUri,
+            headers: this.oauthTokenRevocationHeaders,
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
-            method: this._oauthTokenRevocationMethod,
+            method: this.oauthTokenRevocationMethod,
             params,
         };
 
@@ -159,7 +190,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.
             // https://github.com/axios/axios/issues/723
-            method: this._oauthTokenRevocationMethod,
+            method: this.oauthTokenRevocationMethod,
         });
 
         // TODO: check if {status:"ok"};
@@ -168,44 +199,13 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return data;
     }
 
-    public async _revokeToken(token: string): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof token, "string");
-        assert.greater(token.length, 0);
-
-        const data = {
-            client_id: this._clientId,
-            token,
-        };
-
-        this._logger.trace(data, "_revokeToken");
-
-        await this._sendRevocation(data);
-    }
-
-    public async _revokeTokenIfSet(token: string | null): Promise<void> {
+    private async revokeTokenIfSet(token: string | null): Promise<void> {
         assert.hasLength(arguments, 1);
 
         if (typeof token === "string") {
-            return this._revokeToken(token);
+            return this.revokeToken(token);
         }
 
         return undefined;
-    }
-
-    public async get(): Promise<string | null> {
-        assert.hasLength(arguments, 0);
-
-        return this._applicationAccessToken;
-    }
-
-    public async getOrWait(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
-        await this._waitForFirstTokenPromise;
-
-        const token = await this.get();
-
-        return token!;
     }
 }

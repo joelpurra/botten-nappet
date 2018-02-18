@@ -33,45 +33,45 @@ import IConnection from "./iconnection";
 
 export default abstract class ConnectionManager<T, V> {
     // TODO: make connection private.
-    protected _connection: IConnection<T, V>;
-    private _dataHandlerSubscription: Subscription | null;
-    protected _logger: PinoLogger;
+    protected connection: IConnection<T, V>;
+    protected logger: PinoLogger;
+    private dataHandlerSubscription: Subscription | null;
 
     constructor(logger: PinoLogger, connection: IConnection<T, V>) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("ConnectionManager");
-        this._connection = connection;
-        this._dataHandlerSubscription = null;
+        this.logger = logger.child("ConnectionManager");
+        this.connection = connection;
+        this.dataHandlerSubscription = null;
     }
 
     public async start(): Promise<void> {
         assert(arguments.length === 0);
-        assert.null(this._dataHandlerSubscription);
+        assert.null(this.dataHandlerSubscription);
 
-        const filter: ((data: T) => Promise<boolean>) = this._filter.bind(this);
-        const dataHandler: ((data: T) => Promise<void>) = this._dataHandler.bind(this);
+        const filter: ((data: T) => Promise<boolean>) = this.filter.bind(this);
+        const dataHandler: ((data: T) => Promise<void>) = this.dataHandler.bind(this);
 
-        const filteredDataObservable = this._connection.dataObservable
+        const filteredDataObservable = this.connection.dataObservable
             .concatFilter((data: T) => Rx.Observable.from(filter(data)));
 
         const dataHandlerObserver: NextObserver<T> = {
             next: (data: T) => dataHandler(data),
         };
 
-        this._dataHandlerSubscription = filteredDataObservable.subscribe(dataHandlerObserver);
+        this.dataHandlerSubscription = filteredDataObservable.subscribe(dataHandlerObserver);
     }
 
     public async stop(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.not.null(this._dataHandlerSubscription);
+        assert.not.null(this.dataHandlerSubscription);
 
         // TODO: better null handling.
-        this._dataHandlerSubscription!.unsubscribe();
+        this.dataHandlerSubscription!.unsubscribe();
     }
 
-    protected abstract async _dataHandler(data: T): Promise<void>;
-    protected abstract async _filter(data: T): Promise<boolean>;
+    protected abstract async dataHandler(data: T): Promise<void>;
+    protected abstract async filter(data: T): Promise<boolean>;
 }

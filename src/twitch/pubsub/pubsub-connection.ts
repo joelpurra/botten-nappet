@@ -47,8 +47,8 @@ import IPubSubConnection from "./ipubsub-connection";
 import IPubSubResponse from "./ipubsub-response";
 
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {
-    private _userAccessTokenProvider: UserAccessTokenProviderType;
-    private _topics: string[];
+    private userAccessTokenProvider: UserAccessTokenProviderType;
+    private topics: string[];
 
     constructor(
         logger: PinoLogger,
@@ -67,14 +67,14 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         assert.nonEmptyArray(topics);
         assert.equal(typeof userAccessTokenProvider, "function");
 
-        this._logger = logger.child("PubSubConnection");
+        this.logger = logger.child("PubSubConnection");
 
-        this._topics = topics;
-        this._userAccessTokenProvider = userAccessTokenProvider;
+        this.topics = topics;
+        this.userAccessTokenProvider = userAccessTokenProvider;
     }
 
-    protected async _getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse>>> {
-        const userAccessToken = await this._userAccessTokenProvider();
+    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse>>> {
+        const userAccessToken = await this.userAccessTokenProvider();
 
         const listenNonce = Math.random()
             .toString(10);
@@ -103,7 +103,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
                         // TODO: typing for the LISTEN request.
                         data: {
                             auth_token: userAccessToken,
-                            topics: this._topics,
+                            topics: this.topics,
                         },
                         nonce: listenNonce,
                         type: "LISTEN",
@@ -120,7 +120,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
                     if (typeof data.error === "string" && data.error.length !== 0) {
                         const listenError = new Error(`Listen error: ${JSON.stringify(data.error)}`);
 
-                        this._logger.error(listenError, data, "Listen error");
+                        this.logger.error(listenError, data, "Listen error");
 
                         throw listenError;
                     }
@@ -129,7 +129,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
                     if (data.type !== "RESPONSE") {
                         const badTypeError = new Error(`Bad type: ${JSON.stringify(data.type)}`);
 
-                        this._logger.error(badTypeError, data, "Bad type");
+                        this.logger.error(badTypeError, data, "Bad type");
 
                         throw badTypeError;
                     }
@@ -142,7 +142,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         return setupConnectionCommands;
     }
 
-    protected async _parseMessage(rawMessage: string): Promise<any> {
+    protected async parseMessage(rawMessage: string): Promise<any> {
         // TODO: verify response format.
         // TODO: try-catch for bad messages.
         const data = JSON.parse(rawMessage.toString());

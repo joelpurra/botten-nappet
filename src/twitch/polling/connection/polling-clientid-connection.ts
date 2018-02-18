@@ -28,7 +28,7 @@ import IHttpHeaders from "../ihttp-header";
 import PollingConnection from "../polling-connection";
 
 export default class PollingClientIdConnection extends PollingConnection<any, void> {
-    public _applicationClientId: string;
+    private applicationClientId: string;
 
     constructor(
         logger: PinoLogger,
@@ -57,25 +57,22 @@ export default class PollingClientIdConnection extends PollingConnection<any, vo
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        // super._getHeaders = this._getHeaders.bind(this);
-        // super._getData = this._getData.bind(this);
-
-        this._logger = logger.child("PollingClientIdConnection");
-        this._applicationClientId = applicationClientId;
+        this.logger = logger.child("PollingClientIdConnection");
+        this.applicationClientId = applicationClientId;
     }
 
-    public async _getHeaders(): Promise<IHttpHeaders> {
+    private async getHeaders(): Promise<IHttpHeaders> {
         assert.hasLength(arguments, 0);
 
         const headers = {
             "Accept": "application/vnd.twitchtv.v5+json",
-            "Client-ID": `${this._applicationClientId}`,
+            "Client-ID": `${this.applicationClientId}`,
         };
 
         return headers;
     }
 
-    public async _getData(): Promise<IHttpData> {
+    private async getData(): Promise<IHttpData> {
         assert.hasLength(arguments, 0);
 
         const data = {};

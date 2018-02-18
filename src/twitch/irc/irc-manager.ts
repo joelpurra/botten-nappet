@@ -28,7 +28,7 @@ import IIRCConnection from "./iirc-connection";
 import IParsedMessage from "./iparsed-message";
 
 export default abstract class IrcManager extends ConnectionManager<IParsedMessage, string> {
-    protected _connection: IIRCConnection;
+    protected connection: IIRCConnection;
 
     constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
@@ -37,10 +37,10 @@ export default abstract class IrcManager extends ConnectionManager<IParsedMessag
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("IrcManager");
-        this._connection = connection;
+        this.logger = logger.child("IrcManager");
+        this.connection = connection;
     }
 
-    protected abstract async _dataHandler(data: IParsedMessage): Promise<void>;
-    protected abstract async _filter(data: IParsedMessage): Promise<boolean>;
+    protected abstract async dataHandler(data: IParsedMessage): Promise<void>;
+    protected abstract async filter(data: IParsedMessage): Promise<boolean>;
 }

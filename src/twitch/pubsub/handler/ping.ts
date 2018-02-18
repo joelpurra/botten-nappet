@@ -28,8 +28,8 @@ import IPubSubResponse from "../ipubsub-response";
 import PubSubManager from "../pubsub-manager";
 
 export default class PingPubSubHandler extends PubSubManager {
-    public _pingIntervalMilliseconds: number;
-    public _pingIntervalId: (number | NodeJS.Timer | null);
+    private pingIntervalMilliseconds: number;
+    private pingIntervalId: (number | NodeJS.Timer | null);
 
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
@@ -38,60 +38,47 @@ export default class PingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("PingPubSubHandler");
-        this._pingIntervalId = null;
+        this.logger = logger.child("PingPubSubHandler");
+        this.pingIntervalId = null;
 
         // NOTE: minimum interval is a PING every 5 minutes.
         // https://dev.twitch.tv/docs/pubsub#connection-management
-        this._pingIntervalMilliseconds = 4 * 60 * 1000;
+        this.pingIntervalMilliseconds = 4 * 60 * 1000;
     }
 
     public async start(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.equal(this._pingIntervalId, null);
+        assert.equal(this.pingIntervalId, null);
 
         await super.start();
 
         // TODO: configure atBegin?
-        await this._ping();
+        await this.ping();
 
         // TODO: use an observable interval?
-        this._pingIntervalId = setInterval(() => this._ping(), this._pingIntervalMilliseconds);
+        this.pingIntervalId = setInterval(() => this.ping(), this.pingIntervalMilliseconds);
     }
 
     public async stop(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.not.equal(this._pingIntervalId, null);
+        assert.not.equal(this.pingIntervalId, null);
 
-        clearInterval(this._pingIntervalId as NodeJS.Timer);
-        this._pingIntervalId = null;
+        clearInterval(this.pingIntervalId as NodeJS.Timer);
+        this.pingIntervalId = null;
 
         return super.stop();
     }
 
-    public _ping(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
-        this._logger.trace("Sending ping", "_ping");
-
-        const message = {
-            type: "PING",
-        };
-
-        // TODO: handle errors, re-reconnect, or shut down server?
-        return this._connection.send(message);
-    }
-
-    public async _dataHandler(data: IPubSubResponse): Promise<void> {
+    protected async dataHandler(data: IPubSubResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace(data, "_dataHandler");
+        this.logger.trace(data, "dataHandler");
 
-        throw new Error("Unexpected call to _dataHandler.");
+        throw new Error("Unexpected call to dataHandler.");
     }
 
-    public async _filter(data: IPubSubResponse): Promise<boolean> {
+    protected async filter(data: IPubSubResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -99,5 +86,18 @@ export default class PingPubSubHandler extends PubSubManager {
         // TODO: backoff doubling for reconnects.
         // https://dev.twitch.tv/docs/pubsub#connection-management
         return false;
+    }
+
+    private async ping(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
+        this.logger.trace("Sending ping", "ping");
+
+        const message = {
+            type: "PING",
+        };
+
+        // TODO: handle errors, re-reconnect, or shut down server?
+        return this.connection.send(message);
     }
 }

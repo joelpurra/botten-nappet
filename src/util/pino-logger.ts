@@ -27,79 +27,79 @@ import {
 } from "check-types";
 
 export default class PinoLogger {
-    private _parentPinoLogger: Logger;
+    private parentPinoLogger: Logger;
 
     constructor(parentPinoLogger: Logger) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof parentPinoLogger, "object");
 
-        this._parentPinoLogger = parentPinoLogger;
+        this.parentPinoLogger = parentPinoLogger;
     }
 
     public fatal(...args: any[]): void {
-        this._parentPinoLogger.fatal({
+        this.parentPinoLogger.fatal({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public error(...args: any[]): void {
-        this._parentPinoLogger.error({
+        this.parentPinoLogger.error({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public warn(...args: any[]): void {
-        this._parentPinoLogger.warn({
+        this.parentPinoLogger.warn({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public info(...args: any[]): void {
-        this._parentPinoLogger.info({
+        this.parentPinoLogger.info({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public debug(...args: any[]): void {
-        this._parentPinoLogger.debug({
+        this.parentPinoLogger.debug({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public trace(...args: any[]): void {
-        this._parentPinoLogger.trace({
+        this.parentPinoLogger.trace({
             // TODO: serialize error objects etcetera.
             // args: this._serialize(args),
             args,
         });
 
         // TODO: configure to flush only during development/debugging.
-        this._parentPinoLogger.flush();
+        this.parentPinoLogger.flush();
     }
 
     public child(childName: string): PinoLogger {
@@ -111,7 +111,7 @@ export default class PinoLogger {
             childName,
         };
 
-        const pinoLogger = this._parentPinoLogger.child(childBindings);
+        const pinoLogger = this.parentPinoLogger.child(childBindings);
 
         const childLogger = new PinoLogger(pinoLogger);
 

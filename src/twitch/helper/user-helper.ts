@@ -31,10 +31,10 @@ import RequestHelper from "./request-helper";
 type UserNameOrId = string | number;
 
 export default class UserHelper {
-    public _applicationAccessTokenProvider: ApplicationAccessTokenProviderType;
-    public _usersDataUri: string;
-    public _requestHelper: RequestHelper;
-    public _logger: PinoLogger;
+    private applicationAccessTokenProvider: ApplicationAccessTokenProviderType;
+    private usersDataUri: string;
+    private requestHelper: RequestHelper;
+    private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
@@ -49,13 +49,13 @@ export default class UserHelper {
         assert(usersDataUri.startsWith("https://"));
         assert.equal(typeof applicationAccessTokenProvider, "function");
 
-        this._logger = logger.child("UserHelper");
-        this._requestHelper = requestHelper;
-        this._usersDataUri = usersDataUri;
-        this._applicationAccessTokenProvider = applicationAccessTokenProvider;
+        this.logger = logger.child("UserHelper");
+        this.requestHelper = requestHelper;
+        this.usersDataUri = usersDataUri;
+        this.applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
 
-    public async _getUsersData(...usernamesAndIds: UserNameOrId[]) {
+    public async getUsersData(...usernamesAndIds: UserNameOrId[]) {
         assert(Array.isArray(usernamesAndIds));
         assert(usernamesAndIds.length > 0);
         assert(usernamesAndIds.every((usernameOrId) =>
@@ -63,6 +63,7 @@ export default class UserHelper {
             || typeof usernameOrId === "number"),
         );
 
+        /* tslint:disable:max-line-length */
         // https://dev.twitch.tv/docs/api/reference#get-users
         // const sampleResponse = {
         //     "data": [
@@ -80,8 +81,9 @@ export default class UserHelper {
         //         },
         //     ],
         // };
+        /* tslint:enable:max-line-length */
 
-        const applicationAccessToken = await this._applicationAccessTokenProvider();
+        const applicationAccessToken = await this.applicationAccessTokenProvider();
 
         const usernames = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "string");
         const ids = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "number");
@@ -93,13 +95,13 @@ export default class UserHelper {
 
         // TODO: use an https class.
         const response = await axios.get(
-            this._usersDataUri,
+            this.usersDataUri,
             {
                 headers: {
                     Authorization: `Bearer ${applicationAccessToken}`,
                 },
                 params,
-                paramsSerializer: this._requestHelper.twitchQuerystringSerializer,
+                paramsSerializer: this.requestHelper.twitchQuerystringSerializer,
             },
         );
 
@@ -110,7 +112,7 @@ export default class UserHelper {
         // TODO: define type.
         const users = data.data;
 
-        this._logger.trace(users, usernamesAndIds, "_getUsersData");
+        this.logger.trace(users, usernamesAndIds, "getUsersData");
 
         return users;
     }
@@ -119,7 +121,7 @@ export default class UserHelper {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(username);
 
-        const usersData = await this._getUsersData(username);
+        const usersData = await this.getUsersData(username);
         const firstUserData = usersData[0];
 
         // TODO: use a number type/interface instead of safety-parsing.

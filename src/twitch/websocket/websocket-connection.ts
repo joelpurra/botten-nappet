@@ -44,12 +44,12 @@ import IWebSocketCommand from "./iwebsocket-command";
 import IWebSocketConnection from "./iwebsocket-connection";
 
 export default abstract class WebSocketConnection<T, V> implements IWebSocketConnection<T, V> {
-    private _sharedWebSocketObservable: Rx.Observable<any> | null;
-    private _websocketSubcription: Rx.Subscription | null;
-    private _websocketSubject: WebSocketSubject<any> | null;
-    private _protocol?: string;
-    private _uri: string;
-    protected _logger: PinoLogger;
+    protected logger: PinoLogger;
+    private sharedWebSocketObservable: Rx.Observable<any> | null;
+    private websocketSubcription: Rx.Subscription | null;
+    private websocketSubject: WebSocketSubject<any> | null;
+    private protocol?: string;
+    private uri: string;
 
     constructor(logger: PinoLogger, uri: string, protocol?: string) {
         assert(arguments.length === 2 || arguments.length === 3);
@@ -59,39 +59,39 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert(uri.startsWith("wss://"));
         assert(typeof protocol === "undefined" || (typeof protocol === "string" && protocol.length > 0));
 
-        this._logger = logger.child("WebSocketConnection");
-        this._uri = uri;
-        this._protocol = protocol;
+        this.logger = logger.child("WebSocketConnection");
+        this.uri = uri;
+        this.protocol = protocol;
 
-        this._websocketSubject = null;
-        this._websocketSubcription = null;
-        this._sharedWebSocketObservable = null;
+        this.websocketSubject = null;
+        this.websocketSubcription = null;
+        this.sharedWebSocketObservable = null;
     }
 
     public async connect(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.null(this._websocketSubject);
-        assert.null(this._websocketSubcription);
+        assert.null(this.websocketSubject);
+        assert.null(this.websocketSubcription);
 
         const openedObserver: Observer<any> = {
             complete: () => {
-                this._logger.trace("complete", "openedObserver");
+                this.logger.trace("complete", "openedObserver");
             },
             error: (error) => {
                 // TODO: handle errors.
-                this._logger.error(error, "error", "openedObserver");
+                this.logger.error(error, "error", "openedObserver");
             },
             next: (message) => {
-                this._logger.trace(message, "next", "openedObserver");
+                this.logger.trace(message, "next", "openedObserver");
             },
         };
 
         const openObserver: NextObserver<Event> = {
             next: (event) => {
                 // this._logger.trace(event, "next", "openObserver");
-                this._logger.debug("next", "openObserver");
+                this.logger.debug("next", "openObserver");
 
-                this._sendLoginCommands()
+                this.sendLoginCommands()
                     .subscribe(connectedSubject);
             },
         };
@@ -99,15 +99,15 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         const closeObserver: NextObserver<Event> = {
             next: (event) => {
                 // this._logger.trace(event, "next", "closeObserver");
-                this._logger.debug("next", "closeObserver");
+                this.logger.debug("next", "closeObserver");
             },
         };
 
         // TODO: log sending data through the websocket.
-        this._websocketSubject = Rx.Observable.webSocket<string>({
+        this.websocketSubject = Rx.Observable.webSocket<string>({
             WebSocketCtor: WebSocket as any,
-            protocol: this._protocol,
-            url: this._uri,
+            protocol: this.protocol,
+            url: this.uri,
 
             resultSelector: (messageEvent) => messageEvent.data,
 
@@ -116,10 +116,10 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
             // closingObserver: ...
         });
 
-        this._sharedWebSocketObservable = this._websocketSubject.share()
-            .concatMap((message) => Rx.Observable.from(this._parseMessage(message)));
+        this.sharedWebSocketObservable = this.websocketSubject.share()
+            .concatMap((message) => Rx.Observable.from(this.parseMessage(message)));
 
-        this._websocketSubcription = this._sharedWebSocketObservable.subscribe(openedObserver);
+        this.websocketSubcription = this.sharedWebSocketObservable.subscribe(openedObserver);
 
         const connectedSubject = new Rx.Subject<void>();
 
@@ -127,30 +127,30 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
 
         return connectedPromise
             .tap(() => {
-                this._logger.debug("connectedPromise");
+                this.logger.debug("connectedPromise");
             })
             .tapCatch((error) => {
-                this._logger.error(error, "connectedPromise");
+                this.logger.error(error, "connectedPromise");
             });
     }
 
     public async disconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
-        assert.not.null(this._websocketSubject);
-        assert.not.null(this._websocketSubcription);
+        assert.not.null(this.websocketSubject);
+        assert.not.null(this.websocketSubcription);
 
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+        if (!(this.websocketSubject instanceof WebSocketSubject)) {
             throw new TypeError("this._websocketSubject must be WebSocketSubject");
         }
 
-        if (!(this._websocketSubcription instanceof Subscription)) {
+        if (!(this.websocketSubcription instanceof Subscription)) {
             throw new TypeError("this._websocketSubcription must be Subscription");
         }
 
         // TODO: verify that the refcount reaches 0 for a proper websocket "close".
         // TODO: force websocket termination after a "close" timeout.
-        this._websocketSubcription.unsubscribe();
-        this._websocketSubject.complete();
+        this.websocketSubcription.unsubscribe();
+        this.websocketSubject.complete();
     }
 
     public async reconnect(): Promise<void> {
@@ -161,27 +161,27 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
     }
 
     public async send(data: V): Promise<void> {
-        return this._send(data);
+        return this.sendInternal(data);
     }
 
     public get dataObservable(): Rx.Observable<any> {
         assert.hasLength(arguments, 0);
-        assert.not.null(this._sharedWebSocketObservable);
+        assert.not.null(this.sharedWebSocketObservable);
 
         // TODO: better null handling.
-        return this._sharedWebSocketObservable!;
+        return this.sharedWebSocketObservable!;
     }
 
-    protected abstract async _getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<T>>>;
+    protected abstract async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<T>>>;
 
-    protected abstract async _parseMessage(rawMessage: string): Promise<T>;
+    protected abstract async parseMessage(rawMessage: string): Promise<T>;
 
-    private async _send(data: V) {
+    private async sendInternal(data: any): Promise<void> {
         assert.hasLength(arguments, 1);
         assert(data !== undefined && data !== null);
-        assert.not.null(this._websocketSubject);
+        assert.not.null(this.websocketSubject);
 
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+        if (!(this.websocketSubject instanceof WebSocketSubject)) {
             throw new TypeError("this._websocketSubject must be WebSocketSubject");
         }
 
@@ -193,13 +193,13 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
             message = JSON.stringify(data);
         }
 
-        this._logger.debug(data, message.length, "_send");
+        this.logger.debug(data, message.length, "sendInternal");
 
-        this._websocketSubject.next(message);
+        this.websocketSubject.next(message);
     }
 
-    private _sendLoginCommands(): Rx.Observable<void> {
-        const commandObservables = Rx.Observable.from(this._getSetupConnectionCommands())
+    private sendLoginCommands(): Rx.Observable<void> {
+        const commandObservables = Rx.Observable.from(this.getSetupConnectionCommands())
             .concatMap((setupConnectionCommands) => Rx.Observable.from(setupConnectionCommands)
                 .map((setupConnectionCommand) => {
                     // TODO: cleaner mapping?
@@ -215,7 +215,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
                     return setupConnectionCommand;
                 })
                 .concatMap(({ commands, verifier }) =>
-                    Rx.Observable.from(this._sendCommandsAndVerifyResponse(commands, verifier))),
+                    Rx.Observable.from(this.sendCommandsAndVerifyResponse(commands, verifier))),
         );
 
         const allLoginCommandsObservable = Rx.Observable.concat(commandObservables);
@@ -223,7 +223,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         return allLoginCommandsObservable;
     }
 
-    private _sendCommandsAndVerifyResponse(
+    private sendCommandsAndVerifyResponse(
         cmds: string[],
         verifier: (message: T) => boolean,
     ): Rx.Observable<void> {
@@ -231,33 +231,33 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert.nonEmptyArray(cmds);
         assert.equal(typeof verifier, "function");
 
-        assert.not.null(this._websocketSubject);
+        assert.not.null(this.websocketSubject);
 
-        if (!(this._websocketSubject instanceof WebSocketSubject)) {
+        if (!(this.websocketSubject instanceof WebSocketSubject)) {
             throw new TypeError("this._websocketSubject must be WebSocketSubject");
         }
 
         const loginCommandsObservable = Rx.Observable.from(cmds)
-            .do((val) => this._logger.trace(val, "Before sending", "loginCommandsObservable"))
+            .do((val) => this.logger.trace(val, "Before sending", "loginCommandsObservable"))
             .flatMap((cmd) => {
-                if (!(this._sharedWebSocketObservable instanceof Rx.Observable)) {
+                if (!(this.sharedWebSocketObservable instanceof Rx.Observable)) {
                     throw new TypeError("this._openedWebSocketSubject must be WebSocketSubject");
                 }
 
                 // TODO: timeout waiting for a verifiable message?
-                const verifiedCommandsObservable = this._sharedWebSocketObservable
-                    .do((val) => this._logger.trace(val, "unverified", "verifiedCommandsObservable"))
+                const verifiedCommandsObservable = this.sharedWebSocketObservable
+                    .do((val) => this.logger.trace(val, "unverified", "verifiedCommandsObservable"))
                     .first(verifier)
-                    .do((val) => this._logger.trace(val, "verified", "verifiedCommandsObservable"))
+                    .do((val) => this.logger.trace(val, "verified", "verifiedCommandsObservable"))
                     .mapTo(undefined);
 
                 // TODO: is this a hack? Should loginCommandsObservable be subscribed to _websocketSubject?
                 // NOTE: could be performed separately, outside of this map function?
-                this._websocketSubject!.next(cmd);
+                this.sendInternal(cmd);
 
                 return verifiedCommandsObservable;
             })
-            .do((val) => this._logger.trace(val, "After sending", "loginCommandsObservable"));
+            .do((val) => this.logger.trace(val, "After sending", "loginCommandsObservable"));
 
         return loginCommandsObservable;
     }
