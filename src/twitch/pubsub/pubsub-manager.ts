@@ -27,7 +27,7 @@ import ConnectionManager from "../connection-manager";
 import IPubSubConnection from "./ipubsub-connection";
 import IPubSubResponse from "./ipubsub-response";
 
-export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, string> {
+export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, any> {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
