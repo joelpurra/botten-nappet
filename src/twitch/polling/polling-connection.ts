@@ -51,6 +51,7 @@ interface IDataHandlerObject {
 
 export default abstract class PollingConnection<T, V> implements IPollingConnection<T, V> {
     protected logger: PinoLogger;
+    private intervalSubscription: Rx.Subscription | null;
     private pollingSubject: Subject<T> | null;
     private sharedpollingObservable: Rx.Observable<T> | null;
     private pollingSubcription: Subscription | null;
@@ -108,6 +109,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
 
         assert(this.intervalMilliseconds >= this.intervalMinimumMilliseconds);
 
+        this.intervalSubscription = null;
         this.pollingSubject = null;
         this.sharedpollingObservable = null;
         this.pollingSubcription = null;
@@ -176,7 +178,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
             },
         };
 
-        const intervalSubscription = intervalObservable.subscribe(intervalObserver);
+        this.intervalSubscription = intervalObservable.subscribe(intervalObserver);
 
         if (this.atBegin === true) {
             this.logger.warn(this.atBegin, "atBegin", "connect");
@@ -199,6 +201,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
 
         // TODO: verify that the refcount reaches 0 for a proper polling "close".
         // TODO: force polling termination after a "close" timeout.
+        this.intervalSubscription.unsubscribe();
         this.pollingSubcription.unsubscribe();
         this.pollingSubject.complete();
     }
