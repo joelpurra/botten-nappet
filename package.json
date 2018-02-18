@@ -41,10 +41,13 @@
   },
   "homepage": "https://joelpurra.com/projects/botten-nappet/",
   "dependencies": {
+    "@types/config": "0.0.34",
     "axios": "^0.17.1",
     "bluebird": "^3.5.1",
     "camo": "^0.12.3",
     "check-types": "^7.3.0",
+    "config": "^1.29.4",
+    "js-yaml": "^3.10.0",
     "nedb": "^1.8.0",
     "pino": "^4.10.3",
     "qs": "^6.5.1",

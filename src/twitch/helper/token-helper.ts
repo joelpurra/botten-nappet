@@ -125,6 +125,7 @@ export default class TokenHelper {
     public async getUserIdByRawAccessToken(token: IRawToken): Promise<number> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof token, "object");
+        assert.not.null(token);
 
         const tokenValidation = await this._getTokenValidation(token);
 
