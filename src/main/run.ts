@@ -90,7 +90,7 @@ const createRootLogger = async (config: Config): Promise<PinoLogger> => {
 
 const perUserHandlersMain = async (
     config: Config,
-    indexLogger: PinoLogger,
+    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     twitchIrcConnection: TwitchIrcConnection,
@@ -135,25 +135,34 @@ const perUserHandlersMain = async (
         twitchPollingFollowingHandler,
     ];
 
-    await Bluebird.map(startables, async (startable) => startable.start());
-
-    indexLogger.info(`Started listening to events for ${config.twitchUserName} (${twitchUserId}).`);
-
     const stop = async (incomingError?: Error) => {
-        await Bluebird.map(startables, async (startable) => startable.stop());
+        await Bluebird.map(startables, async (startable) => {
+            try {
+                startable.stop();
+            } catch (error) {
+                mainLogger.error(error, startable, "Swallowed error while stopping.");
+            }
+        });
 
         if (incomingError) {
-            indexLogger.error("Stopped.", incomingError);
+            mainLogger.error(incomingError, "Stopped.");
 
             throw incomingError;
         }
 
-        indexLogger.info("Stopped.");
+        mainLogger.info("Stopped.");
 
         return undefined;
     };
 
     try {
+        await Bluebird.map(startables, async (startable) => startable.start());
+
+        mainLogger.info({
+            twitchUserId,
+            twitchUserName: config.twitchUserName,
+        }, "Started listening to events");
+
         await gracefulShutdownManager.waitForShutdownSignal();
 
         await stop();
@@ -164,7 +173,7 @@ const perUserHandlersMain = async (
 
 const authenticatedApplicationMain = async (
     config: Config,
-    indexLogger: PinoLogger,
+    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     twitchApplicationTokenManager: TwitchApplicationTokenManager,
@@ -264,18 +273,18 @@ const authenticatedApplicationMain = async (
 
     await Bluebird.map(connectables, async (connectable) => connectable.connect());
 
-    indexLogger.info("Connected.");
+    mainLogger.info("Connected.");
 
     const disconnect = async (incomingError?: Error) => {
         await Bluebird.map(connectables, async (connectable) => connectable.disconnect());
 
         if (incomingError) {
-            indexLogger.error("Disconnected.", incomingError);
+            mainLogger.error(incomingError, "Disconnected.");
 
             throw incomingError;
         }
 
-        indexLogger.info("Disconnected.");
+        mainLogger.info("Disconnected.");
 
         return undefined;
     };
@@ -283,7 +292,7 @@ const authenticatedApplicationMain = async (
     try {
         await perUserHandlersMain(
             config,
-            indexLogger,
+            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             twitchIrcConnection,
@@ -302,7 +311,7 @@ const authenticatedApplicationMain = async (
 
 const managedMain = async (
     config: Config,
-    indexLogger: PinoLogger,
+    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     twitchRequestHelper: TwitchRequestHelper,
@@ -315,19 +324,19 @@ const managedMain = async (
     await twitchApplicationTokenManager.start();
     await twitchApplicationTokenManager.getOrWait();
 
-    indexLogger.info("Application authenticated.");
+    mainLogger.info("Application authenticated.");
 
     const disconnectAuthentication = async (incomingError?: Error) => {
         await twitchApplicationTokenManager.stop();
         await twitchPollingApplicationTokenConnection.disconnect();
 
         if (incomingError) {
-            indexLogger.error("Unauthenticated.", incomingError);
+            mainLogger.error(incomingError, "Unauthenticated.");
 
             throw incomingError;
         }
 
-        indexLogger.info("Unauthenticated.");
+        mainLogger.info("Unauthenticated.");
 
         return undefined;
     };
@@ -335,7 +344,7 @@ const managedMain = async (
     try {
         await authenticatedApplicationMain(
             config,
-            indexLogger,
+            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             twitchApplicationTokenManager,
@@ -352,7 +361,7 @@ const managedMain = async (
 
 const managerMain = async (
     config: Config,
-    indexLogger: PinoLogger,
+    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     databaseConnection: DatabaseConnection,
@@ -365,20 +374,19 @@ const managerMain = async (
     await gracefulShutdownManager.start();
     await databaseConnection.connect();
 
-    indexLogger.info("Managed.");
+    mainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
         await databaseConnection.disconnect();
         await gracefulShutdownManager.stop();
 
         if (incomingError) {
-            indexLogger.error("Unmanaged.",
-                incomingError);
+            mainLogger.error(incomingError, "Unmanaged.");
 
             throw incomingError;
         }
 
-        indexLogger.info("Unmanaged.");
+        mainLogger.info("Unmanaged.");
 
         return undefined;
     };
@@ -386,7 +394,7 @@ const managerMain = async (
     try {
         await managedMain(
             config,
-            indexLogger,
+            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             twitchRequestHelper,
@@ -409,7 +417,7 @@ const main = async (): Promise<void> => {
 
     const rootLogger = await createRootLogger(config);
 
-    const indexLogger = rootLogger.child("index");
+    const mainLogger = rootLogger.child("main");
 
     const gracefulShutdownManager = new GracefulShutdownManager(rootLogger);
     const databaseConnection = new DatabaseConnection(rootLogger, config.databaseUri);
@@ -441,7 +449,7 @@ const main = async (): Promise<void> => {
 
     await managerMain(
         config,
-        indexLogger,
+        mainLogger,
         rootLogger,
         gracefulShutdownManager,
         databaseConnection,
