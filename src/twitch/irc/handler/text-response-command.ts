@@ -32,8 +32,9 @@ interface ICommandAndResponse {
 }
 
 export default class TextResponseCommandIrcHandler extends IrcManager {
-    public _commandsAndResponses: ICommandAndResponse;
-    public _commandPrefix: string;
+    private commandsAndResponses: ICommandAndResponse;
+    private commandPrefix: string;
+
     constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
@@ -41,10 +42,10 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("TextResponseCommandIrcHandler");
+        this.logger = logger.child("TextResponseCommandIrcHandler");
 
-        this._commandPrefix = "!";
-        this._commandsAndResponses = {
+        this.commandPrefix = "!";
+        this.commandsAndResponses = {
             // TODO: command aliases.
             bot: "For bot details see https://joelpurra.com/projects/botten-nappet/",
             commands: "For bot details see https://joelpurra.com/projects/botten-nappet/",
@@ -52,11 +53,11 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
         };
     }
 
-    public async _dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace("Responding to command.", data.username, data.message, "_dataHandler");
+        this.logger.trace("Responding to command.", data.username, data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
@@ -71,15 +72,15 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
         // TODO: use command arguments for more advanced commands.
         // const incomingCommandArguments = tokenizedMessageParts.slice(1);
 
-        const response = this._commandsAndResponses[incomingCommand];
+        const response = this.commandsAndResponses[incomingCommand];
 
         const message = `PRIVMSG ${data.channel} :@${data.username}: ${response}`;
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.send(message);
+        this.connection.send(message);
     }
 
-    public async _filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -91,7 +92,7 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
             return false;
         }
 
-        if (!data.message.startsWith(this._commandPrefix)) {
+        if (!data.message.startsWith(this.commandPrefix)) {
             return false;
         }
 
@@ -102,7 +103,7 @@ export default class TextResponseCommandIrcHandler extends IrcManager {
             .filter((tokenizedPart) => tokenizedPart.length > 0);
 
         const incomingCommand = tokenizedMessageParts[0];
-        const isKnownCommand = Object.keys(this._commandsAndResponses)
+        const isKnownCommand = Object.keys(this.commandsAndResponses)
             .some((knownCommand) => incomingCommand === knownCommand);
 
         return isKnownCommand;

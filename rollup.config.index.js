@@ -35,6 +35,7 @@ export default {
         "bluebird",
         "camo",
         "check-types",
+        "config",
         "fs",
         "pino",
         "qs",

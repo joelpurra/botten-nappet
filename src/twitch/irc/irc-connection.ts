@@ -50,9 +50,9 @@ import IIRCConnection from "./iirc-connection";
 import IParsedMessage from "./iparsed-message";
 
 export default class IrcConnection extends WebSocketConnection<IParsedMessage, string> implements IIRCConnection {
-    private _userAccessTokenProvider: UserAccessTokenProviderType;
-    private _username: string;
-    private _channel: string;
+    private userAccessTokenProvider: UserAccessTokenProviderType;
+    private username: string;
+    private channelName: string;
 
     constructor(
         logger: PinoLogger,
@@ -75,19 +75,19 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
         assert.nonEmptyString(username);
         assert.equal(typeof userAccessTokenProvider, "function");
 
-        this._logger = logger.child("IrcConnection");
+        this.logger = logger.child("IrcConnection");
 
-        this._channel = channel;
-        this._username = username;
-        this._userAccessTokenProvider = userAccessTokenProvider;
+        this.channelName = channel;
+        this.username = username;
+        this.userAccessTokenProvider = userAccessTokenProvider;
     }
 
     public get channel(): string {
-        return this._channel;
+        return this.channelName;
     }
 
-    protected async _getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IParsedMessage>>> {
-        const userAccessToken = await this._userAccessTokenProvider();
+    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IParsedMessage>>> {
+        const userAccessToken = await this.userAccessTokenProvider();
 
         // TODO: make capabilities configurable/subclassable?
         const capabilities = [
@@ -110,7 +110,7 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
                 commands: [
                     // NOTE: the user access token needs to have an "oauth:" prefix.
                     `PASS oauth:${userAccessToken}`,
-                    `NICK ${this._username}`,
+                    `NICK ${this.username}`,
                 ],
                 // NOTE: the "001" message might change, but for now it's a hardcoded return value.
                 // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
@@ -119,19 +119,20 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
 
             {
                 commands: [
-                    `JOIN ${this._channel}`,
+                    `JOIN ${this.channelName}`,
                 ],
-                verifier: (message) => message.original.includes(`JOIN ${this._channel}`),
+                verifier: (message) => message.original.includes(`JOIN ${this.channelName}`),
             },
         ];
 
         return setupConnectionCommands;
     }
 
-    protected async _parseMessage(rawMessage: string): Promise<IParsedMessage> {
+    protected async parseMessage(rawMessage: string): Promise<IParsedMessage> {
         // NOTE: parts of the _parseMessage function comes from official Twitch example code; see license note.
         // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
+        /* tslint:disable:max-line-length */
         /*
         Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
         Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
@@ -150,6 +151,7 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
         // PRIVMSG
         // #channel
         // :Kappa Keepo Kappa
+        /* tslint:enable:max-line-length */
 
         const parsedMessage: IParsedMessage = {
             channel: null,

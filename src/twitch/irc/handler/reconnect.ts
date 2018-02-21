@@ -35,20 +35,20 @@ export default class ReconnectIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("ReconnectIrcHandler");
+        this.logger = logger.child("ReconnectIrcHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.info("Reconnecting irc upon server request.", "_dataHandler");
+        this.logger.info("Reconnecting irc upon server request.", "dataHandler");
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.reconnect();
+        this.connection.reconnect();
     }
 
-    public async _filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

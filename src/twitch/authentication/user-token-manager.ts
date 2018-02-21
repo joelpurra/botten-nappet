@@ -28,9 +28,9 @@ import IAugmentedToken from "./iaugmented-token";
 import IRawToken from "./iraw-token";
 
 export default class UserTokenManager {
-    public _userTokenHelper: UserTokenHelper;
-    public _tokenHelper: TokenHelper;
-    public _logger: PinoLogger;
+    private userTokenHelper: UserTokenHelper;
+    private tokenHelper: TokenHelper;
+    private logger: PinoLogger;
 
     constructor(logger: PinoLogger, tokenHelper: TokenHelper, userTokenHelper: UserTokenHelper) {
         assert.hasLength(arguments, 3);
@@ -38,9 +38,9 @@ export default class UserTokenManager {
         assert.equal(typeof tokenHelper, "object");
         assert.equal(typeof userTokenHelper, "object");
 
-        this._logger = logger.child("UserTokenManager");
-        this._tokenHelper = tokenHelper;
-        this._userTokenHelper = userTokenHelper;
+        this.logger = logger.child("UserTokenManager");
+        this.tokenHelper = tokenHelper;
+        this.userTokenHelper = userTokenHelper;
     }
 
     public async get(username: string): Promise<IAugmentedToken> {
@@ -48,28 +48,28 @@ export default class UserTokenManager {
         assert.equal(typeof username, "string");
         assert(username.length > 0);
 
-        const augmentedToken: IAugmentedToken = await this._userTokenHelper.get(username);
+        const augmentedToken: IAugmentedToken = await this.userTokenHelper.get(username);
         let isValid = false;
 
         if (augmentedToken.token !== null) {
-            isValid = await this._tokenHelper.validate(augmentedToken.token);
+            isValid = await this.tokenHelper.validate(augmentedToken.token);
         }
 
         if (isValid) {
             return augmentedToken;
         }
 
-        const rawRefreshedToken = await this._userTokenHelper.refresh(augmentedToken);
-        const isRefreshedTokenValid = await this._tokenHelper.validate(rawRefreshedToken);
+        const rawRefreshedToken = await this.userTokenHelper.refresh(augmentedToken);
+        const isRefreshedTokenValid = await this.tokenHelper.validate(rawRefreshedToken);
 
         if (isRefreshedTokenValid) {
-            return this._userTokenHelper.store(username, rawRefreshedToken);
+            return this.userTokenHelper.store(username, rawRefreshedToken);
         }
 
-        await this._userTokenHelper.forget(username);
+        await this.userTokenHelper.forget(username);
 
         // TODO: user-wrappers with username for the generic token functions?
-        await this._tokenHelper.revoke(rawRefreshedToken);
+        await this.tokenHelper.revoke(rawRefreshedToken);
 
         // NOTE: recursive. Hope recursion ends at some point.
         return this.get(username);

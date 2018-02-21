@@ -34,18 +34,18 @@ export default class LoggingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child("LoggingPubSubHandler");
     }
 
-    public async _dataHandler(data: object): Promise<void> {
+    protected async dataHandler(data: object): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         // TODO: verify that the data contains both the topic and the actual message data.
-        this._logger.trace(data, "_dataHandler");
+        this.logger.trace(data, "dataHandler");
     }
 
-    public async _filter(data: object): Promise<boolean> {
+    protected async filter(data: object): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

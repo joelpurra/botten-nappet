@@ -27,7 +27,7 @@ import ConnectionManager from "../connection-manager";
 import IPubSubConnection from "./ipubsub-connection";
 import IPubSubResponse from "./ipubsub-response";
 
-export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, string> {
+export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, any> {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
@@ -35,9 +35,9 @@ export default abstract class PubSubManager extends ConnectionManager<IPubSubRes
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("PubSubManager");
+        this.logger = logger.child("PubSubManager");
     }
 
-    protected abstract async _dataHandler(data: IPubSubResponse): Promise<void>;
-    protected abstract async _filter(data: IPubSubResponse): Promise<boolean>;
+    protected abstract async dataHandler(data: IPubSubResponse): Promise<void>;
+    protected abstract async filter(data: IPubSubResponse): Promise<boolean>;
 }

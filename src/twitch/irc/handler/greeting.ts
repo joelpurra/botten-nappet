@@ -28,8 +28,9 @@ import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
 export default class GreetingIrcHandler extends IrcManager {
-    private _greetings: RegExp[];
-    private _username: string;
+    private greetings: RegExp[];
+    private username: string;
+
     constructor(logger: PinoLogger, connection: IIRCConnection, username: string) {
         super(logger, connection);
 
@@ -39,10 +40,10 @@ export default class GreetingIrcHandler extends IrcManager {
         assert.equal(typeof username, "string");
         assert.greater(username.length, 0);
 
-        this._logger = logger.child("GreetingIrcHandler");
-        this._username = username;
+        this.logger = logger.child("GreetingIrcHandler");
+        this.username = username;
 
-        this._greetings = [
+        this.greetings = [
             /\bhello\b/,
             /\bhi\b/,
             /\bhiya\b/,
@@ -58,11 +59,11 @@ export default class GreetingIrcHandler extends IrcManager {
         ];
     }
 
-    protected async _dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace("Responding to greeting.", data.username, data.message, "_dataHandler");
+        this.logger.trace("Responding to greeting.", data.username, data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
@@ -75,10 +76,10 @@ export default class GreetingIrcHandler extends IrcManager {
         }
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.send(message);
+        this.connection.send(message);
     }
 
-    protected async _filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -90,7 +91,7 @@ export default class GreetingIrcHandler extends IrcManager {
             return false;
         }
 
-        if (data.username === this._username) {
+        if (data.username === this.username) {
             return false;
         }
 
@@ -102,7 +103,7 @@ export default class GreetingIrcHandler extends IrcManager {
             .join(" ")
             .trim();
 
-        const isGreeting = this._greetings.some((greeting) => {
+        const isGreeting = this.greetings.some((greeting) => {
             return greeting.test(tokenizedMessage);
         });
 

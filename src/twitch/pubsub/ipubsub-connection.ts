@@ -21,5 +21,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IWebSocketConnection from "../websocket/iwebsocket-connection";
 import IPubSubResponse from "./ipubsub-response";
 
-export default interface IPubSubConnection extends IWebSocketConnection<IPubSubResponse, string> {
+export default interface IPubSubConnection extends IWebSocketConnection<IPubSubResponse, any> {
 }

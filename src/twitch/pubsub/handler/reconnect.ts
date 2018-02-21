@@ -35,22 +35,22 @@ export default class ReconnectPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("ReconnectPubSubHandler");
+        this.logger = logger.child("ReconnectPubSubHandler");
     }
 
-    public async _dataHandler(data: IPubSubResponse): Promise<void> {
+    protected async dataHandler(data: IPubSubResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this._logger.trace(data, "_dataHandler");
+        this.logger.trace(data, "dataHandler");
 
-        this._logger.info("Reconnecting.");
+        this.logger.info("Reconnecting.");
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection.reconnect();
+        this.connection.reconnect();
     }
 
-    public async _filter(data: IPubSubResponse): Promise<boolean> {
+    protected async filter(data: IPubSubResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
