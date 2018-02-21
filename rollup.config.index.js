@@ -44,6 +44,7 @@ export default {
         "rxjs",
         "rxjs/internal/observable/dom/WebSocketSubject",
         "ws",
+        "zeromq-ng",
     ],
     input: inputName,
     output: {
