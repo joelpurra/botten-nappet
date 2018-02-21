@@ -30,18 +30,19 @@ import IUserCamo from "../iuser-camo";
 import UserRepositoryClass from "../repository/user-repository";
 
 export default class UserStorageManager {
-    public _UserRepository: UserRepositoryClass;
-    public _logger: PinoLogger;
-    constructor(logger: PinoLogger, UserRepository: UserRepositoryClass) {
+    private UserRepository: typeof UserRepositoryClass;
+    private logger: PinoLogger;
+
+    constructor(logger: PinoLogger, UserRepository: typeof UserRepositoryClass) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof UserRepository, "function");
 
-        this._logger = logger.child("UserStorageManager");
-        this._UserRepository = UserRepository;
+        this.logger = logger.child("UserStorageManager");
+        this.UserRepository = UserRepository;
     }
 
-    public async getByUsername(username: string) {
+    public async getByUsername(username: string): Promise<IUser> {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(username);
 
@@ -49,9 +50,9 @@ export default class UserStorageManager {
             username,
         };
 
-        const user = await this._UserRepository.findOne(findUser);
+        const user = await this.UserRepository.findOne(findUser);
 
-        this._logger.trace(user, "getByUsername");
+        this.logger.trace(user, "getByUsername");
 
         return user;
     }
@@ -65,7 +66,7 @@ export default class UserStorageManager {
             username: user.username,
         };
 
-        const userFromDatabase: IUserCamo = await this._UserRepository.findOne(findUser);
+        const userFromDatabase: IUserCamo = await this.UserRepository.findOne(findUser);
 
         const userFromDatabaseWithoutId = {
             ...userFromDatabase,
@@ -80,7 +81,7 @@ export default class UserStorageManager {
         };
         delete upsertUser._id;
 
-        const userAfterStoring = await this._UserRepository.findOneAndUpdate(
+        const userAfterStoring = await this.UserRepository.findOneAndUpdate(
             userFromDatabaseWithoutId,
             upsertUser,
             {
@@ -88,12 +89,12 @@ export default class UserStorageManager {
             },
         );
 
-        this._logger.trace(userAfterStoring, "store");
+        this.logger.trace(userAfterStoring, "store");
 
         return userAfterStoring;
     }
 
-    public async storeToken(username: string, rawToken: IRawToken): Promise<IUser> {
+    public async storeToken(username: string, rawToken: IRawToken | null): Promise<IUser> {
         assert.hasLength(arguments, 2);
         assert.nonEmptyString(username);
         // NOTE: rawToken can be null, to "forget" it.
@@ -128,7 +129,7 @@ export default class UserStorageManager {
 
         const userAfterStoring = await this.store(userWithToken);
 
-        this._logger.trace(userAfterStoring, "storeToken");
+        this.logger.trace(userAfterStoring, "storeToken");
 
         return userAfterStoring;
     }

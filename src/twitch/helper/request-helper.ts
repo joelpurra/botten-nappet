@@ -29,13 +29,13 @@ import qs, {
 import PinoLogger from "../../util/pino-logger";
 
 export default class RequestHelper {
-    private _logger: PinoLogger;
+    private logger: PinoLogger;
 
     constructor(logger: PinoLogger) {
         assert.equal(arguments.length, 1);
         assert.equal(typeof logger, "object");
 
-        this._logger = logger.child("RequestHelper");
+        this.logger = logger.child("RequestHelper");
     }
 
     public twitchQuerystringSerializer(params: object) {

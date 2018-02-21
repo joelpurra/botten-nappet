@@ -25,16 +25,23 @@ import {
 import PinoLogger from "../../../util/pino-logger";
 import IConnection from "../../iconnection";
 import IIRCConnection from "../../irc/iirc-connection";
+import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
 type TwitchApiV5ChannelFollower = any;
 type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
 
-export default class FollowingPollingHandler extends PollingManager {
-    public _lastFollowingMessageTimestamp: number;
-    public _ircChannel: string;
-    public _ircConnection: IIRCConnection;
-    constructor(logger: PinoLogger, connection: IConnection, ircConnection: IIRCConnection, ircChannel: string) {
+export default class FollowingPollingHandler extends PollingManager<any, void> {
+    private lastFollowingMessageTimestamp: number;
+    private ircChannel: string;
+    private ircConnection: IIRCConnection;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IPollingConnection<any, void>,
+        ircConnection: IIRCConnection,
+        ircChannel: string,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 4);
@@ -45,34 +52,35 @@ export default class FollowingPollingHandler extends PollingManager {
         assert(ircChannel.startsWith("#"));
         assert.greater(ircChannel.length, 1);
 
-        this._ircConnection = ircConnection;
-        this._ircChannel = ircChannel;
+        this.ircConnection = ircConnection;
+        this.ircChannel = ircChannel;
 
-        this._logger = logger.child("FollowingPollingHandler");
-        this._lastFollowingMessageTimestamp = Date.now();
+        this.logger = logger.child("FollowingPollingHandler");
+        this.lastFollowingMessageTimestamp = Date.now();
     }
 
-    public async _dataHandler(data: any): Promise<void> {
+    protected async dataHandler(data: any): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        const newFollows = await this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
+        const newFollows = await this.getNewFollows(data.follows, this.lastFollowingMessageTimestamp);
 
-        this._lastFollowingMessageTimestamp = Date.now();
+        this.lastFollowingMessageTimestamp = Date.now();
 
         newFollows.forEach((follow) => {
-            this._logger.trace("Responding to follower.", follow.user.name, "_dataHandler");
+            this.logger.trace("Responding to follower.", follow.user.name, "dataHandler");
 
             // TODO: use a string templating system.
             // TODO: configure message.
-            const message =
-                `PRIVMSG ${this._ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
+            /* tslint:disable:max-line-length */
+            const message = `PRIVMSG ${this.ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
+            /* tslint:enable:max-line-length */
 
-            this._ircConnection.send(message);
+            this.ircConnection.send(message);
         });
     }
 
-    public async _filter(data: any): Promise<boolean> {
+    protected async filter(data: any): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -84,14 +92,17 @@ export default class FollowingPollingHandler extends PollingManager {
             return false;
         }
 
-        const newFollows = await this._getNewFollows(data.follows, this._lastFollowingMessageTimestamp);
+        const newFollows = await this.getNewFollows(data.follows, this.lastFollowingMessageTimestamp);
 
         const shouldHandle = newFollows.length > 0;
 
         return shouldHandle;
     }
 
-    public async _getNewFollows(follows: TwitchApiV5ChannelFollowers, since: number) {
+    private async getNewFollows(
+        follows: TwitchApiV5ChannelFollowers,
+        since: number,
+    ): Promise<TwitchApiV5ChannelFollowers> {
         const newFollows = follows.filter((follow) => {
             const followedAt = Date.parse(follow.created_at);
 

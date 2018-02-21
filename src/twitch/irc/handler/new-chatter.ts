@@ -35,10 +35,10 @@ export default class NewChatterIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("NewChatterIrcHandler");
+        this.logger = logger.child("NewChatterIrcHandler");
     }
 
-    public async _dataHandler(data: IParsedMessage) {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -46,23 +46,21 @@ export default class NewChatterIrcHandler extends IrcManager {
         const username = tags.login;
         const channel = data.channel;
 
-        this._logger.trace("Responding to new chatter.", username, data.message, "_dataHandler");
+        this.logger.trace("Responding to new chatter.", username, data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
+        /* tslint:disable:max-line-length */
         const message = `PRIVMSG ${channel} :Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
+        /* tslint:enable:max-line-length */
 
         // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(message);
+        this.connection.send(message);
     }
 
-    public async _filter(data: IParsedMessage) {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (typeof data !== "object") {
-            return false;
-        }
 
         if (data.command !== "USERNOTICE") {
             return false;

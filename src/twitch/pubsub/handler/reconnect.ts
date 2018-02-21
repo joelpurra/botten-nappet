@@ -22,12 +22,12 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../util/pino-logger";
-import ConnectionManager from "../connection-manager";
-import IPubSubConnection from "./ipubsub-connection";
-import IPubSubResponse from "./ipubsub-response";
+import PinoLogger from "../../../util/pino-logger";
+import IPubSubConnection from "../ipubsub-connection";
+import IPubSubResponse from "../ipubsub-response";
+import PubSubManager from "../pubsub-manager";
 
-export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse, any> {
+export default class ReconnectPubSubHandler extends PubSubManager {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
@@ -35,9 +35,34 @@ export default abstract class PubSubManager extends ConnectionManager<IPubSubRes
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("PubSubManager");
+        this.logger = logger.child("ReconnectPubSubHandler");
     }
 
-    protected abstract async dataHandler(data: IPubSubResponse): Promise<void>;
-    protected abstract async filter(data: IPubSubResponse): Promise<boolean>;
+    protected async dataHandler(data: IPubSubResponse): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
+
+        this.logger.trace(data, "dataHandler");
+
+        this.logger.info("Reconnecting.");
+
+        // TODO: handle errors, re-reconnect, or shut down server?
+        this.connection.reconnect();
+    }
+
+    protected async filter(data: IPubSubResponse): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof data, "object");
+
+        if (typeof data.type !== "string") {
+            return false;
+        }
+
+        // https://dev.twitch.tv/docs/pubsub#connection-management
+        if (data.type !== "RECONNECT") {
+            return false;
+        }
+
+        return true;
+    }
 }

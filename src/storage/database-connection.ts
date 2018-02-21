@@ -33,9 +33,9 @@ interface ICamoDatabaseConnection {
 }
 
 export default class DatabaseConnection {
-    public _database: ICamoDatabaseConnection | null;
-    public _uri: string;
-    public _logger: PinoLogger;
+    private database: ICamoDatabaseConnection | null;
+    private uri: string;
+    private logger: PinoLogger;
 
     constructor(logger: PinoLogger, uri: string) {
         assert.hasLength(arguments, 2);
@@ -44,26 +44,26 @@ export default class DatabaseConnection {
         assert(uri.length > 0);
         assert(uri.startsWith("nedb://"));
 
-        this._logger = logger.child("DatabaseConnection");
-        this._uri = uri;
+        this.logger = logger.child("DatabaseConnection");
+        this.uri = uri;
 
-        this._database = null;
+        this.database = null;
     }
 
     public async connect() {
         assert.hasLength(arguments, 0);
-        assert.equal(this._database, null);
+        assert.equal(this.database, null);
 
-        const db = await connect(this._uri);
-        this._database = db as ICamoDatabaseConnection;
+        const db = await connect(this.uri);
+        this.database = db as ICamoDatabaseConnection;
 
         return undefined;
     }
 
     public async disconnect() {
         assert.hasLength(arguments, 0);
-        assert.not.equal(this._database, null);
+        assert.not.equal(this.database, null);
 
-        return this._database!.close();
+        return this.database!.close();
     }
 }

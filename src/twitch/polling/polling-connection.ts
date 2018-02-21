@@ -22,17 +22,26 @@ import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
+import Rx, {
+    Observer, Subject, Subscription,
+} from "rxjs";
+import {
+    Observable,
+} from "rxjs/internal/Observable";
 
-import axios, {
-    AxiosInstance,
-} from "axios";
+// import {
+//     rxios as Rxios,
+// } from "rxios";
+import {
+    rxios as Rxios,
+} from "../../../lib/rxios";
 
 import PinoLogger from "../../util/pino-logger";
 import IConnection from "../iconnection";
 import IHttpData from "./ihttp-data";
 import IHttpHeaders from "./ihttp-header";
+import IPollingConnection from "./ipolling-connection";
 
-type KillSwitch = () => void;
 type DataHandler = (data: any) => void;
 type DataFilter = (data: any) => boolean;
 interface IDataHandlerObject {
@@ -40,13 +49,15 @@ interface IDataHandlerObject {
     filter: DataFilter;
 }
 
-export default abstract class PollingConnection implements IConnection {
-    protected _logger: PinoLogger;
-    private _dataHandlerObjects: IDataHandlerObject[];
-    private _intervalId: (number | NodeJS.Timer | null);
-    private _axios: (AxiosInstance | null);
-    private _intervalMinMilliseconds: number;
-    private readonly _methods: string[] = [
+export default abstract class PollingConnection<T, V> implements IPollingConnection<T, V> {
+    protected logger: PinoLogger;
+    private intervalSubscription: Rx.Subscription | null;
+    private pollingSubject: Subject<T> | null;
+    private sharedpollingObservable: Rx.Observable<T> | null;
+    private pollingSubcription: Subscription | null;
+    private dataHandlerObjects: IDataHandlerObject[];
+    private intervalMinimumMilliseconds: number;
+    private readonly methods: string[] = [
         "get",
         "delete",
         "head",
@@ -55,16 +66,16 @@ export default abstract class PollingConnection implements IConnection {
         "put",
         "patch",
     ];
-    private _defaultData: IHttpData | undefined;
-    private _defaultHeaders: IHttpHeaders | undefined;
-    private _method: string;
-    private _uri: string;
-    private _atBegin: boolean;
-    private _interval: number;
+    private defaultData: IHttpData | undefined;
+    private defaultHeaders: IHttpHeaders | undefined;
+    private method: string;
+    private uri: string;
+    private atBegin: boolean;
+    private intervalMilliseconds: number;
 
     constructor(
         logger: PinoLogger,
-        interval: number,
+        intervalInMilliseconds: number,
         atBegin: boolean,
         uri: string,
         method: string,
@@ -73,8 +84,8 @@ export default abstract class PollingConnection implements IConnection {
     ) {
         assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
         assert.equal(typeof logger, "object");
-        assert.number(interval);
-        assert.greater(interval, 0);
+        assert.number(intervalInMilliseconds);
+        assert.greater(intervalInMilliseconds, 0);
         assert.equal(typeof atBegin, "boolean");
         assert.equal(typeof uri, "string");
         assert.greater(uri.length, 0);
@@ -84,181 +95,142 @@ export default abstract class PollingConnection implements IConnection {
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        this._logger = logger.child("PollingConnection");
-        this._interval = interval;
-        this._atBegin = atBegin;
-        this._uri = uri;
-        this._method = method;
-        this._defaultHeaders = defaultHeaders;
-        this._defaultData = defaultData;
+        this.logger = logger.child("PollingConnection");
+        this.intervalMilliseconds = intervalInMilliseconds;
+        this.atBegin = atBegin;
+        this.uri = uri;
+        this.method = method;
+        this.defaultHeaders = defaultHeaders;
+        this.defaultData = defaultData;
 
-        assert(this._methods.includes(this._method));
+        assert(this.methods.includes(this.method));
 
-        this._intervalMinMilliseconds = 10 * 1000;
+        this.intervalMinimumMilliseconds = 10 * 1000;
 
-        assert(this._interval >= this._intervalMinMilliseconds);
+        assert(this.intervalMilliseconds >= this.intervalMinimumMilliseconds);
 
-        this._axios = null;
-        this._intervalId = null;
-        this._dataHandlerObjects = [];
+        this.intervalSubscription = null;
+        this.pollingSubject = null;
+        this.sharedpollingObservable = null;
+        this.pollingSubcription = null;
+        this.dataHandlerObjects = [];
     }
 
-    public async _getAllHeaders(): Promise<IHttpHeaders> {
-        assert.equal(arguments.length, 0);
+    public get dataObservable(): Rx.Observable<T> {
+        assert.hasLength(arguments, 0);
+        assert.not.null(this.sharedpollingObservable);
 
-        const overriddenHeaders = await this._getHeaders();
-
-        const headers = {
-            ...this._defaultHeaders,
-            ...overriddenHeaders,
-        };
-
-        return headers;
+        // TODO: better null handling.
+        return this.sharedpollingObservable!;
     }
 
-    public abstract async _getHeaders(): Promise<IHttpHeaders>;
+    public async reconnect(): Promise<void> {
+        assert.hasLength(arguments, 0);
 
-    public async _getAllData(): Promise<IHttpData> {
-        assert.equal(arguments.length, 0);
-
-        const overriddenData = await this._getData();
-
-        const data = {
-            ...this._defaultData,
-            ...overriddenData,
-        };
-
-        return data;
-    }
-
-    public abstract async _getData(): Promise<IHttpData>;
-
-    public async _setConnection(headers: IHttpHeaders, data: IHttpData) {
-        assert.equal(arguments.length, 2);
-        assert.equal(typeof headers, "object");
-        assert.equal(typeof data, "object");
-
-        assert.equal(this._axios, null);
-
-        const axiosInstanceConfig = {
-            baseURL: this._uri,
-            // NOTE: per-instance method has no effect due to bug in axios, must use per request.
-            // TODO: remove per-call overrides once axios has been fixed.
-            // https://github.com/axios/axios/issues/723
-            data,
-            headers,
-            method: this._method,
-        };
-
-        this._axios = axios.create(axiosInstanceConfig);
-
-        return undefined;
-    }
-
-    public async _unsetConnection() {
-        assert.equal(arguments.length, 0);
-
-        assert.not.equal(this._axios, null);
-
-        this._axios = null;
-
-        return undefined;
-    }
-
-    public async _startInterval(): Promise<void> {
-        assert.equal(arguments.length, 0);
-
-        assert.not.equal(this._axios, null);
-
-        this._intervalId = setInterval(this._poll.bind(this), this._interval);
+        return this.disconnect()
+            .then(() => this.connect());
     }
 
     public async connect(): Promise<void> {
-        assert.equal(arguments.length, 0);
-        assert.equal(this._axios, null);
-        assert.equal(this._intervalId, null);
+        assert.hasLength(arguments, 0);
+        assert.null(this.pollingSubject);
+        assert.null(this.pollingSubcription);
 
-        const [headers, data] = await Promise.all([
-            this._getAllHeaders(),
-            this._getAllData(),
-        ]);
+        const openedObserver: Observer<T> = {
+            complete: () => {
+                this.logger.trace("complete", "openedObserver");
+            },
+            error: (error) => {
+                // TODO: handle errors.
+                this.logger.error(error, "error", "openedObserver");
+            },
+            next: (message) => {
+                this.logger.trace(message, "next", "openedObserver");
+            },
+        };
 
-        this._setConnection(headers, data);
+        this.pollingSubject = new Subject();
 
-        if (this._atBegin === true) {
-            return this._poll();
+        this.pollingSubject.asObservable()
+            .do((val) => this.logger.trace(val, "pollingSubject"));
+
+        this.sharedpollingObservable = this.pollingSubject.share()
+            .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
+            .concatMap((message) => Rx.Observable.from(this._parseMessage(message)));
+
+        this.pollingSubcription = this.sharedpollingObservable
+            .subscribe(openedObserver);
+
+        const intervalObservable = Rx.Observable.interval(this.intervalMilliseconds);
+
+        const intervalObserver: Observer<number> = {
+            complete: () => {
+                this.logger.trace("complete", "intervalObserver");
+            },
+            error: (error) => {
+                // TODO: handle errors.
+                this.logger.error(error, "error", "intervalObserver");
+            },
+            next: (counter) => {
+                this.logger.trace(counter, "next", "intervalObserver");
+
+                this.sendInternal();
+            },
+        };
+
+        this.intervalSubscription = intervalObservable.subscribe(intervalObserver);
+
+        if (this.atBegin === true) {
+            this.logger.warn(this.atBegin, "atBegin", "connect");
+            this.sendInternal();
         }
-
-        return this._startInterval();
-    }
-
-    public async _stopInterval(): Promise<void> {
-        assert.not.equal(this._axios, null);
-        assert.not.equal(this._intervalId, null);
-
-        clearInterval(this._intervalId as NodeJS.Timer);
-
-        this._intervalId = null;
     }
 
     public async disconnect(): Promise<void> {
-        assert.not.equal(this._axios, null);
-        assert.not.equal(this._intervalId, null);
+        assert.hasLength(arguments, 0);
+        assert.not.null(this.pollingSubject);
+        assert.not.null(this.pollingSubcription);
 
-        await this._stopInterval();
-        return this._unsetConnection();
-    }
-
-    public async force(resetInterval: boolean): Promise<void> {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof resetInterval, "boolean");
-
-        assert.not.equal(this._axios, null);
-        assert.not.equal(this._intervalId, null);
-
-        this._logger.trace(resetInterval, "force");
-        await this._poll();
-
-        if (resetInterval === true) {
-            return this._stopInterval()
-                .then(() => this._startInterval());
-        }
-    }
-
-    public async _poll(): Promise<void> {
-        assert.equal(arguments.length, 0);
-        assert.not.null(this._axios);
-
-        // TODO: better null checking?
-        if (this._axios == null) {
-            throw new ReferenceError("_axios");
+        if (!(this.pollingSubject instanceof Subject)) {
+            throw new TypeError("this._pollingSubject must be Subject");
         }
 
-        try {
-            const response = await this._axios.request({
-                // NOTE: per-instance method has no effect due to bug in axios, must use per request.
-                // TODO: remove per-call overrides once axios has been fixed.
-                // https://github.com/axios/axios/issues/723
-                method: this._method,
-            });
-
-            this._logger.trace(response.data, response.status, response.statusText, "_poll");
-
-            const data = response.data;
-
-            return this._dataHandler(data);
-        } catch (error) {
-            this._logger.error(error, "Masking polling error", "_poll");
-
-            return undefined;
+        if (!(this.pollingSubcription instanceof Subscription)) {
+            throw new TypeError("this._pollingSubcription must be Subscription");
         }
+
+        // TODO: verify that the refcount reaches 0 for a proper polling "close".
+        // TODO: force polling termination after a "close" timeout.
+        this.intervalSubscription.unsubscribe();
+        this.pollingSubcription.unsubscribe();
+        this.pollingSubject.complete();
     }
 
-    public async _dataHandler(data: any): Promise<void> {
-        assert.equal(arguments.length, 1);
+    public async send(): Promise<void> {
+        assert.hasLength(arguments, 1);
+        assert.undefined(arguments[0]);
+
+        this.logger.trace("send");
+
+        // TODO: better null handling.
+        await this.sendInternal();
+
+        // if (resetInterval === true) {
+        //     // TODO: unsubscribe/subscribe interval.
+        //     // TODO: re-enable.
+        //     this._logger.warn(resetInterval, "send");
+        // }
+    }
+
+    protected abstract async getHeaders(): Promise<IHttpHeaders>;
+
+    protected abstract async getData(): Promise<IHttpData>;
+
+    protected async dataHandler(data: any): Promise<void> {
+        assert.hasLength(arguments, 1);
 
         const applicableHandlers = await Bluebird.filter(
-            this._dataHandlerObjects,
+            this.dataHandlerObjects,
             (dataHandler) => Promise.resolve(dataHandler.filter(data))
                 .then((shouldHandle) => {
                     if (shouldHandle !== true) {
@@ -268,7 +240,7 @@ export default abstract class PollingConnection implements IConnection {
                     return true;
                 })
                 .catch((error) => {
-                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.filter.name}`);
+                    this.logger.warn(error, `Masking error in dataHandler ${dataHandler.filter.name}`);
 
                     return false;
                 }),
@@ -278,30 +250,130 @@ export default abstract class PollingConnection implements IConnection {
             applicableHandlers,
             (dataHandler) => Promise.resolve(dataHandler.handler(data))
                 .catch((error) => {
-                    this._logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
+                    this.logger.warn(error, `Masking error in dataHandler ${dataHandler.handler.name}`);
 
                     return undefined;
                 }),
         );
     }
 
-    public async listen(handler: DataHandler, filter: DataFilter): Promise<KillSwitch> {
-        assert.equal(arguments.length, 2);
-        assert.equal(typeof handler, "function");
-        assert.equal(typeof filter, "function");
+    protected async _parseMessage(rawMessage: any): Promise<T> {
+        // TODO: parse outside this function?
+        // TODO: try-catch for bad messages.
+        const data: T = rawMessage as T;
 
-        const dataHandlerObject: IDataHandlerObject = {
-            filter,
-            handler,
+        return data;
+    }
+
+    private async getAllHeaders(): Promise<IHttpHeaders> {
+        assert.hasLength(arguments, 0);
+
+        const overriddenHeaders = await this.getHeaders();
+
+        const headers = {
+            ...this.defaultHeaders,
+            ...overriddenHeaders,
         };
 
-        this._dataHandlerObjects.push(dataHandlerObject);
+        return headers;
+    }
 
-        const killSwitch = () => {
-            this._dataHandlerObjects = this._dataHandlerObjects
-                .filter((_dataHandlerObject) => _dataHandlerObject !== dataHandlerObject);
+    private async getAllData(): Promise<IHttpData> {
+        assert.hasLength(arguments, 0);
+
+        const overriddenData = await this.getData();
+
+        const data = {
+            ...this.defaultData,
+            ...overriddenData,
         };
 
-        return killSwitch;
+        return data;
+    }
+
+    private async sendInternal(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.not.null(this.pollingSubject);
+
+        const [headers, data] = await Promise.all([
+            this.getAllHeaders(),
+            this.getAllData(),
+        ]);
+
+        const axiosInstanceConfig = {
+            // TODO: don't pass URL both here and in rxios instance method call.
+            baseURL: this.uri,
+            // TODO: don't pass data both here and in rxios instance method call.
+            data,
+            headers,
+            // TODO: don't pass method both here and in rxios instance method call.
+            method: this.method,
+        };
+
+        // TODO: instantiate only once.
+        const rxios = new Rxios(axiosInstanceConfig);
+
+        let request: (Observable<any> | null) = null;
+
+        // TODO: log sending data through the polling.
+        switch (this.method) {
+            case "get":
+                request = rxios.get<any>(this.uri);
+                break;
+
+            case "delete":
+                request = rxios.delete(this.uri);
+                break;
+
+            case "head":
+                // TODO: patch rxios to give head.
+                // request = rxios.head<any>(this._uri);
+                // break;
+                throw new Error("HTTP method 'head' not supported.");
+
+            case "options":
+                // TODO: patch rxios to allow options.
+                // request = rxios.options<any>(this._uri);
+                // break;
+                throw new Error("HTTP method 'head' not supported.");
+
+            case "post":
+                // TODO: patch rxios to have optional post data; it's already set on the axios instance.
+                request = rxios.post<any>(this.uri, data);
+                break;
+
+            case "put":
+                // TODO: patch rxios to have optional put data; it's already set on the axios instance.
+                request = rxios.put<any>(this.uri, data);
+                break;
+
+            case "patch":
+                // TODO: patch rxios to have optional patch data; it's already set on the axios instance.
+                request = rxios.patch<any>(this.uri, data);
+                break;
+
+            default:
+                throw new Error(`Unknown method: ${this.method}`);
+        }
+
+        const responseObserver: Observer<any> = {
+            complete: () => {
+                this.logger.trace("complete", "openedObserver");
+            },
+            error: (error) => {
+                // TODO: handle errors.
+                this.logger.error(error, "error", "openedObserver");
+            },
+            next: (response) => {
+                this.logger.trace(response, "next", "openedObserver");
+
+                // TODO: better null handling.
+                this.pollingSubject!.next(response);
+            },
+        };
+
+        const responseSubscription = request
+            .do((val) => this.logger.trace(val, this.uri, "response", "request"))
+            .subscribe(responseObserver);
     }
 }

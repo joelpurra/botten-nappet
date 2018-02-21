@@ -24,12 +24,13 @@ import {
 
 import PinoLogger from "../../../util/pino-logger";
 import IIRCConnection from "../iirc-connection";
+import IParsedMessage from "../iparsed-message";
 import IrcManager from "../irc-manager";
 
 export default class FollowReminderIrcHandler extends IrcManager {
-    public _reminderMessages: string[];
-    public _reminderIntervalMilliseconds: number;
-    public _reminderIntervalId: (number | NodeJS.Timer | null);
+    private reminderMessages: string[];
+    private reminderIntervalMilliseconds: number;
+    private reminderIntervalId: (number | NodeJS.Timer | null);
 
     constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
@@ -38,11 +39,13 @@ export default class FollowReminderIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this._logger = logger.child("FollowReminderIrcHandler");
-        this._reminderIntervalId = null;
+        this.logger = logger.child("FollowReminderIrcHandler");
+        this.reminderIntervalId = null;
 
-        this._reminderIntervalMilliseconds = 15 * 60 * 1000;
-        this._reminderMessages = [
+        this.reminderIntervalMilliseconds = 15 * 60 * 1000;
+
+        /* tslint:disable:max-line-length */
+        this.reminderMessages = [
             "Remember to follow to catch the next live stream 😀",
             "Enjoying the stream? Hit that follow button! 😀",
             "I know not everyone wants to be a follower, but keep in mind that followers receive super-handy notifications when a live stream starts 😀",
@@ -51,64 +54,66 @@ export default class FollowReminderIrcHandler extends IrcManager {
             // NOTE: per-restart calculation of the random value. Re-calculate per reminder?
             `Did you know followers are up to ${(50 + (Math.random() * 50)).toString().substring(0, 5)}% more likely to not miss the next live stream? 😀`,
         ];
+        /* tslint:enable:max-line-length */
     }
 
     public async start() {
         assert.hasLength(arguments, 0);
-        assert.equal(this._reminderIntervalId, null);
+        assert.equal(this.reminderIntervalId, null);
 
         await super.start();
 
-        this._reminderIntervalId = setInterval(() => this._remind(), this._reminderIntervalMilliseconds);
+        // TODO: use an observable interval?
+        this.reminderIntervalId = setInterval(() => this.remind(), this.reminderIntervalMilliseconds);
     }
 
     public async stop() {
         assert.hasLength(arguments, 0);
-        assert.not.equal(this._reminderIntervalId, null);
+        assert.not.equal(this.reminderIntervalId, null);
 
-        clearInterval(this._reminderIntervalId as NodeJS.Timer);
-        this._reminderIntervalId = null;
+        clearInterval(this.reminderIntervalId as NodeJS.Timer);
+        this.reminderIntervalId = null;
 
         return super.stop();
     }
 
-    public _getReminder() {
-        assert.hasLength(arguments, 0);
-
-        // TODO: get library for random integers.
-        const randomReminderMessageIndex = Math.floor(Math.random() * this._reminderMessages.length);
-
-        const randomReminderMessage = this._reminderMessages[randomReminderMessageIndex];
-
-        return randomReminderMessage;
-    }
-
-    public _remind() {
-        assert.hasLength(arguments, 0);
-
-        this._logger.trace("Sending reminder", "_remind");
-
-        // TODO: use a string templating system.
-        // TODO: configure message.
-        const reminder = this._getReminder();
-
-        const message = `PRIVMSG ${this._connection._channel} :${reminder}`;
-
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this._connection._send(message);
-    }
-
-    public async _dataHandler(data) {
+    protected async dataHandler(data: IParsedMessage): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        throw new Error("Unexpected call to _dataHandler.");
+        throw new Error("Unexpected call to dataHandler.");
     }
 
-    public async _filter(data) {
+    protected async filter(data: IParsedMessage): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         return false;
+    }
+
+    private getReminder() {
+        assert.hasLength(arguments, 0);
+
+        // TODO: get library for random integers.
+        const randomReminderMessageIndex = Math.floor(Math.random() * this.reminderMessages.length);
+
+        const randomReminderMessage = this.reminderMessages[randomReminderMessageIndex];
+
+        return randomReminderMessage;
+    }
+
+    private remind() {
+        assert.hasLength(arguments, 0);
+
+        this.logger.trace("Sending reminder", "remind");
+
+        // TODO: use a string templating system.
+        // TODO: configure message.
+        const reminder = this.getReminder();
+
+        const message = `PRIVMSG ${this.connection.channel} :${reminder}`;
+
+        // TODO: handle errors, re-reconnect, or shut down server?
+        this.connection.send(message);
     }
 }

@@ -25,13 +25,13 @@ import {
 import PinoLogger from "../../util/pino-logger";
 
 export default class CSRFHelper {
-    public _logger: PinoLogger;
+    private logger: PinoLogger;
 
     constructor(logger: PinoLogger) {
         assert.equal(arguments.length, 1);
         assert.equal(typeof logger, "object");
 
-        this._logger = logger.child("CSRFHelper");
+        this.logger = logger.child("CSRFHelper");
     }
 
     public async getRandomCSRF() {

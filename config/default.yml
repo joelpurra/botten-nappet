@@ -1,0 +1,20 @@
+applicationName: "botten-nappet"
+bottenNappetDefaultPollingInterval: 30000
+databaseUri: null
+followingPollingLimit: 5
+loggingFile: null
+loggingLevel: "error"
+twitchAppClientId: null
+twitchAppClientSecret: null
+twitchAppOAuthRedirectUrl: null
+twitchAppScopes:
+    - "channel_feed_read"
+twitchAppTokenRefreshInterval: 2700000
+twitchIrcWebSocketUri: "wss://irc-ws.chat.twitch.tv:443/"
+twitchOAuthAuthorizationUri: "https://api.twitch.tv/kraken/oauth2/authorize"
+twitchOAuthTokenRevocationUri: "https://api.twitch.tv/kraken/oauth2/revoke"
+twitchOAuthTokenUri: "https://api.twitch.tv/kraken/oauth2/token"
+twitchOAuthTokenVerificationUri: "https://api.twitch.tv/kraken"
+twitchPubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
+twitchUserName: null
+twitchUsersDataUri: "https://api.twitch.tv/helix/users"

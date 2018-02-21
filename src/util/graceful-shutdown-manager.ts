@@ -22,143 +22,191 @@ import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
+import Rx, {
+    Subject,
+} from "rxjs";
+import {
+    EventTargetLike,
+} from "rxjs/internal/observable/FromEventObservable";
+
+import {
+    EventEmitter,
+} from "events";
 
 import PinoLogger from "./pino-logger";
 
-type ShutdownEvent = ("beforeExit" | "exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
+type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
 type ShutdownHandler = () => void;
 
 export default class GracefulShutdownManager {
-    private _shutdownPromise: Promise<void>;
-    private _handleEvents: {
-        SIGBREAK: NodeJS.SignalsListener,
-        SIGHUP: NodeJS.SignalsListener,
-        SIGINT: NodeJS.SignalsListener,
-        SIGQUIT: NodeJS.SignalsListener,
-        SIGTERM: NodeJS.SignalsListener,
-        beforeExit: NodeJS.BeforeExitListener,
-        exit: NodeJS.ExitListener,
-        uncaughtException: NodeJS.UncaughtExceptionListener,
-        unhandledRejection: NodeJS.UnhandledRejectionListener,
+    private shutdownObservableInternal: Rx.Observable<void> | null;
+    private shutdownSubject: Subject<void> | null;
+    private shutdownPromise: Promise<void> | null;
+    private subscriptions: {
+        SIGBREAK: Rx.Subscription | null,
+        SIGHUP: Rx.Subscription | null,
+        SIGINT: Rx.Subscription | null,
+        SIGQUIT: Rx.Subscription | null,
+        SIGTERM: Rx.Subscription | null,
+        exit: Rx.Subscription | null,
+        uncaughtException: Rx.Subscription | null,
+        unhandledRejection: Rx.Subscription | null,
     };
-    private _shutdownHandlers: ShutdownHandler[];
-    private _logger: PinoLogger;
+    private logger: PinoLogger;
 
     constructor(logger: PinoLogger) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof logger, "object");
 
-        this._logger = logger.child("GracefulShutdownManager");
+        this.logger = logger.child("GracefulShutdownManager");
 
-        this._shutdownHandlers = [];
+        this.handleSignalEvent = this.handleSignalEvent.bind(this);
+        this.handleExitEvent = this.handleExitEvent.bind(this);
+        this.handleUncaughtExceptionEvent = this.handleUncaughtExceptionEvent.bind(this);
+        this.handleUnhandledRejectionEvent = this.handleUnhandledRejectionEvent.bind(this);
 
-        this._handleEvents = {
-            SIGBREAK: this._handleSignalEvent.bind(this),
-            SIGHUP: this._handleSignalEvent.bind(this),
-            SIGINT: this._handleSignalEvent.bind(this),
-            SIGQUIT: this._handleSignalEvent.bind(this),
-            SIGTERM: this._handleSignalEvent.bind(this),
-            beforeExit: this._handleBeforeExitEvent.bind(this),
-            exit: this._handleExitEvent.bind(this),
-            uncaughtException: this._handleUncaughtExceptionEvent.bind(this),
-            unhandledRejection: this._handleUnhandledRejectionEvent.bind(this),
+        this.subscriptions = {
+            SIGBREAK: null,
+            SIGHUP: null,
+            SIGINT: null,
+            SIGQUIT: null,
+            SIGTERM: null,
+            exit: null,
+            uncaughtException: null,
+            unhandledRejection: null,
         };
 
-        this._shutdownPromise = new Promise((resolve, reject) => {
-            const waitForShutdown = () => {
-                resolve();
-            };
-
-            this.register(waitForShutdown);
-        })
-            .then(() => {
-                this._logger.warn("Detected shutdown.", "_shutdownPromise");
-
-                return undefined;
-            });
+        this.shutdownSubject = null;
+        this.shutdownObservableInternal = null;
+        this.shutdownPromise = null;
     }
 
     public async start() {
         assert.hasLength(arguments, 0);
+        assert.null(this.shutdownSubject);
+        assert.null(this.shutdownObservableInternal);
+        assert.null(this.shutdownPromise);
+        assert.null(this.subscriptions.SIGHUP);
+        assert.null(this.subscriptions.SIGINT);
+        assert.null(this.subscriptions.SIGQUIT);
+        assert.null(this.subscriptions.SIGTERM);
+        assert.null(this.subscriptions.exit);
+        assert.null(this.subscriptions.uncaughtException);
+        assert.null(this.subscriptions.unhandledRejection);
 
-        process.on("SIGBREAK", this._handleEvents.SIGBREAK);
-        process.on("SIGHUP", this._handleEvents.SIGHUP);
-        process.on("SIGINT", this._handleEvents.SIGINT);
-        process.on("SIGQUIT", this._handleEvents.SIGQUIT);
-        process.on("SIGTERM", this._handleEvents.SIGTERM);
-        process.on("beforeExit", this._handleEvents.beforeExit);
-        process.on("exit", this._handleEvents.exit);
-        process.on("uncaughtException", this._handleEvents.uncaughtException);
-        process.on("unhandledRejection", this._handleEvents.unhandledRejection);
+        this.shutdownSubject = new Rx.Subject<void>();
+        this.shutdownObservableInternal = this.shutdownSubject.asObservable();
+
+        this.shutdownPromise = this.shutdownObservableInternal
+            .first()
+            .toPromise()
+            .then(() => {
+                this.logger.warn("Detected shutdown.", "shutdownPromise");
+            });
+
+        // TODO: update rxjs or fix the type definitions for the nodejs event emitter mismatch.
+        const processAsEventTargetLike = ((process as EventEmitter) as EventTargetLike);
+
+        this.subscriptions.SIGBREAK = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGBREAK")
+            .subscribe(this.handleSignalEvent);
+
+        this.subscriptions.SIGHUP = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGHUP")
+            .subscribe(this.handleSignalEvent);
+
+        this.subscriptions.SIGINT = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGINT")
+            .subscribe(this.handleSignalEvent);
+
+        this.subscriptions.SIGQUIT = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGQUIT")
+            .subscribe(this.handleSignalEvent);
+
+        this.subscriptions.SIGTERM = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGTERM")
+            .subscribe(this.handleSignalEvent);
+
+        this.subscriptions.exit = Rx.Observable.fromEvent<number>(processAsEventTargetLike, "exit")
+            .subscribe(this.handleExitEvent);
+
+        this.subscriptions.uncaughtException = Rx.Observable
+            .fromEvent<Error>(processAsEventTargetLike, "uncaughtException")
+            .subscribe(this.handleUncaughtExceptionEvent);
+
+        this.subscriptions.unhandledRejection = Rx.Observable
+            .fromEvent(processAsEventTargetLike, "unhandledRejection", (reason, promise) => [reason, promise])
+            .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
     }
 
     public async stop() {
         assert.hasLength(arguments, 0);
+        assert.not.null(this.shutdownSubject);
+        assert.not.null(this.shutdownObservableInternal);
+        assert.not.null(this.shutdownPromise);
+        assert.not.null(this.subscriptions.SIGBREAK);
+        assert.not.null(this.subscriptions.SIGHUP);
+        assert.not.null(this.subscriptions.SIGINT);
+        assert.not.null(this.subscriptions.SIGQUIT);
+        assert.not.null(this.subscriptions.SIGTERM);
+        assert.not.null(this.subscriptions.exit);
+        assert.not.null(this.subscriptions.uncaughtException);
+        assert.not.null(this.subscriptions.unhandledRejection);
 
-        process.removeListener("SIGBREAK", this._handleEvents.SIGBREAK);
-        process.removeListener("SIGHUP", this._handleEvents.SIGHUP);
-        process.removeListener("SIGINT", this._handleEvents.SIGINT);
-        process.removeListener("SIGQUIT", this._handleEvents.SIGQUIT);
-        process.removeListener("SIGTERM", this._handleEvents.SIGTERM);
-        process.removeListener("beforeExit", this._handleEvents.beforeExit);
-        process.removeListener("exit", this._handleEvents.exit);
-        process.removeListener("uncaughtException", this._handleEvents.uncaughtException);
-        process.removeListener("unhandledRejection", this._handleEvents.unhandledRejection);
-    }
+        this.subscriptions.SIGBREAK!.unsubscribe();
+        this.subscriptions.SIGHUP!.unsubscribe();
+        this.subscriptions.SIGINT!.unsubscribe();
+        this.subscriptions.SIGQUIT!.unsubscribe();
+        this.subscriptions.SIGTERM!.unsubscribe();
+        this.subscriptions.exit!.unsubscribe();
+        this.subscriptions.uncaughtException!.unsubscribe();
+        this.subscriptions.unhandledRejection!.unsubscribe();
 
-    public async register(shutdownHandler: ShutdownHandler) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof shutdownHandler, "function");
-
-        this._shutdownHandlers.push(shutdownHandler);
+        this.shutdownPromise = null;
+        this.shutdownObservableInternal = null;
+        this.shutdownSubject = null;
     }
 
     public async shutdown() {
         assert.hasLength(arguments, 0);
+        assert.not.null(this.shutdownSubject);
 
-        return Bluebird.map(
-            this._shutdownHandlers,
-            (shutdownHandler) => Promise.resolve(shutdownHandler())
-                .then(() => undefined, (error) => {
-                    this._logger.warn(error, `Masking error in shutdownHandler ${shutdownHandler.name}`);
+        // TODO: better null handling.
+        this.shutdownSubject!.next();
+    }
 
-                    return undefined;
-                }),
-        );
+    public get shutdownObservable(): Rx.Observable<void> {
+        assert.hasLength(arguments, 0);
+        assert.not.null(this.shutdownObservableInternal);
+
+        // TODO: better null handling.
+        return this.shutdownObservableInternal!;
     }
 
     public async waitForShutdownSignal() {
         assert.hasLength(arguments, 0);
+        assert.not.null(this.shutdownPromise);
 
-        return this._shutdownPromise;
+        return this.shutdownPromise;
     }
 
-    private async _handleBeforeExitEvent(code: number): Promise<void> {
-        return this._handleEvent("beforeExit", code);
+    private async handleExitEvent(code: number): Promise<void> {
+        return this.handleEvent("exit", code);
     }
 
-    private async _handleExitEvent(code: number): Promise<void> {
-        return this._handleEvent("exit", code);
+    private async handleUncaughtExceptionEvent(error: Error): Promise<void> {
+        return this.handleEvent("uncaughtException", error);
     }
 
-    private async _handleUncaughtExceptionEvent(error: Error): Promise<void> {
-        return this._handleEvent("uncaughtException", error);
+    private async handleUnhandledRejectionEvent(reason: any, promise: Promise<any>): Promise<void> {
+        return this.handleEvent("unhandledRejection", reason, promise);
     }
 
-    private async _handleUnhandledRejectionEvent(reason: any, promise: Promise<any>): Promise<void> {
-        return this._handleEvent("unhandledRejection", reason, promise);
+    private async handleSignalEvent(signal: NodeJS.Signals): Promise<void> {
+        return this.handleEvent(signal, signal);
     }
 
-    private async _handleSignalEvent(signal: NodeJS.Signals): Promise<void> {
-        return this._handleEvent(signal, signal);
-    }
-
-    private async _handleEvent(shutdownEvent: ShutdownEvent, ...args: any[]): Promise<void> {
+    private async handleEvent(shutdownEvent: ShutdownEvent, ...args: any[]): Promise<void> {
         // TODO: test/ensure that the right number of arguments are passed from each event/signal type.
         // assert.hasLength(arguments, 1);
         assert.equal(typeof shutdownEvent, "string");
 
-        this._logger.debug(shutdownEvent, "Received shutdown event", ...args);
+        this.logger.debug(shutdownEvent, "Received shutdown event", ...args);
 
         this.shutdown();
     }

@@ -30,21 +30,22 @@ import qs from "qs";
 import IUser from "../../storage/iuser";
 import UserStorageManager from "../../storage/manager/user-storage-manager";
 import PinoLogger from "../../util/pino-logger";
+import IAugmentedToken from "../authentication/iaugmented-token";
 import IRawToken from "../authentication/iraw-token";
-import IAugmentedToken from "../authentication/iuser-token";
 import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 
 export default class UserTokenHelper {
-    public _appClientSecret: string;
-    public _appClientId: string;
-    public _oauthTokenUri: string;
-    public _appOAuthRedirectUrl: string;
-    public _oauthAuthorizationUri: string;
-    public _requestHelper: RequestHelper;
-    public _userStorageHelper: UserStorageManager;
-    public _csrfHelper: CSRFHelper;
-    public _logger: PinoLogger;
+    private appClientSecret: string;
+    private appClientId: string;
+    private oauthTokenUri: string;
+    private appOAuthRedirectUrl: string;
+    private oauthAuthorizationUri: string;
+    private requestHelper: RequestHelper;
+    private userStorageHelper: UserStorageManager;
+    private csrfHelper: CSRFHelper;
+    private logger: PinoLogger;
+
     constructor(
         logger: PinoLogger,
         csrfHelper: CSRFHelper,
@@ -70,18 +71,160 @@ export default class UserTokenHelper {
         assert.nonEmptyString(appClientId);
         assert.nonEmptyString(appClientSecret);
 
-        this._logger = logger.child("UserTokenHelper");
-        this._csrfHelper = csrfHelper;
-        this._userStorageHelper = userStorageManager;
-        this._requestHelper = requestHelper;
-        this._oauthAuthorizationUri = oauthAuthorizationUri;
-        this._appOAuthRedirectUrl = appOAuthRedirectUrl;
-        this._oauthTokenUri = oauthTokenUri;
-        this._appClientId = appClientId;
-        this._appClientSecret = appClientSecret;
+        this.logger = logger.child("UserTokenHelper");
+        this.csrfHelper = csrfHelper;
+        this.userStorageHelper = userStorageManager;
+        this.requestHelper = requestHelper;
+        this.oauthAuthorizationUri = oauthAuthorizationUri;
+        this.appOAuthRedirectUrl = appOAuthRedirectUrl;
+        this.oauthTokenUri = oauthTokenUri;
+        this.appClientId = appClientId;
+        this.appClientSecret = appClientSecret;
     }
 
-    public async _getUserAuthorizationUrl(randomCSRF: string): Promise<string> {
+    public async getUserTokenFromUserTerminalPrompt(): Promise<IRawToken> {
+        assert.hasLength(arguments, 0);
+
+        // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
+        // const sampleResponse = {
+        //     "access_token": "0123456789abcdefghijABCDEFGHIJ",
+        //     "refresh_token": "eyJfaWQmNzMtNGCJ9%6VFV5LNrZFUj8oU231/3Aj",
+        //     "expires_in": 3600,
+        //     "scope": "viewing_activity_read",
+        // };
+
+        // TODO: replace with an https server.
+        const code = await this.getUserAuthorizationCode();
+
+        assert.nonEmptyString(code);
+
+        const data = {
+            client_id: this.appClientId,
+            client_secret: this.appClientSecret,
+            code,
+            grant_type: "authorization_code",
+            redirect_uri: this.appOAuthRedirectUrl,
+        };
+
+        const serializedData = this.requestHelper.twitchQuerystringSerializer(data);
+
+        // TODO: use an https class.
+        const response = await axios.post(this.oauthTokenUri, serializedData);
+
+        // NOTE: axios response data.
+        // TODO: verify token format.
+        const rawToken: IRawToken = response.data;
+
+        this.logger.trace(rawToken, "getUserTokenFromUserTerminalPrompt");
+
+        return rawToken;
+    }
+
+    public async getUserTokenFromDatabase(username: string): Promise<IAugmentedToken | null> {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(username);
+
+        const user = await this.userStorageHelper.getByUsername(username);
+
+        const isValidUserToken = (
+            user
+            && user.twitchToken !== null
+            && typeof user.twitchToken === "object"
+            && user.twitchToken.token !== null
+            && typeof user.twitchToken.token === "object"
+            && typeof user.twitchToken.token.access_token === "string"
+        );
+
+        let token = null;
+
+        if (isValidUserToken) {
+            token = user.twitchToken;
+        }
+
+        this.logger.trace(token, "getUserTokenFromDatabase");
+
+        return token;
+    }
+
+    public async store(username: string, rawToken: IRawToken): Promise<IAugmentedToken> {
+        assert.hasLength(arguments, 2);
+        assert.nonEmptyString(username);
+        assert.not.null(rawToken);
+        assert.equal(typeof rawToken, "object");
+        assert.equal(typeof rawToken.access_token, "string");
+
+        const userAfterStoring = await this.userStorageHelper.storeToken(username, rawToken);
+
+        const augmentedToken: IAugmentedToken = userAfterStoring.twitchToken;
+
+        this.logger.trace(augmentedToken, "store");
+
+        return augmentedToken;
+    }
+
+    public async forget(username: string): Promise<IUser> {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(username);
+
+        const userAfterStoring = await this.userStorageHelper.storeToken(username, null);
+
+        this.logger.trace(userAfterStoring, "forgetUserToken");
+
+        return userAfterStoring;
+    }
+
+    public async get(username: string): Promise<IAugmentedToken> {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(username);
+
+        let result = null;
+
+        const tokenFromDatabase = await this.getUserTokenFromDatabase(username);
+
+        if (tokenFromDatabase) {
+            result = tokenFromDatabase;
+        } else {
+            const rawToken = await this.getUserTokenFromUserTerminalPrompt();
+            const tokenFromUserTerminalPrompt = await this.store(username, rawToken);
+
+            result = tokenFromUserTerminalPrompt;
+        }
+
+        this.logger.trace(result, "getUserToken");
+
+        return result;
+    }
+
+    public async refresh(tokenToRefresh: IAugmentedToken): Promise<IRawToken> {
+        assert.hasLength(arguments, 1);
+        assert.not.null(tokenToRefresh);
+        assert.equal(typeof tokenToRefresh, "object");
+        assert.not.null(tokenToRefresh.token);
+        assert.equal(typeof tokenToRefresh.token, "object");
+
+        const data = {
+            client_id: this.appClientId,
+            client_secret: this.appClientSecret,
+            grant_type: "refresh_token",
+            // TODO: better null handling.
+            refresh_token: tokenToRefresh.token!.refresh_token,
+        };
+
+        const serializedData = this.requestHelper.twitchQuerystringSerializer(data);
+
+        // TODO: use an https class.
+        const response = await axios.post(this.oauthTokenUri, serializedData);
+
+        // NOTE: axios response data.
+        // TODO: verify reponse data.
+        const rawRefreshedToken: IRawToken = response.data;
+
+        this.logger.trace(rawRefreshedToken, tokenToRefresh, "get");
+
+        return rawRefreshedToken;
+    }
+
+    private async getUserAuthorizationUrl(randomCSRF: string): Promise<string> {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(randomCSRF);
 
@@ -95,22 +238,22 @@ export default class UserTokenHelper {
         const serializedScopes = scopes.join(" ");
 
         const params = {
-            client_id: this._appClientId,
+            client_id: this.appClientId,
             force_verify: "true",
-            redirect_uri: this._appOAuthRedirectUrl,
+            redirect_uri: this.appOAuthRedirectUrl,
             response_type: "code",
             scope: serializedScopes,
             state: randomCSRF,
         };
 
-        const serializedParams = this._requestHelper.twitchQuerystringSerializer(params);
+        const serializedParams = this.requestHelper.twitchQuerystringSerializer(params);
 
-        const url = `${this._oauthAuthorizationUri}?${serializedParams}`;
+        const url = `${this.oauthAuthorizationUri}?${serializedParams}`;
 
         return url;
     }
 
-    public async _parseCodeFromAnswer(answer: string, randomCSRF: string): Promise<string> {
+    private async parseCodeFromAnswer(answer: string, randomCSRF: string): Promise<string> {
         assert.hasLength(arguments, 2);
         assert.nonEmptyString(answer);
         assert.nonEmptyString(randomCSRF);
@@ -144,7 +287,7 @@ export default class UserTokenHelper {
         return code;
     }
 
-    public async _promptForCodeOrUrl(): Promise<string> {
+    private async promptForCodeOrUrl(): Promise<string> {
         assert.hasLength(arguments, 0);
 
         const rl = readline.createInterface({
@@ -167,7 +310,7 @@ export default class UserTokenHelper {
         return answer;
     }
 
-    public async _promptToOpenAuthorizationUrl(userAuthorizationUrl: string): Promise<void> {
+    private async promptToOpenAuthorizationUrl(userAuthorizationUrl: string): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(userAuthorizationUrl);
         assert(userAuthorizationUrl.startsWith("https://"));
@@ -177,161 +320,21 @@ export default class UserTokenHelper {
         /* tslint:enable:no-console */
     }
 
-    public async _getUserAuthorizationCode(): Promise<string> {
+    private async getUserAuthorizationCode(): Promise<string> {
         assert.hasLength(arguments, 0);
 
         // TODO: replace with an https server.
-        const randomCSRF = await this._csrfHelper.getRandomCSRF();
+        const randomCSRF = await this.csrfHelper.getRandomCSRF();
 
-        const userAuthorizationUrl = await this._getUserAuthorizationUrl(randomCSRF);
+        const userAuthorizationUrl = await this.getUserAuthorizationUrl(randomCSRF);
 
-        await this._promptToOpenAuthorizationUrl(userAuthorizationUrl);
+        await this.promptToOpenAuthorizationUrl(userAuthorizationUrl);
 
-        const answer = await this._promptForCodeOrUrl();
-        const code = await this._parseCodeFromAnswer(answer, randomCSRF);
+        const answer = await this.promptForCodeOrUrl();
+        const code = await this.parseCodeFromAnswer(answer, randomCSRF);
 
         assert.nonEmptyString(code);
 
         return code;
-    }
-
-    public async _getUserTokenFromUserTerminalPrompt(): Promise<IRawToken> {
-        assert.hasLength(arguments, 0);
-
-        // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
-        // const sampleResponse = {
-        //     "access_token": "0123456789abcdefghijABCDEFGHIJ",
-        //     "refresh_token": "eyJfaWQmNzMtNGCJ9%6VFV5LNrZFUj8oU231/3Aj",
-        //     "expires_in": 3600,
-        //     "scope": "viewing_activity_read",
-        // };
-
-        // TODO: replace with an https server.
-        const code = await this._getUserAuthorizationCode();
-
-        assert.nonEmptyString(code);
-
-        const data = {
-            client_id: this._appClientId,
-            client_secret: this._appClientSecret,
-            code,
-            grant_type: "authorization_code",
-            redirect_uri: this._appOAuthRedirectUrl,
-        };
-
-        const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
-
-        // TODO: use an https class.
-        const response = await axios.post(this._oauthTokenUri, serializedData);
-
-        // NOTE: axios response data.
-        // TODO: verify token format.
-        const rawToken: IRawToken = response.data;
-
-        this._logger.trace(rawToken, "_getUserTokenFromUserTerminalPrompt");
-
-        return rawToken;
-    }
-
-    public async _getUserTokenFromDatabase(username: string): Promise<IAugmentedToken | null> {
-        assert.hasLength(arguments, 1);
-        assert.nonEmptyString(username);
-
-        const user = await this._userStorageHelper.getByUsername(username);
-
-        const isValidUserToken = (
-            user
-            && user.twitchToken !== null
-            && typeof user.twitchToken === "object"
-            && user.twitchToken.token !== null
-            && typeof user.twitchToken.token === "object"
-            && typeof user.twitchToken.token.access_token === "string"
-        );
-
-        let token = null;
-
-        if (isValidUserToken) {
-            token = user.twitchToken;
-        }
-
-        this._logger.trace(token, "_getUserTokenFromDatabase");
-
-        return token;
-    }
-
-    public async store(username: string, rawToken: IRawToken): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 2);
-        assert.nonEmptyString(username);
-        assert.not.null(rawToken);
-        assert.equal(typeof rawToken, "object");
-        assert.equal(typeof rawToken.access_token, "string");
-
-        const userAfterStoring = await this._userStorageHelper.storeToken(username, rawToken);
-
-        const augmentedToken: IAugmentedToken = userAfterStoring.twitchToken;
-
-        this._logger.trace(augmentedToken, "store");
-
-        return augmentedToken;
-    }
-
-    public async forget(username: string): Promise<IUser> {
-        assert.hasLength(arguments, 1);
-        assert.nonEmptyString(username);
-
-        const userAfterStoring = await this._userStorageHelper.storeToken(username, null);
-
-        this._logger.trace(userAfterStoring, "forgetUserToken");
-
-        return userAfterStoring;
-    }
-
-    public async get(username: string): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 1);
-        assert.nonEmptyString(username);
-
-        let result = null;
-
-        const tokenFromDatabase = await this._getUserTokenFromDatabase(username);
-
-        if (tokenFromDatabase) {
-            result = tokenFromDatabase;
-        } else {
-            const rawToken = await this._getUserTokenFromUserTerminalPrompt();
-            const tokenFromUserTerminalPrompt = await this.store(username, rawToken);
-
-            result = tokenFromUserTerminalPrompt;
-        }
-
-        this._logger.trace(result, "getUserToken");
-
-        return result;
-    }
-
-    public async refresh(tokenToRefresh: IAugmentedToken): Promise<IRawToken> {
-        assert.hasLength(arguments, 1);
-        assert.not.null(tokenToRefresh);
-        assert.equal(typeof tokenToRefresh, "object");
-        assert.equal(typeof tokenToRefresh.token, "object");
-
-        const data = {
-            client_id: this._appClientId,
-            client_secret: this._appClientSecret,
-            grant_type: "refresh_token",
-            refresh_token: tokenToRefresh.token.refresh_token,
-        };
-
-        const serializedData = this._requestHelper.twitchQuerystringSerializer(data);
-
-        // TODO: use an https class.
-        const response = await axios.post(this._oauthTokenUri, serializedData);
-
-        // NOTE: axios response data.
-        // TODO: verify reponse data.
-        const rawRefreshedToken: IRawToken = response.data;
-
-        this._logger.trace(rawRefreshedToken, tokenToRefresh, "get");
-
-        return rawRefreshedToken;
     }
 }
