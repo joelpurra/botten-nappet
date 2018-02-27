@@ -18,23 +18,30 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// NOTE: this is a hack, modifying the global Rx.Observable.prototype.
-import "../../lib/rxjs-extensions/async-filter";
+import fs from "fs";
 
-import main from "./main";
+import pino from "pino";
 
-const run = async (): Promise<void> => {
-    try {
-        await main();
+import Config from "../config/config";
+import PinoLogger from "../util/pino-logger";
 
-        process.exitCode = 0;
-    } catch (error) {
-        /* tslint:disable:no-console */
-        console.error("Error.", error);
-        /* tslint:enable:no-console */
+export default async function createRootLogger(config: Config): Promise<PinoLogger> {
+    const logFileStream = fs.createWriteStream(config.loggingFile);
+    const rootPinoLogger = pino({
+        extreme: true,
+        level: config.loggingLevel,
+        name: config.applicationName,
+        onTerminated: (
+            /* tslint:disable:no-unused-variable */
+            // eventName,
+            // error,
+            /* tslint:enable:no-unused-variable */
+        ) => {
+            // NOTE: override onTerminated to prevent pino from calling process.exit().
+        },
+    }, logFileStream);
 
-        process.exitCode = 1;
-    }
-};
+    const logger = new PinoLogger(rootPinoLogger);
 
-export default run;
+    return logger;
+}
