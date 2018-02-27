@@ -18,6 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import run from "./src/shared/src/main/run";
+import main from "./main";
 
-run();
+const run = async (): Promise<void> => {
+    try {
+        main();
+
+        process.exitCode = 0;
+    } catch (error) {
+        /* tslint:disable:no-console */
+        console.error("Error.", error);
+        /* tslint:enable:no-console */
+
+        process.exitCode = 1;
+    }
+};
+
+export default run;

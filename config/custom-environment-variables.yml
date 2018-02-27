@@ -1,8 +1,14 @@
-databaseUri: BOTTEN_NAPPET_DATABASE_URI
-loggingFile: BOTTEN_NAPPET_LOG_FILE
-loggingLevel: BOTTEN_NAPPET_LOGGING_LEVEL
-twitchAppClientId: TWITCH_APP_CLIENT_ID
-twitchAppClientSecret: TWITCH_APP_CLIENT_SECRET
-twitchAppOAuthRedirectUrl: TWITCH_APP_OAUTH_REDIRECT_URL
-twitchUserName: TWITCH_USER_NAME
-zmqAddress: BOTTEN_NAPPET_ZMQ_ADDRESS
+backend:
+  databaseUri: BOTTEN_NAPPET_BACKEND_DATABASE_URI
+  twitch:
+    appClientId: TWITCH_APP_CLIENT_ID
+    appClientSecret: TWITCH_APP_CLIENT_SECRET
+    appOAuthRedirectUrl: TWITCH_APP_OAUTH_REDIRECT_URL
+    userName: TWITCH_USER_NAME
+frontend:
+    port: PORT
+shared:
+  logging:
+    file: BOTTEN_NAPPET_SHARED_LOG_FILE
+    level: BOTTEN_NAPPET_SHARED_LOGGING_LEVEL
+  zmqAddress: BOTTEN_NAPPET_SHARED_ZMQ_ADDRESS

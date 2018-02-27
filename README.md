@@ -19,8 +19,8 @@ export TWITCH_APP_CLIENT_ID='configure me'
 export TWITCH_APP_CLIENT_SECRET='configure me'
 export TWITCH_APP_OAUTH_REDIRECT_URL='configure me'
 export TWITCH_USER_NAME='configure me'
-export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
-export BOTTEN_NAPPET_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory"
+export BOTTEN_NAPPET_SHARED_LOG_FILE="${TMPDIR}.botten-nappet.log"
+export BOTTEN_NAPPET_BACKEND_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory"
 ```
 
 
@@ -58,11 +58,11 @@ npm run --silent test
 npm run --silent watch
 
 # Modify the ZeroMQ port if running multiple instances.
-#export BOTTEN_NAPPET_ZMQ_ADDRESS="tcp://localhost:61611"
+#export BOTTEN_NAPPET_SHARED_ZMQ_ADDRESS="tcp://localhost:61611"
 
 # Set logging parameters.
-export BOTTEN_NAPPET_LOGGING_LEVEL='trace'
-export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
+export BOTTEN_NAPPET_SHARED_LOGGING_LEVEL='trace'
+export BOTTEN_NAPPET_SHARED_LOG_FILE="${TMPDIR}.botten-nappet.log"
 
 # Start debugger. Connect to it using Google Chrome, see chrome://inspect/
 # https://medium.com/@paul_irish/debugging-node-js-nightlies-with-chrome-devtools-7c4a1b95ae27
@@ -71,7 +71,7 @@ export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"
 npm run --silent debug
 
 # New terminal window: watch log file and pretty print.
-tail -f "$BOTTEN_NAPPET_LOG_FILE" | ./node_modules/.bin/pino
+tail -f "$BOTTEN_NAPPET_SHARED_LOG_FILE" | ./node_modules/.bin/pino
 ```
 
 

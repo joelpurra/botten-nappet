@@ -18,6 +18,26 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import run from "./src/shared/src/main/run";
+import {
+    assert,
+} from "check-types";
 
-run();
+import PinoLogger from "../../../shared/src/util/pino-logger";
+
+import ConnectionManager from "../connection/connection-manager";
+import IEventSubscriptionConnection from "./ievent-subscription-connection";
+
+export default abstract class EventSubscriptionManager<T> extends ConnectionManager<T> {
+    constructor(logger: PinoLogger, connection: IEventSubscriptionConnection<T>) {
+        super(logger, connection);
+
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof connection, "object");
+
+        this.logger = logger.child("EventSubscriptionManager");
+    }
+
+    protected abstract async dataHandler(data: T): Promise<void>;
+    protected abstract async filter(data: T): Promise<boolean>;
+}

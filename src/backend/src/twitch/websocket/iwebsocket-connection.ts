@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import run from "./src/shared/src/main/run";
+import IReceivingConnection from "../../../../shared/src/connection/ireceiving-connection";
+import ISendingConnection from "../../../../shared/src/connection/isending-connection";
 
-run();
+export default interface IWebSocketConnection<T, V> extends IReceivingConnection<T>, ISendingConnection<V> {
+}

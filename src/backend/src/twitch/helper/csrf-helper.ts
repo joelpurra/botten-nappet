@@ -18,6 +18,26 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import run from "./src/shared/src/main/run";
+import {
+    assert,
+} from "check-types";
 
-run();
+import PinoLogger from "../../../../shared/src/util/pino-logger";
+
+export default class CSRFHelper {
+    private logger: PinoLogger;
+
+    constructor(logger: PinoLogger) {
+        assert.equal(arguments.length, 1);
+        assert.equal(typeof logger, "object");
+
+        this.logger = logger.child("CSRFHelper");
+    }
+
+    public async getRandomCSRF() {
+        assert.equal(arguments.length, 0);
+
+        // TODO: use a random string library.
+        return Math.random().toString(10);
+    }
+}

@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import run from "./src/shared/src/main/run";
-
-run();
+export default interface ILoggingConfig {
+    loggingFile: string;
+    loggingLevel: string;
+    applicationName: string;
+}
