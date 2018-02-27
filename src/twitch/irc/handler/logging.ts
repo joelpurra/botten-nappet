@@ -22,13 +22,16 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IIRCConnection from "../iirc-connection";
-import IrcManager from "../irc-manager";
 
-export default class LoggingIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class LoggingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);

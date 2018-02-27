@@ -124,20 +124,41 @@ export default async function perUserHandlersMain(
         twitchOutgoingIrcCommandEventEmitter,
     );
 
-    const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(rootLogger, twitchIrcConnection);
-    const twitchIrcPingHandler = new TwitchIrcPingHandler(rootLogger, twitchIrcConnection);
+    const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+    );
+    const twitchIrcPingHandler = new TwitchIrcPingHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
+    );
     const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(
         rootLogger,
-        twitchIrcConnection,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
         config.twitchUserName,
     );
-    const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(rootLogger, twitchIrcConnection);
-    const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(rootLogger, twitchIrcConnection);
-    const twitchIrcFollowReminderHandler = new TwitchIrcFollowReminderHandler(rootLogger, twitchIrcConnection);
+    const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
+    );
+    const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
+    );
+    const twitchIrcFollowReminderHandler = new TwitchIrcFollowReminderHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        twitchOutgoingIrcCommandEventEmitter,
+        config.twitchChannelName,
+    );
     const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(
         rootLogger,
         twitchPollingFollowingConnection,
-        twitchIrcConnection,
+        twitchOutgoingIrcCommandEventEmitter,
         config.twitchChannelName,
     );
 

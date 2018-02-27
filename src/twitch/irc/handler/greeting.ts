@@ -22,25 +22,35 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventEmitter from "../../../event/ievent-emitter";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IIRCConnection from "../iirc-connection";
-import IrcManager from "../irc-manager";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
-export default class GreetingIrcHandler extends IrcManager {
+export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private greetings: RegExp[];
     private username: string;
 
-    constructor(logger: PinoLogger, connection: IIRCConnection, username: string) {
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        username: string,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 3);
+        assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
         assert.equal(typeof username, "string");
         assert.greater(username.length, 0);
 
         this.logger = logger.child("GreetingIrcHandler");
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.username = username;
 
         this.greetings = [
@@ -65,18 +75,26 @@ export default class GreetingIrcHandler extends IrcManager {
 
         this.logger.trace("Responding to greeting.", data.username, data.message, "dataHandler");
 
-        // TODO: use a string templating system.
-        // TODO: configure message.
-        let message = null;
+        const userIsASubscriber = data.tags!.subscriber === "1";
 
-        if (data.tags!.subscriber === "1") {
-            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, loyal rubber ducky, how are you?`;
+        // TODO: use a string templating system.
+        // TODO: configure response.
+        let response = null;
+
+        if (userIsASubscriber) {
+            response = `Hiya @${data.username}, loyal rubber ducky, how are you?`;
         } else {
-            message = `PRIVMSG ${data.channel} :Hiya @${data.username}, how are you?`;
+            response = `Hiya @${data.username}, how are you?`;
         }
 
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send(message);
+        const command: IOutgoingIrcCommand = {
+            channel: data.channel,
+            command: "PRIVMSG",
+            message: response,
+            tags: {},
+        };
+
+        this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
     protected async filter(data: IIncomingIrcCommand): Promise<boolean> {

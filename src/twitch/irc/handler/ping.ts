@@ -22,20 +22,30 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventEmitter from "../../../event/ievent-emitter";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IIRCConnection from "../iirc-connection";
-import IrcManager from "../irc-manager";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
-export default class PingIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class PingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child("PingIrcHandler");
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
@@ -44,8 +54,14 @@ export default class PingIrcHandler extends IrcManager {
 
         this.logger.trace("Responding to PING.", "dataHandler");
 
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send("PONG :" + data.message);
+        const command: IOutgoingIrcCommand = {
+            channel: null,
+            command: "PONG",
+            message: data.message,
+            tags: {},
+        };
+
+        this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
     protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
