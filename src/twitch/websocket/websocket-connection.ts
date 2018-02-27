@@ -35,11 +35,9 @@ import {
     NextObserver,
 } from "rxjs/internal/observer";
 
-import http from "http";
 import WebSocket from "ws";
 
 import PinoLogger from "../../util/pino-logger";
-import IWebSocketError from "../iweb-socket-error";
 import IWebSocketCommand from "./iwebsocket-command";
 import IWebSocketConnection from "./iwebsocket-connection";
 
@@ -156,8 +154,8 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
     public async reconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
 
-        return this.disconnect()
-            .then(() => this.connect());
+        await this.disconnect();
+        await this.connect();
     }
 
     public async send(data: V): Promise<void> {

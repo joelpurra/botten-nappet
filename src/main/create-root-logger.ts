@@ -18,22 +18,30 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    Observable,
-} from "rxjs/internal/Observable";
+import fs from "fs";
 
-export default interface IConnection<T, V> {
-    // TODO: separate interfaces per method?
-    connect: () => Promise<void>;
+import pino from "pino";
 
-    // TODO: separate interfaces per method?
-    disconnect: () => Promise<void>;
+import Config from "../config/config";
+import PinoLogger from "../util/pino-logger";
 
-    // TODO: separate interfaces per method?
-    reconnect: () => Promise<void>;
+export default async function createRootLogger(config: Config): Promise<PinoLogger> {
+    const logFileStream = fs.createWriteStream(config.loggingFile);
+    const rootPinoLogger = pino({
+        extreme: true,
+        level: config.loggingLevel,
+        name: config.applicationName,
+        onTerminated: (
+            /* tslint:disable:no-unused-variable */
+            // eventName,
+            // error,
+            /* tslint:enable:no-unused-variable */
+        ) => {
+            // NOTE: override onTerminated to prevent pino from calling process.exit().
+        },
+    }, logFileStream);
 
-    // TODO: separate interfaces per method?
-    send: (data: V) => Promise<void>;
+    const logger = new PinoLogger(rootPinoLogger);
 
-    readonly dataObservable: Observable<T>;
+    return logger;
 }

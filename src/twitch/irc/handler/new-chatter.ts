@@ -22,43 +22,58 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventEmitter from "../../../event/ievent-emitter";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
-import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
-import IrcManager from "../irc-manager";
+import IIncomingIrcCommand from "../command/iincoming-irc-command";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
-export default class NewChatterIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class NewChatterIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child("NewChatterIrcHandler");
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
     }
 
-    protected async dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         const tags = data.tags!;
         const username = tags.login;
-        const channel = data.channel;
 
         this.logger.trace("Responding to new chatter.", username, data.message, "dataHandler");
 
         // TODO: use a string templating system.
-        // TODO: configure message.
+        // TODO: configure response.
         /* tslint:disable:max-line-length */
-        const message = `PRIVMSG ${channel} :Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
+        const response = `Hiya @${username}, welcome! Have a question? Go ahead and ask, I'll answer as soon as I see it. I'd be happy if you hang out with us, and don't forget to follow 😀`;
         /* tslint:enable:max-line-length */
 
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send(message);
+        const command: IOutgoingIrcCommand = {
+            channel: data.channel,
+            command: "PRIVMSG",
+            message: response,
+            tags: {},
+        };
+
+        this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

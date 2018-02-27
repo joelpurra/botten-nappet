@@ -28,7 +28,7 @@ import IHttpHeaders from "../polling/ihttp-header";
 import PollingConnection from "../polling/polling-connection";
 import IRawToken from "./iraw-token";
 
-export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken, void> {
+export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     private scopes: string[];
     private applicationClientSecret: string;
     private applicationClientId: string;

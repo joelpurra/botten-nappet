@@ -1,14 +1,16 @@
-applicationName: "botten-nappet"
+applicationName: botten-nappet
 bottenNappetDefaultPollingInterval: 30000
 databaseUri: null
 followingPollingLimit: 5
 loggingFile: null
-loggingLevel: "error"
+loggingLevel: error
+topicTwitchIncomingIrcCommand: twitch-incoming-irc-command
+topicTwitchOutgoingIrcCommand: twitch-outgoing-irc-command
 twitchAppClientId: null
 twitchAppClientSecret: null
 twitchAppOAuthRedirectUrl: null
 twitchAppScopes:
-    - "channel_feed_read"
+    - channel_feed_read
 twitchAppTokenRefreshInterval: 2700000
 twitchIrcWebSocketUri: "wss://irc-ws.chat.twitch.tv:443/"
 twitchOAuthAuthorizationUri: "https://api.twitch.tv/kraken/oauth2/authorize"
@@ -18,3 +20,4 @@ twitchOAuthTokenVerificationUri: "https://api.twitch.tv/kraken"
 twitchPubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
 twitchUserName: null
 twitchUsersDataUri: "https://api.twitch.tv/helix/users"
+zmqAddress: "tcp://127.0.0.1:54859"

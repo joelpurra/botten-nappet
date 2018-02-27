@@ -22,24 +22,24 @@ import {
     assert,
 } from "check-types";
 
+import IEventEmitter from "../../../event/ievent-emitter";
 import PinoLogger from "../../../util/pino-logger";
-import IConnection from "../../iconnection";
-import IIRCConnection from "../../irc/iirc-connection";
+import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
 type TwitchApiV5ChannelFollower = any;
 type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
 
-export default class FollowingPollingHandler extends PollingManager<any, void> {
+export default class FollowingPollingHandler extends PollingManager<any> {
     private lastFollowingMessageTimestamp: number;
     private ircChannel: string;
-    private ircConnection: IIRCConnection;
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<any, void>,
-        ircConnection: IIRCConnection,
+        connection: IPollingConnection<any>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
         ircChannel: string,
     ) {
         super(logger, connection);
@@ -47,12 +47,12 @@ export default class FollowingPollingHandler extends PollingManager<any, void> {
         assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof ircConnection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
         assert.equal(typeof ircChannel, "string");
         assert(ircChannel.startsWith("#"));
         assert.greater(ircChannel.length, 1);
 
-        this.ircConnection = ircConnection;
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.ircChannel = ircChannel;
 
         this.logger = logger.child("FollowingPollingHandler");
@@ -71,12 +71,19 @@ export default class FollowingPollingHandler extends PollingManager<any, void> {
             this.logger.trace("Responding to follower.", follow.user.name, "dataHandler");
 
             // TODO: use a string templating system.
-            // TODO: configure message.
+            // TODO: configure response.
             /* tslint:disable:max-line-length */
-            const message = `PRIVMSG ${this.ircChannel} :Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
+            const response = `Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
             /* tslint:enable:max-line-length */
 
-            this.ircConnection.send(message);
+            const command: IOutgoingIrcCommand = {
+                channel: this.ircChannel,
+                command: "PRIVMSG",
+                message: response,
+                tags: {},
+            };
+
+            this.outgoingIrcCommandEventEmitter.emit(command);
         });
     }
 

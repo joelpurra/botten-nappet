@@ -52,7 +52,8 @@
     "pino": "^4.10.3",
     "qs": "^6.5.1",
     "rxjs": "^6.0.0-alpha.3",
-    "ws": "^4.0.0"
+    "ws": "^4.0.0",
+    "zeromq-ng": "^5.0.0-beta.9"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.20",

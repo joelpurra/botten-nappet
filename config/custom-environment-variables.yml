@@ -5,3 +5,4 @@ twitchAppClientId: TWITCH_APP_CLIENT_ID
 twitchAppClientSecret: TWITCH_APP_CLIENT_SECRET
 twitchAppOAuthRedirectUrl: TWITCH_APP_OAUTH_REDIRECT_URL
 twitchUserName: TWITCH_USER_NAME
+zmqAddress: BOTTEN_NAPPET_ZMQ_ADDRESS

@@ -43,10 +43,13 @@ export default class Config {
         assert.nonEmptyString(this.loggingFile);
         assert.nonEmptyString(this.databaseUri);
         assert.match(this.databaseUri, /^nedb:\/\//);
+        assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
+        assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.twitchAppClientId);
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
         assert.nonEmptyString(this.twitchChannelName);
+        assert.nonEmptyString(this.zmqAddress);
     }
 
     public get loggingLevel(): string {
@@ -70,6 +73,22 @@ export default class Config {
 
         assert.nonEmptyString(value);
         assert(value.startsWith, "nedb://");
+
+        return value;
+    }
+
+    public get topicTwitchIncomingIrcCommand(): string {
+        const value = this.config.get<string>("topicTwitchIncomingIrcCommand");
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchOutgoingIrcCommand(): string {
+        const value = this.config.get<string>("topicTwitchOutgoingIrcCommand");
+
+        assert.nonEmptyString(value);
 
         return value;
     }
@@ -212,6 +231,15 @@ export default class Config {
         const value = this.config.get<string[]>("twitchAppScopes");
 
         assert.nonEmptyArray(value);
+
+        return value;
+    }
+
+    public get zmqAddress(): string {
+        const value = this.config.get<string>("zmqAddress");
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith("tcp://"));
 
         return value;
     }

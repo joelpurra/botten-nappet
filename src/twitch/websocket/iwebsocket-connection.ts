@@ -18,11 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    Observable,
-} from "rxjs/internal/Observable";
+import IReceivingConnection from "../../connection/ireceiving-connection";
+import ISendingConnection from "../../connection/isending-connection";
 
-import IConnection from "../iconnection";
-
-export default interface IWebSocketConnection<T, V> extends IConnection<T, V> {
+export default interface IWebSocketConnection<T, V> extends IReceivingConnection<T>, ISendingConnection<V> {
 }

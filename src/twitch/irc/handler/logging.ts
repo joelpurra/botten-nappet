@@ -22,13 +22,16 @@ import {
     assert,
 } from "check-types";
 
+import EventSubscriptionManager from "../../../event/event-subscription-manager";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
-import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
-import IrcManager from "../irc-manager";
+import IIncomingIrcCommand from "../command/iincoming-irc-command";
 
-export default class LoggingIrcHandler extends IrcManager {
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+export default class LoggingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);
@@ -38,14 +41,14 @@ export default class LoggingIrcHandler extends IrcManager {
         this.logger = logger.child("LoggingIrcHandler");
     }
 
-    protected async dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         this.logger.trace(data, "dataHandler");
     }
 
-    protected async filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

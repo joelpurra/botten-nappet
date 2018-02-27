@@ -22,12 +22,12 @@ import {
     assert,
 } from "check-types";
 
+import ConnectionManager from "../../connection/connection-manager";
+import IReceivingConnection from "../../connection/ireceiving-connection";
 import PinoLogger from "../../util/pino-logger";
-import ConnectionManager from "../connection-manager";
-import IConnection from "../iconnection";
 
-export default abstract class PollingManager<T, V> extends ConnectionManager<T, V> {
-    constructor(logger: PinoLogger, connection: IConnection<T, V>) {
+export default abstract class PollingManager<T> extends ConnectionManager<T> {
+    constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);

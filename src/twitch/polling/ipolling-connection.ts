@@ -18,7 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IConnection from "../iconnection";
+import IReceivingConnection from "../../connection/ireceiving-connection";
+import ISendingConnection from "../../connection/isending-connection";
 
-export default interface IPollingConnection<T, V> extends IConnection<T, V> {
+export default interface IPollingConnection<T> extends IReceivingConnection<T>, ISendingConnection<void> {
 }

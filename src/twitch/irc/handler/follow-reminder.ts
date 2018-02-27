@@ -22,24 +22,39 @@ import {
     assert,
 } from "check-types";
 
+import ConnectionManager from "../../../connection/connection-manager";
+import IEventEmitter from "../../../event/ievent-emitter";
+import IEventSubscriptionConnection from "../../../event/ievent-subscription-connection";
 import PinoLogger from "../../../util/pino-logger";
-import IIRCConnection from "../iirc-connection";
-import IParsedMessage from "../iparsed-message";
-import IrcManager from "../irc-manager";
+import IIncomingIrcCommand from "../command/iincoming-irc-command";
+import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
-export default class FollowReminderIrcHandler extends IrcManager {
+export default class FollowReminderIrcHandler extends ConnectionManager<IIncomingIrcCommand> {
+    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private reminderMessages: string[];
     private reminderIntervalMilliseconds: number;
     private reminderIntervalId: (number | NodeJS.Timer | null);
+    private channelName: string;
 
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+    constructor(
+        logger: PinoLogger,
+        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        channelName: string,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
+        assert.equal(typeof channelName, "string");
+        assert.greater(channelName.length, 0);
 
         this.logger = logger.child("FollowReminderIrcHandler");
+        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
+        this.channelName = channelName;
+
         this.reminderIntervalId = null;
 
         this.reminderIntervalMilliseconds = 15 * 60 * 1000;
@@ -77,14 +92,14 @@ export default class FollowReminderIrcHandler extends IrcManager {
         return super.stop();
     }
 
-    protected async dataHandler(data: IParsedMessage): Promise<void> {
+    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
         throw new Error("Unexpected call to dataHandler.");
     }
 
-    protected async filter(data: IParsedMessage): Promise<boolean> {
+    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -108,12 +123,16 @@ export default class FollowReminderIrcHandler extends IrcManager {
         this.logger.trace("Sending reminder", "remind");
 
         // TODO: use a string templating system.
-        // TODO: configure message.
-        const reminder = this.getReminder();
+        // TODO: configure response.
+        const response = this.getReminder();
 
-        const message = `PRIVMSG ${this.connection.channel} :${reminder}`;
+        const command: IOutgoingIrcCommand = {
+            channel: this.channelName,
+            command: "PRIVMSG",
+            message: response,
+            tags: {},
+        };
 
-        // TODO: handle errors, re-reconnect, or shut down server?
-        this.connection.send(message);
+        this.outgoingIrcCommandEventEmitter.emit(command);
     }
 }

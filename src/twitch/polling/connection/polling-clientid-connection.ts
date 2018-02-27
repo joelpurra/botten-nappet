@@ -27,7 +27,7 @@ import IHttpData from "../ihttp-data";
 import IHttpHeaders from "../ihttp-header";
 import PollingConnection from "../polling-connection";
 
-export default class PollingClientIdConnection extends PollingConnection<any, void> {
+export default class PollingClientIdConnection extends PollingConnection<any> {
     private applicationClientId: string;
 
     constructor(
@@ -61,7 +61,7 @@ export default class PollingClientIdConnection extends PollingConnection<any, vo
         this.applicationClientId = applicationClientId;
     }
 
-    private async getHeaders(): Promise<IHttpHeaders> {
+    protected async getHeaders(): Promise<IHttpHeaders> {
         assert.hasLength(arguments, 0);
 
         const headers = {
@@ -72,7 +72,7 @@ export default class PollingClientIdConnection extends PollingConnection<any, vo
         return headers;
     }
 
-    private async getData(): Promise<IHttpData> {
+    protected async getData(): Promise<IHttpData> {
         assert.hasLength(arguments, 0);
 
         const data = {};

@@ -19,7 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import IAugmentedToken from "./iaugmented-token";
-import IRawToken from "./iraw-token";
 
 export type AugmentedTokenProviderType = () => Promise<IAugmentedToken>;
 export type UserAccessTokenProviderType = () => Promise<string>;

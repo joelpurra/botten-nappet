@@ -18,29 +18,14 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
-import Rx,
-{
-    ConnectableObservable,
-    Observer,
-    Subscription,
-} from "rxjs";
-import {
-    WebSocketSubject,
-} from "rxjs/internal/observable/dom/WebSocketSubject";
-import {
-    NextObserver,
-} from "rxjs/internal/observer";
-
-import http from "http";
-import WebSocket from "ws";
 
 import PinoLogger from "../../util/pino-logger";
-import { UserAccessTokenProviderType } from "../authentication/provider-types";
-import IWebSocketError from "../iweb-socket-error";
+import {
+    UserAccessTokenProviderType,
+} from "../authentication/provider-types";
 import IWebSocketCommand from "../websocket/iwebsocket-command";
 import WebSocketConnection from "../websocket/websocket-connection";
 import IPubSubConnection from "./ipubsub-connection";

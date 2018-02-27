@@ -18,38 +18,23 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// NOTE: parts of the _parseMessage function comes from official Twitch example code; see license note.
+// NOTE: parts of the parseMessage function comes from official Twitch example code; see license note.
 // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
-import Rx,
-{
-    ConnectableObservable,
-    Observer,
-    Subscription,
-} from "rxjs";
-import {
-    WebSocketSubject,
-} from "rxjs/internal/observable/dom/WebSocketSubject";
-import {
-    NextObserver,
-} from "rxjs/internal/observer";
-
-import http from "http";
-import WebSocket from "ws";
 
 import PinoLogger from "../../util/pino-logger";
-import { UserAccessTokenProviderType } from "../authentication/provider-types";
-import IWebSocketError from "../iweb-socket-error";
+import {
+    UserAccessTokenProviderType,
+} from "../authentication/provider-types";
 import IWebSocketCommand from "../websocket/iwebsocket-command";
 import WebSocketConnection from "../websocket/websocket-connection";
+import IIncomingIrcCommand from "./command/iincoming-irc-command";
 import IIRCConnection from "./iirc-connection";
-import IParsedMessage from "./iparsed-message";
 
-export default class IrcConnection extends WebSocketConnection<IParsedMessage, string> implements IIRCConnection {
+export default class IrcConnection extends WebSocketConnection<IIncomingIrcCommand, string> implements IIRCConnection {
     private userAccessTokenProvider: UserAccessTokenProviderType;
     private username: string;
     private channelName: string;
@@ -86,7 +71,7 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
         return this.channelName;
     }
 
-    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IParsedMessage>>> {
+    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IIncomingIrcCommand>>> {
         const userAccessToken = await this.userAccessTokenProvider();
 
         // TODO: make capabilities configurable/subclassable?
@@ -98,7 +83,7 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
 
         const capabilitiesString = capabilities.join(" ");
 
-        const setupConnectionCommands: Array<IWebSocketCommand<IParsedMessage>> = [
+        const setupConnectionCommands: Array<IWebSocketCommand<IIncomingIrcCommand>> = [
             {
                 commands: [
                     `CAP REQ :${capabilitiesString}`,
@@ -128,8 +113,8 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
         return setupConnectionCommands;
     }
 
-    protected async parseMessage(rawMessage: string): Promise<IParsedMessage> {
-        // NOTE: parts of the _parseMessage function comes from official Twitch example code; see license note.
+    protected async parseMessage(rawMessage: string): Promise<IIncomingIrcCommand> {
+        // NOTE: parts of the parseMessage function comes from official Twitch example code; see license note.
         // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
         /* tslint:disable:max-line-length */
@@ -153,7 +138,7 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
         // :Kappa Keepo Kappa
         /* tslint:enable:max-line-length */
 
-        const parsedMessage: IParsedMessage = {
+        const incomingMessage: IIncomingIrcCommand = {
             channel: null,
             command: null,
             message: null,
@@ -170,13 +155,13 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
             const channelIndex = rawMessage.indexOf(" ", commandIndex + 1);
             const messageIndex = rawMessage.indexOf(":", channelIndex + 1);
 
-            parsedMessage.originalTags = rawMessage.slice(1, tagIndex);
-            parsedMessage.username = rawMessage.slice(tagIndex + 2, rawMessage.indexOf("!"));
-            parsedMessage.command = rawMessage.slice(userIndex + 1, commandIndex);
-            parsedMessage.channel = rawMessage.slice(commandIndex + 1, channelIndex);
-            parsedMessage.message = rawMessage.slice(messageIndex + 1);
+            incomingMessage.originalTags = rawMessage.slice(1, tagIndex);
+            incomingMessage.username = rawMessage.slice(tagIndex + 2, rawMessage.indexOf("!"));
+            incomingMessage.command = rawMessage.slice(userIndex + 1, commandIndex);
+            incomingMessage.channel = rawMessage.slice(commandIndex + 1, channelIndex);
+            incomingMessage.message = rawMessage.slice(messageIndex + 1);
 
-            parsedMessage.tags = parsedMessage.originalTags
+            incomingMessage.tags = incomingMessage.originalTags
                 .split(";")
                 .reduce(
                     (obj: any, tag) => {
@@ -196,10 +181,10 @@ export default class IrcConnection extends WebSocketConnection<IParsedMessage, s
                     {},
             );
         } else if (rawMessage.startsWith("PING")) {
-            parsedMessage.command = "PING";
-            parsedMessage.message = rawMessage.split(":")[1];
+            incomingMessage.command = "PING";
+            incomingMessage.message = rawMessage.split(":")[1];
         }
 
-        return parsedMessage;
+        return incomingMessage;
     }
 }

@@ -57,6 +57,9 @@ npm run --silent build
 npm run --silent test
 npm run --silent watch
 
+# Modify the ZeroMQ port if running multiple instances.
+#export BOTTEN_NAPPET_ZMQ_ADDRESS="tcp://localhost:61611"
+
 # Set logging parameters.
 export BOTTEN_NAPPET_LOGGING_LEVEL='trace'
 export BOTTEN_NAPPET_LOG_FILE="${TMPDIR}.botten-nappet.log"

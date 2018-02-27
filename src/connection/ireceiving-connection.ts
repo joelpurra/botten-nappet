@@ -17,14 +17,11 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IParsedMessage {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    username: (string | null);
+
+import Rx from "rxjs";
+
+import IConnectable from "./iconnectable";
+
+export default interface IReceivingConnection<T> extends IConnectable {
+    readonly dataObservable: Rx.Observable<T>;
 }

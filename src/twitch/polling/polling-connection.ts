@@ -37,7 +37,6 @@ import {
 } from "../../../lib/rxios";
 
 import PinoLogger from "../../util/pino-logger";
-import IConnection from "../iconnection";
 import IHttpData from "./ihttp-data";
 import IHttpHeaders from "./ihttp-header";
 import IPollingConnection from "./ipolling-connection";
@@ -49,7 +48,7 @@ interface IDataHandlerObject {
     filter: DataFilter;
 }
 
-export default abstract class PollingConnection<T, V> implements IPollingConnection<T, V> {
+export default abstract class PollingConnection<T> implements IPollingConnection<T> {
     protected logger: PinoLogger;
     private intervalSubscription: Rx.Subscription | null;
     private pollingSubject: Subject<T> | null;
@@ -127,8 +126,8 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
     public async reconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
 
-        return this.disconnect()
-            .then(() => this.connect());
+        await this.disconnect();
+        await this.connect();
     }
 
     public async connect(): Promise<void> {
@@ -156,7 +155,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
 
         this.sharedpollingObservable = this.pollingSubject.share()
             .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
-            .concatMap((message) => Rx.Observable.from(this._parseMessage(message)));
+            .concatMap((message) => Rx.Observable.from(this.parseMessage(message)));
 
         this.pollingSubcription = this.sharedpollingObservable
             .subscribe(openedObserver);
@@ -188,15 +187,20 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
 
     public async disconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
+        assert.not.null(this.intervalSubscription);
         assert.not.null(this.pollingSubject);
         assert.not.null(this.pollingSubcription);
 
+        if (!(this.intervalSubscription instanceof Rx.Subscription)) {
+            throw new TypeError("this.intervalSubscription must be Rx.Subscription");
+        }
+
         if (!(this.pollingSubject instanceof Subject)) {
-            throw new TypeError("this._pollingSubject must be Subject");
+            throw new TypeError("this.pollingSubject must be Subject");
         }
 
         if (!(this.pollingSubcription instanceof Subscription)) {
-            throw new TypeError("this._pollingSubcription must be Subscription");
+            throw new TypeError("this.pollingSubcription must be Subscription");
         }
 
         // TODO: verify that the refcount reaches 0 for a proper polling "close".
@@ -218,7 +222,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
         // if (resetInterval === true) {
         //     // TODO: unsubscribe/subscribe interval.
         //     // TODO: re-enable.
-        //     this._logger.warn(resetInterval, "send");
+        //     this.logger.warn(resetInterval, "send");
         // }
     }
 
@@ -257,7 +261,7 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
         );
     }
 
-    protected async _parseMessage(rawMessage: any): Promise<T> {
+    protected async parseMessage(rawMessage: any): Promise<T> {
         // TODO: parse outside this function?
         // TODO: try-catch for bad messages.
         const data: T = rawMessage as T;
@@ -327,13 +331,13 @@ export default abstract class PollingConnection<T, V> implements IPollingConnect
 
             case "head":
                 // TODO: patch rxios to give head.
-                // request = rxios.head<any>(this._uri);
+                // request = rxios.head<any>(this.uri);
                 // break;
                 throw new Error("HTTP method 'head' not supported.");
 
             case "options":
                 // TODO: patch rxios to allow options.
-                // request = rxios.options<any>(this._uri);
+                // request = rxios.options<any>(this.uri);
                 // break;
                 throw new Error("HTTP method 'head' not supported.");
 
