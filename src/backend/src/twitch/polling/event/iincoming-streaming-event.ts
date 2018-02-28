@@ -17,15 +17,15 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+import {
+    TwitchApiV6StreamingEventType,
+} from "../handler/twitch-api-v6-streaming-event-types";
+import IChannelEvent from "./ichannel-event";
+
+export default interface IIncomingStreamingEvent extends IChannelEvent {
+    type: TwitchApiV6StreamingEventType;
+    title: string;
+    viewers: number;
+    startedAt: string;
 }

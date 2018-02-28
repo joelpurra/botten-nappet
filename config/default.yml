@@ -1,13 +1,15 @@
 backend:
     bottenNappetDefaultPollingInterval: 30000
+    bottenNappetStreamingPollingInterval: 10000
     databaseUri: null
     followingPollingLimit: 5
     logging:
         file: null
         level: error
     topic:
-        twitchIncomingIrcCommand: backend-twitch-incoming-irc-command
-        twitchOutgoingIrcCommand: backend-twitch-outgoing-irc-command
+        twitch:
+            incomingIrcCommand: backend-twitch-incoming-irc-command
+            outgoingIrcCommand: backend-twitch-outgoing-irc-command
     twitch:
         appClientId: null
         appClientSecret: null
@@ -23,7 +25,6 @@ backend:
         pubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
         userName: null
         usersDataUri: "https://api.twitch.tv/helix/users"
-    zmqAddress: "tcp://127.0.0.1:54859"
 frontend:
     port: 3000
     static:
@@ -33,4 +34,10 @@ shared:
     logging:
         file: null
         level: error
+    topic:
+        twitch:
+            incomingFollowingEvent: shared-twitch-incoming-following-event
+            incomingStreamingEvent: shared-twitch-incoming-streaming-event
+            incomingCheeringEvent: shared-twitch-incoming-cheering-event
+            incomingSubscriptionEvent: shared-twitch-incoming-subscription-event
     zmqAddress: "tcp://127.0.0.1:54859"

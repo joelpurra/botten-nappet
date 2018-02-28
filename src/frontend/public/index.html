@@ -2,18 +2,66 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>
-        botten-nappet
+        Scrolling stream status page
     </title>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <link rel="stylesheet" href="/css/screen.css" type="text/css" />
+    <link href="/css/screen.css" media="all" rel="stylesheet" />
 </head>
 
 <body>
-    <script src="/javascript/main.js"></script>
+    <div id="top-status-scroll">
+        <div id="repeat1" class="repeated">
+            <!--
+		<p>
+			<strong>Right now:</strong> C-code in Node.js with NaN
+		</p>
+-->
+            <p>
+                <strong>Right now:</strong> developing a twitch bot/stream tool in node.js
+            </p>
+            <!--
+		<p>
+			<strong>Right now:</strong> tool to automate webcam settings
+		</p>
+-->
+            <!--
+ 		<p>
+			Weekend in bed — no cam.
+		</p>
+-->
+            <!--
+ 		<p>
+			A bit <strong>tired</strong> — no mic/cam.
+		</p>
+-->
+            <p>
+                New commands:
+                <strong>!animate [color]</strong>
+                and
+                <strong>!cowbell</strong>
+            </p>
+            <p>
+                Remember to
+                <strong>follow</strong>!
+            </p>
+            <p>
+                Available for
+                <strong>remote contracts</strong>!
+            </p>
+            <p>
+                <strong>joelpurra.com</strong>
+            </p>
+        </div>
+        <div id="repeat2" class="repeated"></div>
+    </div>
+    <div id="screen-log"></div>
+    <div id="notification-container"></div>
+    <canvas id="ballz" resize></canvas>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/dist/libs.js"></script>
+    <script type="text/paperscript" src="/javascript/ballz.js" canvas="ballz"></script>
+    <script src="/dist/client.js"></script>
 </body>
 
 </html>

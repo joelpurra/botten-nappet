@@ -26,15 +26,15 @@ import EventSubscriptionManager from "../../../../../shared/src/event/event-subs
 import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
 import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
+import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
+import IIncomingFollowingEvent from "../event/iincoming-following-event";
 
-export default class SubscribingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+export default class FollowingIrcReplyHandler extends EventSubscriptionManager<IIncomingFollowingEvent> {
     private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
 
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        connection: IEventSubscriptionConnection<IIncomingFollowingEvent>,
         outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
@@ -44,38 +44,27 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("SubscribingIrcHandler");
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
+
+        this.logger = logger.child("FollowingIrcReplyHandler");
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
+    protected async dataHandler(data: IIncomingFollowingEvent): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        const tags = data.tags!;
-        const username = tags.login;
-
-        this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
+        this.logger.trace("Responding to follower.", data.triggerer.name, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure response.
-        let response = null;
-
-        const msgId = tags["msg-id"];
-        const msgParamMonths = tags["msg-param-months"];
-
-        if (msgId === "resub") {
-            /* tslint:disable:max-line-length */
-            response = `Wow, @${username}, thanks for getting your ${msgParamMonths} rubber duckies in a row!`;
-            /* tslint:enable:max-line-length */
-        } else {
-            response = `Wow, @${username}, thanks for becoming my newest rubber ducky!`;
-        }
+        /* tslint:disable:max-line-length */
+        const response = `Hey @${data.triggerer.name}, thanks for following! Hope to see you next live stream 😀`;
+        /* tslint:enable:max-line-length */
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: `#${data.channel.name}`,
             command: "PRIVMSG",
-            message: `${response}`,
+            message: response,
             tags: {},
             timestamp: new Date(),
         };
@@ -83,33 +72,9 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
+    protected async filter(data: IIncomingFollowingEvent): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (data.command !== "USERNOTICE") {
-            return false;
-        }
-
-        const tags = data.tags;
-
-        if (tags === null) {
-            return false;
-        }
-
-        if (typeof tags !== "object") {
-            return false;
-        }
-
-        const msgId = tags["msg-id"];
-
-        if (typeof msgId !== "string") {
-            return false;
-        }
-
-        if (msgId !== "sub" && msgId !== "resub") {
-            return false;
-        }
 
         return true;
     }

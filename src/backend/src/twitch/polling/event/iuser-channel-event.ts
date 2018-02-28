@@ -17,15 +17,10 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+import IChannelEvent from "./ichannel-event";
+import IUserNameId from "./iuser-name-id";
+
+export default interface IUserChannelEvent extends IChannelEvent {
+    triggerer: IUserNameId;
 }

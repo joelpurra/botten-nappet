@@ -25,9 +25,11 @@ import {
 import {
     IConfig,
 } from "config";
+import IZmqConfig from "../../../shared/src/util/izmq-config";
 
-export default class Config {
-    public prefix: string;
+export default class Config implements IZmqConfig {
+    private sharedPrefix: string;
+    private prefix: string;
     private config: IConfig;
 
     constructor(config: IConfig) {
@@ -36,6 +38,7 @@ export default class Config {
 
         this.config = config;
 
+        this.sharedPrefix = "shared";
         this.prefix = "frontend";
     }
 
@@ -43,8 +46,12 @@ export default class Config {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.
         assert.nonEmptyString(this.staticPublicRootDirectory);
+        assert.nonEmptyString(this.topicTwitchIncomingFollowingEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingSubscriptionEvent);
         assert.integer(this.port);
         assert.positive(this.port);
+        assert.nonEmptyString(this.zmqAddress);
     }
 
     public get staticPublicRootDirectory(): string {
@@ -60,6 +67,39 @@ export default class Config {
 
         assert.integer(value);
         assert.positive(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingFollowingEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingFollowingEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingCheeringEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingSubscriptionEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingSubscriptionEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get zmqAddress(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.zmqAddress`);
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith("tcp://"));
 
         return value;
     }

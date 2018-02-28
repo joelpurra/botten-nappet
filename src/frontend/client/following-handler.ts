@@ -17,15 +17,15 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+import SimpleNotificationHandler from "./simple-notification-handler";
+
+export default class FollowingHandler extends SimpleNotificationHandler {
+    public handle(data: any) {
+        // TODO: templates/config for messages.
+        const notificationMessage = `Thank you for following, @${data.username}`;
+        const screenLogMessage = `followed`;
+
+        super.handleNotification(notificationMessage, data.timestamp, data.username, screenLogMessage);
+    }
 }

@@ -55,6 +55,12 @@ import PollingClientIdConnection from "../twitch/polling/connection/polling-clie
 
 import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
 
+import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
+import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
+import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
+import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
+import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
+import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
 import perUserHandlersMain from "./per-user-handlers-main";
 
 export default async function authenticatedApplicationMain(
@@ -118,6 +124,9 @@ export default async function authenticatedApplicationMain(
 
     const followingPollingUri =
         `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${config.followingPollingLimit}`;
+
+    const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${twitchUserId}`;
+
     const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
         rootLogger,
         config.twitchPubSubWebSocketUri,
@@ -133,12 +142,20 @@ export default async function authenticatedApplicationMain(
         twitchUserAccessTokenProvider,
     );
 
-    const twitchPollingFollowingConnection = new PollingClientIdConnection(
+    const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
         rootLogger,
         config.twitchAppClientId,
         config.bottenNappetDefaultPollingInterval,
         false,
         followingPollingUri,
+        "get",
+    );
+    const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
+        rootLogger,
+        config.twitchAppClientId,
+        config.bottenNappetDefaultPollingInterval,
+        true,
+        streamingPollingUri,
         "get",
     );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
@@ -153,13 +170,42 @@ export default async function authenticatedApplicationMain(
             config.zmqAddress,
             config.topicTwitchOutgoingIrcCommand,
         );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingFollowingEvent,
+        );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingStreamingEvent,
+        );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingCheeringEvent,
+        );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingSubscriptionEvent,
+        );
 
     const connectables: IConnectable[] = [
         twitchAllPubSubTopicsForTwitchUserIdConnection,
         twitchIrcConnection,
         twitchPollingFollowingConnection,
+        twitchPollingStreamingConnection,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
     ];
 
     await Bluebird.map(connectables, async (connectable) => connectable.connect());
@@ -195,9 +241,14 @@ export default async function authenticatedApplicationMain(
             messageQueuePublisher,
             twitchIrcConnection,
             twitchPollingFollowingConnection,
+            twitchPollingStreamingConnection,
             twitchAllPubSubTopicsForTwitchUserIdConnection,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
             twitchUserId,
         );
 

@@ -43,14 +43,30 @@ import TwitchIrcReconnectHandler from "../twitch/irc/handler/reconnect";
 import TwitchIrcSubscribingHandler from "../twitch/irc/handler/subscribing";
 import TwitchIrcConnection from "../twitch/irc/irc-connection";
 
-import TwitchOutgoingIrcCommandEventEmitter from "../twitch/irc/event-emitter/outgoing-irc-command-event-emitter";
 import TwitchIncomingIrcCommandEventTranslator from "../twitch/irc/event-handler/incoming-irc-command-event-translator";
 import TwitchOutgoingIrcCommandEventHandler from "../twitch/irc/event-handler/outgoing-irc-command-event-handler";
 import TwitchIrcTextResponseCommandHandler from "../twitch/irc/handler/text-response-command";
 
 import PollingClientIdConnection from "../twitch/polling/connection/polling-clientid-connection";
-import TwitchPollingFollowingHandler from "../twitch/polling/handler/following";
+import TwitchCheeringIrcReplyHandler from "../twitch/polling/handler/cheering-irc-reply-handler";
+import TwitchFollowingIrcReplyHandler from "../twitch/polling/handler/following-irc-reply-handler";
+import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
+import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
+/* tslint:disable max-line-length */
+import TwitchStreamingStatisticsCollectorHandler from "../twitch/polling/handler/streaming-statistics-collector-handler";
+/* tslint:enable max-line-length */
+import TwitchSubscriptionIrcReplyHandler from "../twitch/polling/handler/subscription-irc-reply-handler";
 
+/* tslint:disable max-line-length */
+import IncomingCheeringCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheering-event-translator";
+import IncomingFollowingCommandEventTranslator from "../twitch/polling/event-handler/incoming-following-event-translator";
+import IncomingStreamingCommandEventTranslator from "../twitch/polling/event-handler/incoming-streaming-event-translator";
+import IncomingSubscriptionCommandEventTranslator from "../twitch/polling/event-handler/incoming-subscription-event-translator";
+/* tslint:enable max-line-length */
+import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
+import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
+import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
+import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
 import TwitchPubSubLoggingHandler from "../twitch/pubsub/handler/logging";
 import TwitchPubSubPingHandler from "../twitch/pubsub/handler/ping";
 import TwitchPubSubReconnectHandler from "../twitch/pubsub/handler/reconnect";
@@ -63,12 +79,21 @@ export default async function perUserHandlersMain(
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
     twitchIrcConnection: TwitchIrcConnection,
-    twitchPollingFollowingConnection: PollingClientIdConnection,
+    twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
+    twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
     twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
         MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
         MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
     twitchUserId: number,
 ): Promise<void> {
     const twitchPubSubPingHandler = new TwitchPubSubPingHandler(
@@ -103,15 +128,38 @@ export default async function perUserHandlersMain(
             config.topicTwitchOutgoingIrcCommand,
         );
 
+    const messageQueueTopicPublisherForIIncomingFollowingEvent =
+        new MessageQueueTopicPublisher<IIncomingFollowingEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingFollowingEvent,
+        );
+
+    const messageQueueTopicPublisherForIIncomingStreamingEvent =
+        new MessageQueueTopicPublisher<IIncomingStreamingEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingStreamingEvent,
+        );
+
+    const messageQueueTopicPublisherForIIncomingCheeringEvent =
+        new MessageQueueTopicPublisher<IIncomingCheeringEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingCheeringEvent,
+        );
+
+    const messageQueueTopicPublisherForIIncomingSubscriptionEvent =
+        new MessageQueueTopicPublisher<IIncomingSubscriptionEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingSubscriptionEvent,
+        );
+
     const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
         rootLogger,
         twitchIrcConnection,
         messageQueueTopicPublisherForIIncomingIrcCommand,
-    );
-
-    const twitchOutgoingIrcCommandEventEmitter = new TwitchOutgoingIrcCommandEventEmitter(
-        rootLogger,
-        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
 
     const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(
@@ -123,7 +171,7 @@ export default async function perUserHandlersMain(
     const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
 
     const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(
@@ -133,35 +181,82 @@ export default async function perUserHandlersMain(
     const twitchIrcPingHandler = new TwitchIrcPingHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
     const twitchIrcGreetingHandler = new TwitchIrcGreetingHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
         config.twitchUserName,
     );
     const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
     const twitchIrcSubscribingHandler = new TwitchIrcSubscribingHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
     const twitchIrcFollowReminderHandler = new TwitchIrcFollowReminderHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchOutgoingIrcCommandEventEmitter,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
         config.twitchChannelName,
     );
-    const twitchPollingFollowingHandler = new TwitchPollingFollowingHandler(
+
+    const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
         rootLogger,
         twitchPollingFollowingConnection,
-        twitchOutgoingIrcCommandEventEmitter,
-        config.twitchChannelName,
+        messageQueueTopicPublisherForIIncomingFollowingEvent,
+        config.twitchUserName,
+        twitchUserId,
+    );
+    const twitchFollowingIrcReplyHandler = new TwitchFollowingIrcReplyHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+    );
+
+    const twitchIncomingStreamingCommandEventTranslator = new IncomingStreamingCommandEventTranslator(
+        rootLogger,
+        twitchPollingStreamingConnection,
+        messageQueueTopicPublisherForIIncomingStreamingEvent,
+        config.twitchUserName,
+        twitchUserId,
+    );
+    const twitchStreamingStatisticsCollector = new TwitchStreamingStatisticsCollectorHandler(
+        rootLogger,
+        [
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+            twitchIrcConnection,
+        ],
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+    );
+
+    const twitchIncomingCheeringCommandEventTranslator = new IncomingCheeringCommandEventTranslator(
+        rootLogger,
+        twitchAllPubSubTopicsForTwitchUserIdConnection,
+        messageQueueTopicPublisherForIIncomingCheeringEvent,
+    );
+    const twitchCheeringIrcReplyHandler = new TwitchCheeringIrcReplyHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+    );
+
+    const twitchIncomingSubscriptionCommandEventTranslator = new IncomingSubscriptionCommandEventTranslator(
+        rootLogger,
+        twitchIrcConnection,
+        messageQueueTopicPublisherForIIncomingSubscriptionEvent,
+        config.twitchUserName,
+        twitchUserId,
+    );
+    const twitchSubscriptionIrcReplyHandler = new TwitchSubscriptionIrcReplyHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
     );
 
     const startables: IStartableStoppable[] = [
@@ -175,7 +270,14 @@ export default async function perUserHandlersMain(
         twitchIrcNewChatterHandler,
         twitchIrcSubscribingHandler,
         twitchIrcFollowReminderHandler,
-        twitchPollingFollowingHandler,
+        twitchIncomingFollowingCommandEventTranslator,
+        twitchFollowingIrcReplyHandler,
+        twitchIncomingStreamingCommandEventTranslator,
+        twitchStreamingStatisticsCollector,
+        twitchIncomingCheeringCommandEventTranslator,
+        twitchCheeringIrcReplyHandler,
+        twitchIncomingSubscriptionCommandEventTranslator,
+        twitchSubscriptionIrcReplyHandler,
         twitchIncomingIrcCommandEventTranslator,
         twitchOutgoingIrcCommandEventHandler,
         twitchIrcTextResponseCommandHandler,

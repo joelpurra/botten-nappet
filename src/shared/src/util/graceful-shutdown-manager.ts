@@ -205,7 +205,15 @@ export default class GracefulShutdownManager {
         // assert.hasLength(arguments, 1);
         assert.equal(typeof shutdownEvent, "string");
 
-        this.logger.debug(shutdownEvent, "Received shutdown event", ...args);
+        const argsAsStrings = args.map((arg) => {
+            if (arg) {
+                return arg.toString();
+            }
+
+            return arg;
+        });
+
+        this.logger.debug(shutdownEvent, "Received shutdown event", ...argsAsStrings);
 
         this.shutdown();
     }

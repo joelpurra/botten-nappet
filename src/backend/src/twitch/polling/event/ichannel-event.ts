@@ -1,3 +1,5 @@
+import IUserNameId from "./iuser-name-id";
+
 /*
 This file is part of botten-nappet -- a Twitch bot and streaming tool.
 <https://joelpurra.com/projects/botten-nappet/>
@@ -17,15 +19,8 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
+
+export default interface IChannelEvent {
+    channel: IUserNameId;
     timestamp: Date;
-    username: (string | null);
 }

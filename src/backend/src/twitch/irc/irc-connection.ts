@@ -145,6 +145,7 @@ export default class IrcConnection extends WebSocketConnection<IIncomingIrcComma
             original: rawMessage,
             originalTags: null,
             tags: null,
+            timestamp: new Date(),
             username: null,
         };
 

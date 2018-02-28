@@ -22,65 +22,69 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
 import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
 import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
+import IIncomingIrcCommand from "../../irc/command/iincoming-irc-command";
+import IrcConnection from "../../irc/irc-connection";
+import IrcManager from "../../irc/irc-manager";
+import IIncomingSubscriptionEvent from "../event/iincoming-subscription-event";
 
-export default class SubscribingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
+export default class IncomingSubscriptionCommandEventTranslator extends IrcManager {
+    public userid: number;
+    public username: string;
+    private incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>;
 
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        connection: IrcConnection,
+        incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>,
+        username: string,
+        userid: number,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 3);
+        assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
+        assert.equal(typeof incomingSubscriptionEventEmitter, "object");
+        assert.nonEmptyString(username);
+        assert.integer(userid);
+        assert.positive(userid);
 
-        this.logger = logger.child("SubscribingIrcHandler");
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
+        this.logger = logger.child("IncomingSubscriptionCommandEventTranslator");
+        this.incomingSubscriptionEventEmitter = incomingSubscriptionEventEmitter;
+        this.username = username;
+        this.userid = userid;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
+        assert.equal(typeof data.tags, "object");
 
         const tags = data.tags!;
         const username = tags.login;
+        // NOTE: contains sub/resub.
+        // const msgId = tags["msg-id"];
+        const msgParamMonths = parseInt(tags["msg-param-months"], 10);
+        const months = !isNaN(msgParamMonths) && msgParamMonths >= 0 ? msgParamMonths : 0;
+        const userId = parseInt(data.tags!["user-id"], 10);
 
-        this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
-
-        // TODO: use a string templating system.
-        // TODO: configure response.
-        let response = null;
-
-        const msgId = tags["msg-id"];
-        const msgParamMonths = tags["msg-param-months"];
-
-        if (msgId === "resub") {
-            /* tslint:disable:max-line-length */
-            response = `Wow, @${username}, thanks for getting your ${msgParamMonths} rubber duckies in a row!`;
-            /* tslint:enable:max-line-length */
-        } else {
-            response = `Wow, @${username}, thanks for becoming my newest rubber ducky!`;
-        }
-
-        const command: IOutgoingIrcCommand = {
-            channel: data.channel,
-            command: "PRIVMSG",
-            message: `${response}`,
-            tags: {},
-            timestamp: new Date(),
+        const event: IIncomingSubscriptionEvent = {
+            channel: {
+                id: this.userid,
+                name: this.username,
+            },
+            message: data.message,
+            months,
+            timestamp: data.timestamp,
+            triggerer: {
+                id: userId,
+                name: username,
+            },
         };
 
-        this.outgoingIrcCommandEventEmitter.emit(command);
+        this.incomingSubscriptionEventEmitter.emit(event);
     }
 
     protected async filter(data: IIncomingIrcCommand): Promise<boolean> {

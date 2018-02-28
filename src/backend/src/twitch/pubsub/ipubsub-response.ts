@@ -19,8 +19,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 export default interface IPubSubResponse {
-    data: string;
+    data: {
+        topic: string,
+        message: string,
+        messageParsed: any,
+    } | undefined;
     error: string;
-    nonce: string;
+    nonce: string | undefined;
+    timestamp: Date;
     type: string;
 }

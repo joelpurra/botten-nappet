@@ -17,15 +17,33 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+export default class ConsoleLog {
+    public log(...args: any[]) {
+        /* tslint:disable no-console */
+        console.log(...args);
+        /* tslint:enable no-console */
+    }
+
+    public trace(...args: any[]) {
+        return this.log(...args);
+    }
+
+    public info(...args: any[]) {
+        /* tslint:disable no-console */
+        console.info(...args);
+        /* tslint:enable no-console */
+    }
+
+    public warn(...args: any[]) {
+        /* tslint:disable no-console */
+        console.warn(...args);
+        /* tslint:enable no-console */
+    }
+
+    public error(...args: any[]) {
+        /* tslint:disable no-console */
+        console.error(...args);
+        /* tslint:enable no-console */
+    }
 }

@@ -17,15 +17,11 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
+
+import ITwitchApiV6Pagination from "./itwitch-api-v6-pagination";
+import ITwitchApiV6StreamingEvent from "./itwitch-api-v6-streaming-event";
+
+export default interface IPollingStreamingResponse extends ITwitchApiV6Pagination {
+    data: ITwitchApiV6StreamingEvent[];
     timestamp: Date;
-    username: (string | null);
 }

@@ -49,6 +49,13 @@ export default class Config implements IZmqConfig {
         assert.match(this.databaseUri, /^nedb:\/\//);
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
+        assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingSubscriptionEvent);
+        assert.integer(this.bottenNappetDefaultPollingInterval);
+        assert.positive(this.bottenNappetDefaultPollingInterval);
+        assert.integer(this.bottenNappetStreamingPollingInterval);
+        assert.positive(this.bottenNappetStreamingPollingInterval);
         assert.nonEmptyString(this.twitchAppClientId);
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
@@ -66,7 +73,7 @@ export default class Config implements IZmqConfig {
     }
 
     public get topicTwitchIncomingIrcCommand(): string {
-        const value = this.config.get<string>(`${this.prefix}.topic.twitchIncomingIrcCommand`);
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingIrcCommand`);
 
         assert.nonEmptyString(value);
 
@@ -74,7 +81,39 @@ export default class Config implements IZmqConfig {
     }
 
     public get topicTwitchOutgoingIrcCommand(): string {
-        const value = this.config.get<string>(`${this.prefix}.topic.twitchOutgoingIrcCommand`);
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingIrcCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingFollowingEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingFollowingEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingStreamingEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingStreamingEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingCheeringEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingSubscriptionEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingSubscriptionEvent`);
 
         assert.nonEmptyString(value);
 
@@ -122,6 +161,14 @@ export default class Config implements IZmqConfig {
 
     public get bottenNappetDefaultPollingInterval(): number {
         const value = this.config.get<number>(`${this.prefix}.bottenNappetDefaultPollingInterval`);
+
+        assert.greater(value, 0);
+
+        return value;
+    }
+
+    public get bottenNappetStreamingPollingInterval(): number {
+        const value = this.config.get<number>(`${this.prefix}.bottenNappetStreamingPollingInterval`);
 
         assert.greater(value, 0);
 

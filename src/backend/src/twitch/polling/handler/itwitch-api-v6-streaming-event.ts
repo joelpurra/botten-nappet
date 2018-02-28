@@ -9,7 +9,7 @@ it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
+This program is distributed in the hope that it will be useful;
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
@@ -17,15 +17,21 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+import {
+    TwitchApiV6StreamingEventType,
+} from "./twitch-api-v6-streaming-event-types";
+
+export default interface ITwitchApiV6StreamingEvent {
+    community_ids: string[];
+    game_id: string;
+    id: string;
+    language: string;
+    // pagination: string;
+    started_at: string;
+    thumbnail_url: string;
+    title: string;
+    type: TwitchApiV6StreamingEventType;
+    user_id: string;
+    viewer_count: number;
 }

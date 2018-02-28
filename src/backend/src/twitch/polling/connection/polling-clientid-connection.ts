@@ -27,7 +27,7 @@ import IHttpData from "../ihttp-data";
 import IHttpHeaders from "../ihttp-header";
 import PollingConnection from "../polling-connection";
 
-export default class PollingClientIdConnection extends PollingConnection<any> {
+export default class PollingClientIdConnection<T> extends PollingConnection<T> {
     private applicationClientId: string;
 
     constructor(

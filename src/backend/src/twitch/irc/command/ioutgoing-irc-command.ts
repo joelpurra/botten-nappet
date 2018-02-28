@@ -24,4 +24,5 @@ export default interface IOutgoingIrcCommand {
     tags: ({
         [key: string]: string;
     } | null);
+    timestamp: Date;
 }

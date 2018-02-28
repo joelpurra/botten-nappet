@@ -26,15 +26,15 @@ import EventSubscriptionManager from "../../../../../shared/src/event/event-subs
 import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
 import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
+import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
+import IIncomingSubscriptionEvent from "../event/iincoming-subscription-event";
 
-export default class SubscribingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+export default class SubscriptionIrcReplyHandler extends EventSubscriptionManager<IIncomingSubscriptionEvent> {
     private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
 
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        connection: IEventSubscriptionConnection<IIncomingSubscriptionEvent>,
         outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
@@ -44,16 +44,16 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("SubscribingIrcHandler");
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
+
+        this.logger = logger.child("SubscriptionIrcReplyHandler");
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
+    protected async dataHandler(data: IIncomingSubscriptionEvent): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        const tags = data.tags!;
-        const username = tags.login;
+        const username = data.triggerer.name;
 
         this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
 
@@ -61,19 +61,16 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         // TODO: configure response.
         let response = null;
 
-        const msgId = tags["msg-id"];
-        const msgParamMonths = tags["msg-param-months"];
-
-        if (msgId === "resub") {
+        if (data.months > 0) {
             /* tslint:disable:max-line-length */
-            response = `Wow, @${username}, thanks for getting your ${msgParamMonths} rubber duckies in a row!`;
+            response = `Wow, @${username}, thanks for getting your ${data.months} rubber duckies in a row!`;
             /* tslint:enable:max-line-length */
         } else {
             response = `Wow, @${username}, thanks for becoming my newest rubber ducky!`;
         }
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: `#${data.channel.name}`,
             command: "PRIVMSG",
             message: `${response}`,
             tags: {},
@@ -83,33 +80,9 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
+    protected async filter(data: IIncomingSubscriptionEvent): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
-
-        if (data.command !== "USERNOTICE") {
-            return false;
-        }
-
-        const tags = data.tags;
-
-        if (tags === null) {
-            return false;
-        }
-
-        if (typeof tags !== "object") {
-            return false;
-        }
-
-        const msgId = tags["msg-id"];
-
-        if (typeof msgId !== "string") {
-            return false;
-        }
-
-        if (msgId !== "sub" && msgId !== "resub") {
-            return false;
-        }
 
         return true;
     }

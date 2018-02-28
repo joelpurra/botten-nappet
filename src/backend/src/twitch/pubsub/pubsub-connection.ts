@@ -127,10 +127,27 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         return setupConnectionCommands;
     }
 
-    protected async parseMessage(rawMessage: string): Promise<any> {
+    protected async parseMessage(rawMessage: string): Promise<IPubSubResponse> {
         // TODO: verify response format.
         // TODO: try-catch for bad messages.
         const data = JSON.parse(rawMessage.toString());
+
+        if (data.timestamp) {
+            // TODO: parse.
+            /* tslint:disable max-line-length */
+            this.logger.warn(`Message contained timestamp (${typeof data.timestamp}, ${data.timestamp}), it should be parsed.`);
+            /* tslint:enable max-line-length */
+        }
+
+        if (!data.timestamp) {
+            // TODO: use timestamp from upstream?
+            data.timestamp = new Date();
+        }
+
+        if (typeof data.data === "object" && typeof data.data.message === "string") {
+            const innerMessageParsed = JSON.parse(data.data.message);
+            data.data.messageParsed = innerMessageParsed;
+        }
 
         return data;
     }

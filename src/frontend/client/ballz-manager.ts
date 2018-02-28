@@ -17,15 +17,33 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
-    channel: (string | null);
-    command: (string | null);
-    message: (string | null);
-    original: string;
-    originalTags: (string | null);
-    tags: ({
-        [key: string]: string;
-    } | null);
-    timestamp: Date;
-    username: (string | null);
+
+import ConsoleLog from "./console-log";
+import ScreenLog from "./screen-log";
+
+export default class BallzManager {
+    private defaultBallTimeout: number;
+    private logger: ConsoleLog;
+
+    constructor(logger: ConsoleLog) {
+        this.logger = logger;
+
+        this.defaultBallTimeout = 5000;
+    }
+
+    public add(text: string, color?: string, ballTimeout?: number) {
+        const detail = {
+            ballTimeout: ballTimeout || this.defaultBallTimeout,
+            color,
+            text,
+        };
+
+        const addBallEvent = new CustomEvent("add-ball", {
+            bubbles: true,
+            cancelable: false,
+            detail,
+        });
+
+        document.dispatchEvent(addBallEvent);
+    }
 }

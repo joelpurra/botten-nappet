@@ -22,44 +22,48 @@ import {
     assert,
 } from "check-types";
 
+import moment from "moment";
+
 import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
 import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
+import IIncomingFollowingEvent from "../event/iincoming-following-event";
+import IPollingFollowingResponse from "../handler/ifollowing-polling-response";
+import ITwitchApiV5ChannelFollowingEvent from "../handler/itwitch-api-v5-channel-following-event";
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
-type TwitchApiV5ChannelFollower = any;
-type TwitchApiV5ChannelFollowers = TwitchApiV5ChannelFollower[];
-
-export default class FollowingPollingHandler extends PollingManager<any> {
+export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {
+    public userid: number;
+    public username: string;
     private lastFollowingMessageTimestamp: number;
-    private ircChannel: string;
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
+    private incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>;
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<any>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        ircChannel: string,
+        connection: IPollingConnection<IPollingFollowingResponse>,
+        incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>,
+        username: string,
+        userid: number,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 4);
+        assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
-        assert.equal(typeof ircChannel, "string");
-        assert(ircChannel.startsWith("#"));
-        assert.greater(ircChannel.length, 1);
+        assert.equal(typeof incomingFollowingEventEmitter, "object");
+        assert.nonEmptyString(username);
+        assert.integer(userid);
+        assert.positive(userid);
 
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
-        this.ircChannel = ircChannel;
+        this.logger = logger.child("IncomingFollowingCommandEventTranslator");
+        this.incomingFollowingEventEmitter = incomingFollowingEventEmitter;
+        this.username = username;
+        this.userid = userid;
 
-        this.logger = logger.child("FollowingPollingHandler");
         this.lastFollowingMessageTimestamp = Date.now();
     }
 
-    protected async dataHandler(data: any): Promise<void> {
+    protected async dataHandler(data: IPollingFollowingResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -68,26 +72,27 @@ export default class FollowingPollingHandler extends PollingManager<any> {
         this.lastFollowingMessageTimestamp = Date.now();
 
         newFollows.forEach((follow) => {
-            this.logger.trace("Responding to follower.", follow.user.name, "dataHandler");
+            const userId = parseInt(follow.user._id, 10);
 
-            // TODO: use a string templating system.
-            // TODO: configure response.
-            /* tslint:disable:max-line-length */
-            const response = `Hey @${follow.user.name}, thanks for following! Hope to see you next live stream 😀`;
-            /* tslint:enable:max-line-length */
+            const timestamp = moment(follow.created_at).toDate();
 
-            const command: IOutgoingIrcCommand = {
-                channel: this.ircChannel,
-                command: "PRIVMSG",
-                message: response,
-                tags: {},
+            const event: IIncomingFollowingEvent = {
+                channel: {
+                    id: this.userid,
+                    name: this.username,
+                },
+                timestamp,
+                triggerer: {
+                    id: userId,
+                    name: follow.user.name,
+                },
             };
 
-            this.outgoingIrcCommandEventEmitter.emit(command);
+            this.incomingFollowingEventEmitter.emit(event);
         });
     }
 
-    protected async filter(data: any): Promise<boolean> {
+    protected async filter(data: IPollingFollowingResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
@@ -107,9 +112,9 @@ export default class FollowingPollingHandler extends PollingManager<any> {
     }
 
     private async getNewFollows(
-        follows: TwitchApiV5ChannelFollowers,
+        follows: ITwitchApiV5ChannelFollowingEvent[],
         since: number,
-    ): Promise<TwitchApiV5ChannelFollowers> {
+    ): Promise<ITwitchApiV5ChannelFollowingEvent[]> {
         const newFollows = follows.filter((follow) => {
             const followedAt = Date.parse(follow.created_at);
 

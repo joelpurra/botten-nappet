@@ -26,37 +26,24 @@ import typescript from "./rollup.config.typescript.js";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "index.ts";
-const outputName = "dist/index.js";
+const inputName = "client.ts";
+const outputName = "./src/frontend/public/dist/client.js";
 
 export default {
     external: [
-        "axios",
-        "bluebird",
-        "camo",
-        "check-types",
-        "config",
-        "fs",
-        "http",
-        "koa",
-        "koa-static",
-        "moment",
-        "path",
-        "pino",
-        "pkg-dir",
-        "qs",
-        "readline",
-        "rxios",
+        "animejs",
         "rxjs",
-        "rxjs/internal/observable/dom/WebSocketSubject",
-        "socket.io",
-        "ws",
-        "zeromq-ng",
+        "socket.io-client",
     ],
     input: inputName,
     output: {
         file: outputName,
-        format: "cjs",
+        format: "iife",
+        globals: {
+            "animejs": "anime",
+            "rxjs": "Rx",
+            "socket.io-client": "io",
+        },
         name: inputName,
         sourcemap: true,
     },
