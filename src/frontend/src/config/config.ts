@@ -47,7 +47,9 @@ export default class Config implements IZmqConfig {
         // TODO: add validation error messages.
         assert.nonEmptyString(this.staticPublicRootDirectory);
         assert.nonEmptyString(this.topicTwitchIncomingFollowingEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingSubscriptionEvent);
         assert.integer(this.port);
         assert.positive(this.port);
@@ -79,8 +81,24 @@ export default class Config implements IZmqConfig {
         return value;
     }
 
+    public get topicTwitchIncomingCheeringWithCheermotesEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringWithCheermotesEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
     public get topicTwitchIncomingCheeringEvent(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingCheermotesEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheermotesEvent`);
 
         assert.nonEmptyString(value);
 

@@ -42,7 +42,7 @@ import ITwitchIncomingIrcCommand from "../../../backend/src/twitch/irc/command/i
 import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
 /* tslint:enable max-line-length */
 
-import IIncomingCheeringEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-event";
+import IIncomingCheeringWithCheermotesEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-with-cheermotes-event";
 import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/iincoming-following-event";
 import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
 import managedMain from "./managed-main";
@@ -88,13 +88,13 @@ export default async function managerMain(
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.connect();
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
             mainLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingCheeringEvent,
+            config.topicTwitchIncomingCheeringWithCheermotesEvent,
         );
-    await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent.connect();
+    await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.connect();
 
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
@@ -149,13 +149,29 @@ export default async function managerMain(
                             };
                             break;
 
-                        case "cheering":
+                        case "cheering-with-cheermotes":
                             msg = {
                                 data: {
                                     args: commandArguments,
                                     // TODO: use random library.
                                     bits: Math.floor(Math.random() * 500),
-                                    message: "My custom cheering message 😀",
+                                    cheermotes: [
+                                        {
+                                            cheerToken: {
+                                                amount: 1,
+                                                prefix: "cheer",
+                                            },
+                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif",
+                                        },
+                                        {
+                                            cheerToken: {
+                                                amount: 100,
+                                                prefix: "cheer",
+                                            },
+                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif",
+                                        },
+                                    ],
+                                    message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
                                     timestamp: data.timestamp,
                                     // TODO: use random library.
                                     total: Math.floor(Math.random() * 50000),
@@ -198,21 +214,23 @@ export default async function managerMain(
         io.send(msg);
     });
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent.dataObservable.forEach((data) => {
-        const msg = {
-            data: {
-                // args: commandArguments,
-                bits: data.bits,
-                message: data.message,
-                timestamp: data.timestamp,
-                total: data.total,
-                username: data.triggerer.name,
-            },
-            event: "cheering",
-        };
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent
+        .dataObservable.forEach((data) => {
+            const msg = {
+                data: {
+                    // args: commandArguments,
+                    bits: data.bits,
+                    cheermotes: data.cheermotes,
+                    message: data.message,
+                    timestamp: data.timestamp,
+                    total: data.total,
+                    username: data.triggerer.name,
+                },
+                event: "cheering-with-cheermote",
+            };
 
-        io.send(msg);
-    });
+            io.send(msg);
+        });
 
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable.forEach((data) => {
         const msg = {
@@ -247,7 +265,7 @@ export default async function managerMain(
 
     const shutdown = async (incomingError?: Error) => {
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.disconnect();
-        await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent.disconnect();
+        await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.disconnect();
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.disconnect();
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.disconnect();
         await Bluebird.promisify(server.close, {

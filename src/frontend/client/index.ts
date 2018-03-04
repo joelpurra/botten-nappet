@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import BallzManager from "./ballz-manager";
 import BotSocket from "./bot-socket";
-import CheeringHandler from "./cheering-handler";
+import CheeringWithCheermotesHandler from "./cheering-with-cheermotes-handler";
 import ConsoleLog from "./console-log";
 import EventManager from "./event-manager";
 import FollowingHandler from "./following-handler";
@@ -54,7 +54,7 @@ export default async function client() {
         soundManager,
         "cowbell",
     );
-    const cheeringHandler = new CheeringHandler(
+    const cheeringWithCheermotesHandler = new CheeringWithCheermotesHandler(
         logger,
         screenLogger,
         notificationManager,
@@ -75,7 +75,7 @@ export default async function client() {
         botSocket,
         soundManager,
         followingHandler,
-        cheeringHandler,
+        cheeringWithCheermotesHandler,
         subscriptionHandler,
         ballzManager,
     );

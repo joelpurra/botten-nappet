@@ -66,8 +66,8 @@ export default class IncomingCheeringCommandEventTranslator extends PubSubManage
             timestamp: data.timestamp,
             total: bitsEvent.total_bits_used,
             triggerer: {
-                id: bitsEvent.user_name,
-                name: bitsEvent.user_id,
+                id: bitsEvent.user_id,
+                name: bitsEvent.user_name,
             },
         };
 

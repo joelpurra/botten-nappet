@@ -44,43 +44,50 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-var Ball = function (point, text, customColor) {
+var Ball = function (point, text, colorOrUrl) {
     this.vector = Point.random() * 5;
     this.point = point;
     this.dampen = 0.4;
     this.gravity = 3;
     this.bounce = -0.6;
 
-    var randomColor = {
-        brightness: 1,
-        hue: Math.random() * 360,
-        saturation: 1,
-    };
-
-    var color = customColor || randomColor;
-
-    var gradient = new Gradient([color, "black"], true);
-
+    var groupChildren = [];
     var radius = this.radius = 50 * Math.random() + 30;
 
-    var groupChildren = [];
+    if (colorOrUrl && colorOrUrl.startsWith("https://")) {
+        var image = new Raster(colorOrUrl);
+        image.width = radius;
+        image.height = radius;
 
-    // Wrap CompoundPath in a Group, since CompoundPaths directly
-    // applies the transformations to the content, just like Path.
-    var ball = new CompoundPath({
-        children: [
-            new Path.Circle({
-                radius: radius,
-            }),
-            new Path.Circle({
-                center: radius / 8,
-                radius: radius / 3,
-            }),
-        ],
-        fillColor: new Color(gradient, 0, radius, radius / 8),
-    });
+        groupChildren.push(image);
+    } else {
+        var randomColor = {
+            brightness: 1,
+            hue: Math.random() * 360,
+            saturation: 1,
+        };
 
-    groupChildren.push(ball);
+        var color = colorOrUrl || randomColor;
+
+        var gradient = new Gradient([color, "black"], true);
+
+        // Wrap CompoundPath in a Group, since CompoundPaths directly
+        // applies the transformations to the content, just like Path.
+        var ball = new CompoundPath({
+            children: [
+                new Path.Circle({
+                    radius: radius,
+                }),
+                new Path.Circle({
+                    center: radius / 8,
+                    radius: radius / 3,
+                }),
+            ],
+            fillColor: new Color(gradient, 0, radius, radius / 8),
+        });
+
+        groupChildren.push(ball);
+    }
 
     if (typeof text === "string" && text.length > 0) {
         var ballText = new PointText({
@@ -125,10 +132,10 @@ Ball.prototype.remove = function () {
 function createAndAddBall(event) {
     var point = (event && event.point) || Point.random() * view.size;
     var text = event.detail && event.detail.text;
-    var color = event.detail && event.detail.color;
+    var colorOrUrl = event.detail && event.detail.colorOrUrl;
     var ballTimeoutMilliseconds = (event.detail && event.detail.ballTimeout) || 1000;
 
-    var ball = new Ball(point, text, color);
+    var ball = new Ball(point, text, colorOrUrl);
 
     function removeBall() {
         ball.remove();

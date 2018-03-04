@@ -18,31 +18,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConsoleLog from "./console-log";
 
-export default class BallzManager {
-    private defaultBallTimeout: number;
-    private logger: ConsoleLog;
+export interface ICheerToken {
+    prefix: string;
+    amount: number;
+}
+export interface ICheerTokenWithCheermoteUrl {
 
-    constructor(logger: ConsoleLog) {
-        this.logger = logger;
-
-        this.defaultBallTimeout = 5000;
-    }
-
-    public add(text: string, colorOrUrl?: string, ballTimeout?: number) {
-        const detail = {
-            ballTimeout: ballTimeout || this.defaultBallTimeout,
-            colorOrUrl,
-            text,
-        };
-
-        const addBallEvent = new CustomEvent("add-ball", {
-            bubbles: true,
-            cancelable: false,
-            detail,
-        });
-
-        document.dispatchEvent(addBallEvent);
-    }
+    cheerToken: ICheerToken;
+    url: string;
 }

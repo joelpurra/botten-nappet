@@ -50,12 +50,16 @@ export default class Config implements IZmqConfig {
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingSubscriptionEvent);
         assert.integer(this.bottenNappetDefaultPollingInterval);
         assert.positive(this.bottenNappetDefaultPollingInterval);
         assert.integer(this.bottenNappetStreamingPollingInterval);
         assert.positive(this.bottenNappetStreamingPollingInterval);
+        assert.integer(this.bottenNappetCheermotesPollingInterval);
+        assert.positive(this.bottenNappetCheermotesPollingInterval);
         assert.nonEmptyString(this.twitchAppClientId);
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
@@ -96,8 +100,24 @@ export default class Config implements IZmqConfig {
         return value;
     }
 
+    public get topicTwitchIncomingCheeringWithCheermotesEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringWithCheermotesEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
     public get topicTwitchIncomingStreamingEvent(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingStreamingEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingCheermotesEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheermotesEvent`);
 
         assert.nonEmptyString(value);
 
@@ -160,7 +180,7 @@ export default class Config implements IZmqConfig {
     }
 
     public get bottenNappetDefaultPollingInterval(): number {
-        const value = this.config.get<number>(`${this.prefix}.bottenNappetDefaultPollingInterval`);
+        const value = this.config.get<number>(`${this.prefix}.pollingInterval.default`);
 
         assert.greater(value, 0);
 
@@ -168,7 +188,15 @@ export default class Config implements IZmqConfig {
     }
 
     public get bottenNappetStreamingPollingInterval(): number {
-        const value = this.config.get<number>(`${this.prefix}.bottenNappetStreamingPollingInterval`);
+        const value = this.config.get<number>(`${this.prefix}.pollingInterval.streaming`);
+
+        assert.greater(value, 0);
+
+        return value;
+    }
+
+    public get bottenNappetCheermotesPollingInterval(): number {
+        const value = this.config.get<number>(`${this.prefix}.pollingInterval.cheermotes`);
 
         assert.greater(value, 0);
 

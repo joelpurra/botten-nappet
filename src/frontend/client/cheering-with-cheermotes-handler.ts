@@ -25,7 +25,7 @@ import ScreenLog from "./screen-log";
 import SimpleNotificationHandler from "./simple-notification-handler";
 import SoundManager from "./sound-manager";
 
-export default class CheeringHandler extends SimpleNotificationHandler {
+export default class CheeringWithCheermotesHandler extends SimpleNotificationHandler {
     private maxNumberOfBallsToAdd: number;
     private ballzManager: BallzManager;
     private intervalMilliseconds: number;
@@ -43,10 +43,12 @@ export default class CheeringHandler extends SimpleNotificationHandler {
         this.ballzManager = ballzManager;
 
         this.maxNumberOfBallsToAdd = 20;
-        this.intervalMilliseconds = 10;
+        this.intervalMilliseconds = 100;
     }
 
-    public handle(data: any) {
+    public async handle(data: any) {
+        await Promise.all(data.cheermotes.map((cheermote: any) => this.preloadImage(cheermote.url)));
+
         /* tslint:disable max-line-length */
         const notificationMessage = `Cheers @${data.username}, adding ${data.bits} bits with a grand total of ${data.total}! "${data.message}"`;
         /* tslint:enable max-line-length */
@@ -61,7 +63,23 @@ export default class CheeringHandler extends SimpleNotificationHandler {
         for (let i = 0; i < numberOfBallsToAdd; i++) {
             const delay = i * this.intervalMilliseconds;
 
-            setTimeout(() => this.ballzManager.add(text), delay);
+            // TODO: use random library.
+            const rnd = Math.floor(Math.random() * data.cheermotes.length);
+            const cheermote = data.cheermotes[rnd];
+            const url = cheermote.url;
+
+            setTimeout(() => this.ballzManager.add(text, url), delay);
         }
     }
+
+    private async preloadImage(url: string): Promise<HTMLImageElement> {
+        return new Promise<HTMLImageElement>((resolve, reject) => {
+            const image = new Image();
+            image.src = url;
+            image.onload = (event) => resolve(image);
+            image.onabort = (event) => reject(event);
+            image.onerror = (event) => reject(event);
+        });
+    }
+
 }

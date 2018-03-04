@@ -26,7 +26,7 @@ import {
 
 import BallzManager from "./ballz-manager";
 import BotSocket from "./bot-socket";
-import CheeringHandler from "./cheering-handler";
+import CheeringWithCheermotesHandler from "./cheering-with-cheermotes-handler";
 import ConsoleLog from "./console-log";
 import FollowingHandler from "./following-handler";
 import SoundManager from "./sound-manager";
@@ -41,7 +41,7 @@ export default class EventManager {
     };
     private ballzManager: BallzManager;
     private subscriptionHandler: SubscriptionHandler;
-    private cheeringHandler: CheeringHandler;
+    private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler;
     private followingHandler: FollowingHandler;
     private soundManager: SoundManager;
     private botSocket: BotSocket;
@@ -52,7 +52,7 @@ export default class EventManager {
         botSocket: BotSocket,
         soundManager: SoundManager,
         followingHandler: FollowingHandler,
-        cheeringHandler: CheeringHandler,
+        cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
         subscriptionHandler: SubscriptionHandler,
         ballzManager: BallzManager,
     ) {
@@ -60,7 +60,7 @@ export default class EventManager {
         this.botSocket = botSocket;
         this.soundManager = soundManager;
         this.followingHandler = followingHandler;
-        this.cheeringHandler = cheeringHandler;
+        this.cheeringWithCheermotesHandler = cheeringWithCheermotesHandler;
         this.subscriptionHandler = subscriptionHandler;
         this.ballzManager = ballzManager;
 
@@ -72,26 +72,26 @@ export default class EventManager {
             //      logger.log("chat-message", data);
             // },
 
-            animate: (data: any) => {
+            "animate": (data: any) => {
                 const text = data.username;
                 const color = data.args[0];
 
                 this.ballzManager.add(text, color);
             },
 
-            following: (data: any) => {
+            "following": (data: any) => {
                 this.followingHandler.handle(data);
             },
 
-            cheering: (data: any) => {
-                this.cheeringHandler.handle(data);
+            "cheering-with-cheermotes": (data: any) => {
+                this.cheeringWithCheermotesHandler.handle(data);
             },
 
-            subscription: (data: any) => {
+            "subscription": (data: any) => {
                 this.subscriptionHandler.handle(data);
             },
 
-            cowbell: (data: any) => {
+            "cowbell": (data: any) => {
                 this.soundManager.playRandom("cowbell");
             },
 

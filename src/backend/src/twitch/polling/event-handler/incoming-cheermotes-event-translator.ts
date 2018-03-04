@@ -24,20 +24,20 @@ import {
 
 import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
 import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingStreamingEvent from "../event/iincoming-streaming-event";
-import IPollingStreamingResponse from "../handler/istreaming-polling-response";
+import IIncomingCheermotesEvent from "../event/iincoming-cheermotes-event";
+import IPollingCheermotesResponse from "../handler/icheermotes-polling-response";
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
-export default class IncomingStreamingCommandEventTranslator extends PollingManager<IPollingStreamingResponse> {
+export default class IncomingCheermotesCommandEventTranslator extends PollingManager<IPollingCheermotesResponse> {
     public userid: number;
     public username: string;
-    private incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>;
+    private incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>;
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<IPollingStreamingResponse>,
-        incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>,
+        connection: IPollingConnection<IPollingCheermotesResponse>,
+        incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>,
         username: string,
         userid: number,
     ) {
@@ -46,44 +46,35 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingStreamingEventEmitter, "object");
+        assert.equal(typeof incomingCheermotesEventEmitter, "object");
         assert.nonEmptyString(username);
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingStreamingCommandEventTranslator");
-        this.incomingStreamingEventEmitter = incomingStreamingEventEmitter;
+        this.logger = logger.child("IncomingCheermotesCommandEventTranslator");
+        this.incomingCheermotesEventEmitter = incomingCheermotesEventEmitter;
         this.username = username;
         this.userid = userid;
     }
 
-    protected async dataHandler(data: IPollingStreamingResponse): Promise<void> {
+    protected async dataHandler(data: IPollingCheermotesResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        data.data.forEach((streamEvent) => {
-            const userId = parseInt(streamEvent.user_id, 10);
+        const event: IIncomingCheermotesEvent = {
+            channel: {
+                id: this.userid,
+                name: this.username,
+            },
+            cheermotes: data,
+            // TODO: move upwards in the object creation chain?
+            timestamp: new Date(),
+        };
 
-            assert.equal(this.userid, userId);
-
-            const event: IIncomingStreamingEvent = {
-                channel: {
-                    id: userId,
-                    name: this.username,
-                },
-                startedAt: streamEvent.started_at,
-                // TODO: move upwards in the object creation chain?
-                timestamp: new Date(),
-                title: streamEvent.title,
-                type: streamEvent.type,
-                viewers: streamEvent.viewer_count,
-            };
-
-            this.incomingStreamingEventEmitter.emit(event);
-        });
+        this.incomingCheermotesEventEmitter.emit(event);
     }
 
-    protected async filter(data: IPollingStreamingResponse): Promise<boolean> {
+    protected async filter(data: IPollingCheermotesResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 

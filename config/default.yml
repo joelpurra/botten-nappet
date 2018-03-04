@@ -1,6 +1,8 @@
 backend:
-    bottenNappetDefaultPollingInterval: 30000
-    bottenNappetStreamingPollingInterval: 10000
+    pollingInterval:
+        default: 30000
+        streaming: 30000
+        cheermotes: 600000
     databaseUri: null
     followingPollingLimit: 5
     logging:
@@ -36,8 +38,10 @@ shared:
         level: error
     topic:
         twitch:
+            incomingCheeringEvent: shared-twitch-incoming-cheering-event
+            incomingCheeringWithCheermotesEvent: shared-twitch-incoming-cheering-with-cheermotes-event
+            incomingCheermotesEvent: shared-twitch-incoming-cheermotes-event
             incomingFollowingEvent: shared-twitch-incoming-following-event
             incomingStreamingEvent: shared-twitch-incoming-streaming-event
-            incomingCheeringEvent: shared-twitch-incoming-cheering-event
             incomingSubscriptionEvent: shared-twitch-incoming-subscription-event
     zmqAddress: "tcp://127.0.0.1:54859"

@@ -18,31 +18,18 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConsoleLog from "./console-log";
+import {
+    ICheerTokenWithCheermoteUrl,
+} from "../handler/Icheertoken-with-cheermotes-url";
+import IUserChannelEvent from "./iuser-channel-event";
 
-export default class BallzManager {
-    private defaultBallTimeout: number;
-    private logger: ConsoleLog;
-
-    constructor(logger: ConsoleLog) {
-        this.logger = logger;
-
-        this.defaultBallTimeout = 5000;
-    }
-
-    public add(text: string, colorOrUrl?: string, ballTimeout?: number) {
-        const detail = {
-            ballTimeout: ballTimeout || this.defaultBallTimeout,
-            colorOrUrl,
-            text,
-        };
-
-        const addBallEvent = new CustomEvent("add-ball", {
-            bubbles: true,
-            cancelable: false,
-            detail,
-        });
-
-        document.dispatchEvent(addBallEvent);
-    }
+export default interface IIncomingCheeringWithCheermotesEvent extends IUserChannelEvent {
+    message: string | null;
+    bits: number;
+    cheermotes: ICheerTokenWithCheermoteUrl[];
+    total: number;
+    badge: {
+        new_version: number;
+        previous_version: number;
+    } | null;
 }

@@ -56,9 +56,11 @@ import PollingClientIdConnection from "../twitch/polling/connection/polling-clie
 import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
 
 import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
+import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
 import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
 import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
+import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
 import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
 import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
 import perUserHandlersMain from "./per-user-handlers-main";
@@ -122,10 +124,15 @@ export default async function authenticatedApplicationMain(
         `whispers.${twitchUserId}`,
     ];
 
+    // TODO: externalize/configure base url.
     const followingPollingUri =
         `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${config.followingPollingLimit}`;
 
+    // TODO: externalize/configure base url.
     const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${twitchUserId}`;
+
+    // TODO: externalize/configure base url.
+    const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${twitchUserId}`;
 
     const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
         rootLogger,
@@ -153,9 +160,17 @@ export default async function authenticatedApplicationMain(
     const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
         rootLogger,
         config.twitchAppClientId,
-        config.bottenNappetDefaultPollingInterval,
+        config.bottenNappetStreamingPollingInterval,
         true,
         streamingPollingUri,
+        "get",
+    );
+    const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
+        rootLogger,
+        config.twitchAppClientId,
+        config.bottenNappetCheermotesPollingInterval,
+        true,
+        cheermotesPollingUri,
         "get",
     );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
@@ -182,6 +197,12 @@ export default async function authenticatedApplicationMain(
             config.zmqAddress,
             config.topicTwitchIncomingStreamingEvent,
         );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicTwitchIncomingCheermotesEvent,
+        );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
             rootLogger,
@@ -200,10 +221,12 @@ export default async function authenticatedApplicationMain(
         twitchIrcConnection,
         twitchPollingFollowingConnection,
         twitchPollingStreamingConnection,
+        twitchPollingCheermotesConnection,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
     ];
@@ -242,11 +265,13 @@ export default async function authenticatedApplicationMain(
             twitchIrcConnection,
             twitchPollingFollowingConnection,
             twitchPollingStreamingConnection,
+            twitchPollingCheermotesConnection,
             twitchAllPubSubTopicsForTwitchUserIdConnection,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
             twitchUserId,
