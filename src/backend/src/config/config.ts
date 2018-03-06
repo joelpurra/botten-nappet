@@ -28,15 +28,19 @@ import {
 import IZmqConfig from "../../../shared/src/util/izmq-config";
 
 export default class Config implements IZmqConfig {
+    private packageJson: any;
     private sharedPrefix: string;
     private prefix: string;
     private config: IConfig;
 
-    constructor(config: IConfig) {
-        assert.hasLength(arguments, 1);
+    constructor(config: IConfig, packageJson: any) {
+        assert.hasLength(arguments, 2);
         assert.equal(typeof config, "object");
+        // TODO: import type for package.json.
+        assert.equal(typeof packageJson, "object");
 
         this.config = config;
+        this.packageJson = packageJson;
 
         this.sharedPrefix = "shared";
         this.prefix = "backend";
@@ -65,6 +69,13 @@ export default class Config implements IZmqConfig {
         assert.nonEmptyString(this.twitchUserName);
         assert.nonEmptyString(this.twitchChannelName);
         assert.nonEmptyString(this.zmqAddress);
+        assert.nonEmptyString(this.applicationName);
+        assert.nonEmptyString(this.version);
+        assert.nonEmptyString(this.vidyRootUrl);
+        assert.nonEmptyString(this.vidyVideoLinkBaseUrl);
+        assert.nonEmptyString(this.vidyKeyId);
+        assert.nonEmptyString(this.vidyKeySecret);
+        assert.nonEmptyString(this.vidySystemUuid);
     }
 
     public get databaseUri(): string {
@@ -102,6 +113,22 @@ export default class Config implements IZmqConfig {
 
     public get topicTwitchIncomingCheeringWithCheermotesEvent(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringWithCheermotesEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicVidyOutgoingSearchCommand(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.outgoingSearchCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicVidyIncomingSearchResultEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.incomingSearchResultEvent`);
 
         assert.nonEmptyString(value);
 
@@ -295,6 +322,66 @@ export default class Config implements IZmqConfig {
 
         assert.nonEmptyString(value);
         assert(value.startsWith("tcp://"));
+
+        return value;
+    }
+
+    public get applicationName(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.applicationName`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get version(): string {
+        const value = this.packageJson.version;
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get vidyRootUrl(): string {
+        const value = this.config.get<string>(`${this.prefix}.vidy.rootUrl`);
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith("https://"));
+        assert(value.endsWith("/"));
+
+        return value;
+    }
+
+    public get vidyVideoLinkBaseUrl(): string {
+        const value = this.config.get<string>(`${this.prefix}.vidy.videoLinkBaseUrl`);
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith("https://"));
+        assert(value.endsWith("/"));
+
+        return value;
+    }
+
+    public get vidyKeyId(): string {
+        const value = this.config.get<string>(`${this.prefix}.vidy.keyId`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get vidyKeySecret(): string {
+        const value = this.config.get<string>(`${this.prefix}.vidy.keySecret`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get vidySystemUuid(): string {
+        const value = this.config.get<string>(`${this.prefix}.vidy.systemUuid`);
+
+        assert.nonEmptyString(value);
 
         return value;
     }

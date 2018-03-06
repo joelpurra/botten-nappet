@@ -89,3 +89,9 @@ body {
     vertical-align: middle;
     border-radius: 0.25em;
 }
+
+#vidy-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}

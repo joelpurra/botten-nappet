@@ -45,6 +45,8 @@ import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/mess
 import IIncomingCheeringWithCheermotesEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-with-cheermotes-event";
 import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/iincoming-following-event";
 import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
+import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
+
 import managedMain from "./managed-main";
 
 export default async function managerMain(
@@ -103,6 +105,14 @@ export default async function managerMain(
             config.topicTwitchIncomingSubscriptionEvent,
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.connect();
+
+    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
+            mainLogger,
+            config.zmqAddress,
+            config.topicVidyIncomingSearchResultEvent,
+        );
+    await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.connect();
 
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable.forEach((data) => {
         let msg = null;
@@ -244,6 +254,24 @@ export default async function managerMain(
         io.send(msg);
     });
 
+    vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable.forEach((data) => {
+        const rnd = Math.floor(Math.random() * data.clips.results.length);
+        const randomResult = data.clips.results[rnd];
+        const randomVideoUrl = randomResult.files.landscapeVideo240.url;
+
+        const msg = {
+            data: {
+                // TODO: don't assume too much.
+                videoUrl: randomVideoUrl,
+                // timestamp: data.timestamp,
+                // username: data.triggerer.name,
+            },
+            event: "vidy",
+        };
+
+        io.send(msg);
+    });
+
     io.on("connection", (clientSocket) => {
         // mainLogger.trace(clientSocket, "incoming connection");
         mainLogger.trace(clientSocket.rooms, "incoming connection");
@@ -264,6 +292,7 @@ export default async function managerMain(
     mainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
+        await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.disconnect();
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.disconnect();
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.disconnect();
         await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.disconnect();

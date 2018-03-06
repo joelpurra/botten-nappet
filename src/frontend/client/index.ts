@@ -29,6 +29,7 @@ import ScreenLog from "./screen-log";
 import SoundManager from "./sound-manager";
 import statusScroller from "./status-scroller";
 import SubscriptionHandler from "./subscription-handler";
+import VidyHandler from "./vidy-handler";
 
 export default async function client() {
     const logger = new ConsoleLog();
@@ -69,6 +70,10 @@ export default async function client() {
         soundManager,
         "cowbell",
     );
+    const vidyHandler = new VidyHandler(
+        logger,
+        "vidy-video",
+    );
 
     const eventManager = new EventManager(
         logger,
@@ -78,6 +83,7 @@ export default async function client() {
         cheeringWithCheermotesHandler,
         subscriptionHandler,
         ballzManager,
+        vidyHandler,
     );
 
     await eventManager.start();

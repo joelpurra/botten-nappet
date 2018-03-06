@@ -55,6 +55,8 @@ import PollingClientIdConnection from "../twitch/polling/connection/polling-clie
 
 import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
 
+import IIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
+import IOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
 import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
 import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
@@ -216,6 +218,19 @@ export default async function authenticatedApplicationMain(
             config.topicTwitchIncomingSubscriptionEvent,
         );
 
+    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicVidyOutgoingSearchCommand,
+        );
+    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
+            rootLogger,
+            config.zmqAddress,
+            config.topicVidyIncomingSearchResultEvent,
+        );
+
     const connectables: IConnectable[] = [
         twitchAllPubSubTopicsForTwitchUserIdConnection,
         twitchIrcConnection,
@@ -229,6 +244,8 @@ export default async function authenticatedApplicationMain(
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
+        vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
+        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
     ];
 
     await Bluebird.map(connectables, async (connectable) => connectable.connect());
@@ -274,6 +291,8 @@ export default async function authenticatedApplicationMain(
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
+            vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
+            vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
             twitchUserId,
         );
 

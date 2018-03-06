@@ -41,6 +41,8 @@ import TwitchIrcNewChatterHandler from "../twitch/irc/handler/new-chatter";
 import TwitchIrcPingHandler from "../twitch/irc/handler/ping";
 import TwitchIrcReconnectHandler from "../twitch/irc/handler/reconnect";
 import TwitchIrcSubscribingHandler from "../twitch/irc/handler/subscribing";
+import TwitchIrcVidyCommandHandler from "../twitch/irc/handler/vidy-command";
+import TwitchIrcVidyResultEventHandler from "../twitch/irc/handler/vidy-result-event";
 import TwitchIrcConnection from "../twitch/irc/irc-connection";
 
 import TwitchIncomingIrcCommandEventTranslator from "../twitch/irc/event-handler/incoming-irc-command-event-translator";
@@ -74,6 +76,11 @@ import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following
 import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
 import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
 
+import VidyIIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
+import VidyIOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
+import VidyOutgoingSearchCommandHandler from "../../vidy/outgoing-search-command-handler";
+import VidyAuthenticatedRequest from "../../vidy/request/authenticated-request";
+
 import TwitchPubSubLoggingHandler from "../twitch/pubsub/handler/logging";
 import TwitchPubSubPingHandler from "../twitch/pubsub/handler/ping";
 import TwitchPubSubReconnectHandler from "../twitch/pubsub/handler/reconnect";
@@ -104,6 +111,10 @@ export default async function perUserHandlersMain(
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+        MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
+    vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
     twitchUserId: number,
 ): Promise<void> {
     const twitchPubSubPingHandler = new TwitchPubSubPingHandler(
@@ -180,16 +191,53 @@ export default async function perUserHandlersMain(
             config.topicTwitchIncomingCheeringWithCheermotesEvent,
         );
 
+    const messageQueueTopicPublisherForIOutgoingSearchCommand =
+        new MessageQueueTopicPublisher<VidyIOutgoingSearchCommand>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicVidyOutgoingSearchCommand,
+        );
+
+    const messageQueueTopicPublisherForIIncomingSearchResultEvent =
+        new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicVidyIncomingSearchResultEvent,
+        );
+
     const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
         rootLogger,
         twitchIrcConnection,
         messageQueueTopicPublisherForIIncomingIrcCommand,
     );
 
+    const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(rootLogger, config);
+
+    const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
+        messageQueueTopicPublisherForIIncomingSearchResultEvent,
+        vidyAuthenticatedRequest,
+        config.vidyRootUrl,
+    );
+
     const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
         twitchIrcConnection,
+    );
+
+    const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+        messageQueueTopicPublisherForIOutgoingSearchCommand,
+    );
+    const twitchIrcVidyResultEventHandler = new TwitchIrcVidyResultEventHandler(
+        rootLogger,
+        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+        config.twitchChannelName,
+        config.vidyVideoLinkBaseUrl,
     );
 
     const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(
@@ -324,6 +372,9 @@ export default async function perUserHandlersMain(
         twitchIncomingIrcCommandEventTranslator,
         twitchOutgoingIrcCommandEventHandler,
         twitchIrcTextResponseCommandHandler,
+        vidyOutgoingSearchCommandHandler,
+        twitchIrcVidyCommandHandler,
+        twitchIrcVidyResultEventHandler,
     ];
 
     const stop = async (incomingError?: Error) => {

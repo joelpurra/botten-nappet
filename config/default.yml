@@ -27,6 +27,12 @@ backend:
         pubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
         userName: null
         usersDataUri: "https://api.twitch.tv/helix/users"
+    vidy:
+        rootUrl: null
+        videoLinkBaseUrl: null
+        keyId: null
+        keySecret: null
+        systemUuid: null
 frontend:
     port: 3000
     static:
@@ -44,4 +50,7 @@ shared:
             incomingFollowingEvent: shared-twitch-incoming-following-event
             incomingStreamingEvent: shared-twitch-incoming-streaming-event
             incomingSubscriptionEvent: shared-twitch-incoming-subscription-event
+        vidy:
+            incomingSearchResultEvent: shared-vidy-incoming-search-result-event
+            outgoingSearchCommand: shared-vidy-outgoing-search-command
     zmqAddress: "tcp://127.0.0.1:54859"

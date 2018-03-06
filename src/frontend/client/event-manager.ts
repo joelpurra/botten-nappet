@@ -32,8 +32,10 @@ import FollowingHandler from "./following-handler";
 import SoundManager from "./sound-manager";
 import SubscriptionHandler from "./subscription-handler";
 import { deepParseIso8601UtcDates } from "./utilities";
+import VidyHandler from "./vidy-handler";
 
 export default class EventManager {
+    public vidyHandler: VidyHandler;
     private dataHandlerSubscription: Rx.Subscription | null;
     private handlerObservable: Rx.Observable<any> | null;
     private handlers: {
@@ -55,6 +57,7 @@ export default class EventManager {
         cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
         subscriptionHandler: SubscriptionHandler,
         ballzManager: BallzManager,
+        vidyHandler: VidyHandler,
     ) {
         this.logger = logger;
         this.botSocket = botSocket;
@@ -63,6 +66,7 @@ export default class EventManager {
         this.cheeringWithCheermotesHandler = cheeringWithCheermotesHandler;
         this.subscriptionHandler = subscriptionHandler;
         this.ballzManager = ballzManager;
+        this.vidyHandler = vidyHandler;
 
         this.dataHandlerSubscription = null;
         this.handlerObservable = null;
@@ -93,6 +97,10 @@ export default class EventManager {
 
             "cowbell": (data: any) => {
                 this.soundManager.playRandom("cowbell");
+            },
+
+            "vidy": (data: any) => {
+                this.vidyHandler.handle(data.videoUrl);
             },
 
             // "message": (data: any) => {

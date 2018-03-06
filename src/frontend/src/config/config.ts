@@ -113,6 +113,22 @@ export default class Config implements IZmqConfig {
         return value;
     }
 
+    public get topicVidyOutgoingSearchCommand(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.outgoingSearchCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicVidyIncomingSearchResultEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.incomingSearchResultEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
     public get zmqAddress(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.zmqAddress`);
 

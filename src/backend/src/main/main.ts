@@ -18,10 +18,18 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    assert,
+} from "check-types";
+
+import path from "path";
+
 // NOTE: this is a hack, modifying the global Rx.Observable.prototype.
 import "../../lib/rxjs-extensions/async-filter";
 
 import configLibrary from "config";
+import pkgDir from "pkg-dir";
+const thenReadJson = require("then-read-json");
 
 import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "../../../shared/src/util/pino-logger";
@@ -44,7 +52,17 @@ export default async function main(
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
 ): Promise<void> {
-    const config = new Config(configLibrary);
+    // TODO: import type for package.json.
+    const projectRootDirectoryPath = await pkgDir(__dirname);
+
+    // TODO: better null handling.
+    assert.nonEmptyString(projectRootDirectoryPath!);
+
+    const packageJsonPath = path.join(projectRootDirectoryPath!, "package.json");
+
+    const packageJson = await thenReadJson(packageJsonPath);
+
+    const config = new Config(configLibrary, packageJson);
 
     config.validate();
 

@@ -71,6 +71,7 @@
     "socket.io": "^2.0.4",
     "socket.io-client": "^2.0.4",
     "soundjs": "^1.0.1",
+    "then-read-json": "^1.0.3",
     "ws": "^4.0.0",
     "zeromq-ng": "^5.0.0-beta.9"
   },

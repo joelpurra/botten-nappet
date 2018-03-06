@@ -19,6 +19,11 @@ export TWITCH_APP_CLIENT_ID='configure me'
 export TWITCH_APP_CLIENT_SECRET='configure me'
 export TWITCH_APP_OAUTH_REDIRECT_URL='configure me'
 export TWITCH_USER_NAME='configure me'
+export VIDY_API_ROOT_URL='https://sandbox.vidy.cn/'
+export VIDY_API_KEY_ID='sandbox'
+export VIDY_API_KEY_SECRET='sandbox'
+export VIDY_VIDEO_LINK_BASE_URL='https://vidy.cn/v/'
+export VIDY_SYSTEM_UUID='configure me'
 export BOTTEN_NAPPET_SHARED_LOG_FILE="${TMPDIR}.botten-nappet.log"
 export BOTTEN_NAPPET_BACKEND_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory"
 ```
@@ -113,10 +118,18 @@ Best practice includes revoking the above temporary development tokens.
 
 ```shell
 # Unset all of the exported variables.
+# NOTE: there might be more custom settings.
 export -n TWITCH_APP_CLIENT_ID
 export -n TWITCH_APP_CLIENT_SECRET
 export -n TWITCH_APP_OAUTH_REDIRECT_URL
 export -n TWITCH_USER_NAME
+export -n VIDY_API_ROOT_URL
+export -n VIDY_VIDEO_LINK_BASE_URL
+export -n VIDY_API_KEY_ID
+export -n VIDY_API_KEY_SECRET
+export -n VIDY_SYSTEM_UUID
+export -n BOTTEN_NAPPET_SHARED_LOG_FILE
+export -n BOTTEN_NAPPET_BACKEND_DATABASE_URI
 ```
 
 

@@ -5,6 +5,12 @@ backend:
     appClientSecret: TWITCH_APP_CLIENT_SECRET
     appOAuthRedirectUrl: TWITCH_APP_OAUTH_REDIRECT_URL
     userName: TWITCH_USER_NAME
+  vidy:
+      rootUrl: VIDY_API_ROOT_URL
+      videoLinkBaseUrl: VIDY_VIDEO_LINK_BASE_URL
+      keyId: VIDY_API_KEY_ID
+      keySecret: VIDY_API_KEY_SECRET
+      systemUuid: VIDY_SYSTEM_UUID
 frontend:
     port: PORT
 shared:
