@@ -1,0 +1,97 @@
+html,
+body {
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
+    color: #19171c;
+}
+
+#top-status-scroll {
+    font-size: 3em;
+    color: #ffffaf;
+    text-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5),
+    0 0 2px rgba(0, 0, 0, 1),
+    0 0 2px rgba(0, 0, 0, 1),
+    0 0 2px rgba(0, 0, 0, 1);
+    text-align: center;
+
+    position: absolute;
+    height: 50px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.repeated p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.repeated p:first-of-type {
+    margin-top: 0;
+}
+
+#screen-log {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    width: 300px;
+    height: 192px;
+    overflow: hidden;
+    background-color: #efeef1;
+    opacity: 0.65;
+}
+
+#screen-log .log-message {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#screen-log .log-message .timestamp,
+#screen-log .log-message .username,
+#screen-log .log-message .message {
+    margin-right: 5px;
+}
+
+#screen-log .log-message .timestamp {
+    color: #6e6779;
+}
+
+#screen-log .log-message .username {
+    font-weight: bold;
+}
+
+#ballz {
+    width: 100%;
+    height: 100%;
+}
+
+#notification-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#notification-container .notification {
+    background-color: rgba(192,192,192,0.5);
+    font-size: 2em;
+    padding: 1em;
+    position: absolute;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 0.25em;
+}
+
+#vidy-video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}

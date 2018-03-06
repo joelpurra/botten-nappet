@@ -8,7 +8,7 @@
   "rulesDirectory": [],
   "linterOptions": {
     "exclude": [
-      "lib/**/*.ts"
+      "src/backend/lib/**/*.ts"
     ]
   }
 }

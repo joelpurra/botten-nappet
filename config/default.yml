@@ -1,20 +1,56 @@
-applicationName: "botten-nappet"
-bottenNappetDefaultPollingInterval: 30000
-databaseUri: null
-followingPollingLimit: 5
-loggingFile: null
-loggingLevel: "error"
-twitchAppClientId: null
-twitchAppClientSecret: null
-twitchAppOAuthRedirectUrl: null
-twitchAppScopes:
-    - "channel_feed_read"
-twitchAppTokenRefreshInterval: 2700000
-twitchIrcWebSocketUri: "wss://irc-ws.chat.twitch.tv:443/"
-twitchOAuthAuthorizationUri: "https://api.twitch.tv/kraken/oauth2/authorize"
-twitchOAuthTokenRevocationUri: "https://api.twitch.tv/kraken/oauth2/revoke"
-twitchOAuthTokenUri: "https://api.twitch.tv/kraken/oauth2/token"
-twitchOAuthTokenVerificationUri: "https://api.twitch.tv/kraken"
-twitchPubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
-twitchUserName: null
-twitchUsersDataUri: "https://api.twitch.tv/helix/users"
+backend:
+    pollingInterval:
+        default: 30000
+        streaming: 30000
+        cheermotes: 600000
+    databaseUri: null
+    followingPollingLimit: 5
+    logging:
+        file: null
+        level: error
+    topic:
+        twitch:
+            incomingIrcCommand: backend-twitch-incoming-irc-command
+            outgoingIrcCommand: backend-twitch-outgoing-irc-command
+    twitch:
+        appClientId: null
+        appClientSecret: null
+        appOAuthRedirectUrl: null
+        appScopes:
+            - channel_feed_read
+        appTokenRefreshInterval: 2700000
+        ircWebSocketUri: "wss://irc-ws.chat.twitch.tv:443/"
+        oauthAuthorizationUri: "https://api.twitch.tv/kraken/oauth2/authorize"
+        oauthTokenRevocationUri: "https://api.twitch.tv/kraken/oauth2/revoke"
+        oauthTokenUri: "https://api.twitch.tv/kraken/oauth2/token"
+        oauthTokenVerificationUri: "https://api.twitch.tv/kraken"
+        pubSubWebSocketUri: "wss://pubsub-edge.twitch.tv/"
+        userName: null
+        usersDataUri: "https://api.twitch.tv/helix/users"
+    vidy:
+        rootUrl: null
+        videoLinkBaseUrl: null
+        keyId: null
+        keySecret: null
+        systemUuid: null
+frontend:
+    port: 3000
+    static:
+        publicRootDirectory: "./src/frontend/public"
+shared:
+    applicationName: botten-nappet
+    logging:
+        file: null
+        level: error
+    topic:
+        twitch:
+            incomingCheeringEvent: shared-twitch-incoming-cheering-event
+            incomingCheeringWithCheermotesEvent: shared-twitch-incoming-cheering-with-cheermotes-event
+            incomingCheermotesEvent: shared-twitch-incoming-cheermotes-event
+            incomingFollowingEvent: shared-twitch-incoming-following-event
+            incomingStreamingEvent: shared-twitch-incoming-streaming-event
+            incomingSubscriptionEvent: shared-twitch-incoming-subscription-event
+        vidy:
+            incomingSearchResultEvent: shared-vidy-incoming-search-result-event
+            outgoingSearchCommand: shared-vidy-outgoing-search-command
+    zmqAddress: "tcp://127.0.0.1:54859"
