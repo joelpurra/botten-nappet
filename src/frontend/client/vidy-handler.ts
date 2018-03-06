@@ -35,7 +35,7 @@ export default class VidyHandler {
         videoElement.hidden = true;
         videoElement.src = videoUrl;
         videoElement.load();
-        videoElement.oncanplay = () => {
+        videoElement.oncanplaythrough = () => {
             videoElement.hidden = false;
             videoElement.play();
         };
