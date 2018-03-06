@@ -54,18 +54,22 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         this.username = username;
 
         this.greetings = [
-            /\bhello\b/,
-            /\bhi\b/,
+            /\bh(e+|a+)llo\b/,
+            /\bhi+\b/,
             /\bhiya\b/,
-            /\bhey\b/,
+            /\bhe+y\b/,
             /\bhowdy\b/,
             /\baloha\b/,
             /\b(o )?hai\b/,
             /\bgood (morning|evening|day)\b/,
             /\bwhat ?s up\b/,
             /\bwh?a+z+(u+p+)?\b/,
-            /\byo\b/,
+            /\byo+\b/,
             /\bay+\b/,
+
+            // NOTE: emoticons.
+            /\bheyguys\b/,
+            /\bvohiyo\b/,
         ];
     }
 
