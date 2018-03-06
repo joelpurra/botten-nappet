@@ -82,7 +82,7 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
             return false;
         }
 
-        if (!Array.isArray(data.data)) {
+        if (!Array.isArray(data.actions)) {
             return false;
         }
 

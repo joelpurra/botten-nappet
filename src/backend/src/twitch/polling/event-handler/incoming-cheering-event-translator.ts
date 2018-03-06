@@ -59,8 +59,8 @@ export default class IncomingCheeringCommandEventTranslator extends PubSubManage
             badge: bitsEvent.badge_entitlement,
             bits: bitsEvent.bits_used,
             channel: {
-                id: bitsEvent.channel_name,
-                name: bitsEvent.channel_id,
+                id: bitsEvent.channel_id,
+                name: bitsEvent.channel_name,
             },
             message: bitsEvent.chat_message,
             timestamp: data.timestamp,

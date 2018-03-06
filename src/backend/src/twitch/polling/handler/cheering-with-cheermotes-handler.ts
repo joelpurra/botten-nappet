@@ -32,7 +32,7 @@ import IIncomingCheermotesEvent from "../event/iincoming-cheermotes-event";
 import {
     ICheerToken,
     ICheerTokenWithCheermoteUrl,
-} from "./Icheertoken-with-cheermotes-url";
+} from "./icheertoken-with-cheermotes-url";
 import {
     CheermoteBackground,
     CheermoteImageType,
@@ -101,6 +101,8 @@ export default class CheeringWithCheermotesHandler
 
             this.incomingCheeringWithCheermotesEvent.emit(event);
         }
+
+        throw new Error(`Unknown data object: ${Object.keys(data)}`);
     }
 
     protected async filter(data: IIncomingCheeringEvent | IIncomingCheermotesEvent): Promise<boolean> {
@@ -209,7 +211,6 @@ export default class CheeringWithCheermotesHandler
             };
 
             return cheerTokenWithCheermoteUrl;
-
         });
 
         return cheerTokensWithCheermoteUrl;
