@@ -40,6 +40,7 @@ import {
 
 export default class CheeringWithCheermotesHandler
     extends MultiEventSubscriptionManager<IIncomingCheeringEvent | IIncomingCheermotesEvent> {
+    public cheerTokenPrefixAmountRx: RegExp;
     public currentCheermotes: IIncomingCheermotesEvent | null;
     private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>;
 
@@ -62,6 +63,8 @@ export default class CheeringWithCheermotesHandler
         // NOTE: expecting to collect data from a single channel event source, but not verifying that the
         // channel doesn't change over time and/or per command.
         this.currentCheermotes = null;
+
+        this.cheerTokenPrefixAmountRx = /(\w+?)(\d+)/;
     }
 
     protected async dataHandler(data: IIncomingCheeringEvent | IIncomingCheermotesEvent): Promise<void> {
@@ -133,17 +136,17 @@ export default class CheeringWithCheermotesHandler
 
         const messageTokens = incomingCheeringEvent.message.split(/\s+/);
         const possibleCheerTokens = messageTokens
-            .filter((messageToken) => /\w+\d+/.test(messageToken))
+            .filter((messageToken) => this.cheerTokenPrefixAmountRx.test(messageToken))
             .map((cheerToken) => {
-                const matches = /(\w+)(\d+)/.exec(cheerToken);
+                const matches = this.cheerTokenPrefixAmountRx.exec(cheerToken);
 
                 if (!matches) {
                     throw new Error("No matches found.");
                 }
 
                 const result = {
-                    amount: parseInt(matches[1][2], 10),
-                    prefix: matches[1][1],
+                    amount: parseInt(matches[2], 10),
+                    prefix: matches[1],
                 };
 
                 return result;
@@ -179,7 +182,7 @@ export default class CheeringWithCheermotesHandler
             }
 
             const actionsWithPrefix = this.currentCheermotes.cheermotes.actions
-                .filter((action) => action.prefix === cheerToken.prefix);
+                .filter((action) => action.prefix.toLowerCase() === cheerToken.prefix.toLowerCase());
 
             const actionWithPrefix = actionsWithPrefix[0];
 
