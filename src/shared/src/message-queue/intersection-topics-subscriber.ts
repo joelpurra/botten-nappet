@@ -24,10 +24,12 @@ import {
 
 import PinoLogger from "../../../shared/src/util/pino-logger";
 
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
+import TopicsSubscriber from "./topics-subscriber";
 
-export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {
+export default class IntersectionTopicsSubscriber<T> extends TopicsSubscriber<T> {
+    private topicsStringSeparator: string;
+
     constructor(logger: PinoLogger, address: string, ...topics: string[]) {
         super(logger, address, ...topics);
 
@@ -39,9 +41,24 @@ export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopic
         assert.array(topics);
 
         // TODO: configurable.
-        const topicsStringSeparator = ":";
+        this.topicsStringSeparator = ":";
+        this.logger = logger.child(`IntersectionTopicsSubscriber (${this.topics.join(this.topicsStringSeparator)})`);
+    }
 
-        this.logger = logger.child(`SingleItemJsonTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+    protected async filterMessages(topicMessages: IZeroMqTopicMessages): Promise<boolean> {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof topicMessages, "object");
+        assert.nonEmptyArray(topicMessages.messages);
+        assert.equal(typeof topicMessages.topic, "string");
+        assert.nonEmptyString(topicMessages.topic);
+
+        const currentTopics = topicMessages.topic.split(this.topicsStringSeparator);
+
+        const allMatch = this.topics.every((topic) => currentTopics.includes(topic));
+
+        // this.logger.trace(this.topics, currentTopics, allMatch, "filterMessages");
+
+        return allMatch;
     }
 
     protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T> {

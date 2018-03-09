@@ -18,8 +18,41 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUser from "./iuser";
+import {
+    assert,
+} from "check-types";
 
-export default interface IUserCamo extends IUser {
-    _schema?: object;
+import {
+    Document,
+    DocumentSchema,
+    SchemaType,
+} from "camo";
+
+interface IDistributedEventSchema extends DocumentSchema {
+    messages: SchemaType;
+    topic: SchemaType;
+}
+
+export default class DistributedEventRepository extends Document<IDistributedEventSchema> {
+
+    public static collectionName() {
+        return "distributed-event";
+    }
+
+    constructor() {
+        super();
+
+        assert.hasLength(arguments, 0);
+
+        super.schema({
+            messages: {
+                required: true,
+                type: [Buffer],
+            },
+            topic: {
+                required: true,
+                type: String,
+            },
+        });
+    }
 }

@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUser from "./iuser";
+import IPubSubResponse from "../../pubsub/ipubsub-response";
 
-export default interface IUserCamo extends IUser {
-    _schema?: object;
-}
+/* tslint:disable no-empty-interface */
+export default interface IIncomingPubSubEvent extends IPubSubResponse { }
+/* tslint:enable no-empty-interface */

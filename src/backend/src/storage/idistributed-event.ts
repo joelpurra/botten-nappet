@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUser from "./iuser";
+import IZeroMqTopicMessages from "../../../shared/src/message-queue/izeromq-topic-message";
 
-export default interface IUserCamo extends IUser {
-    _schema?: object;
+export default interface IDistributedEvent extends IZeroMqTopicMessages {
+    _id?: string;
 }

@@ -10,8 +10,9 @@ backend:
         level: error
     topic:
         twitch:
-            incomingIrcCommand: backend-twitch-incoming-irc-command
-            outgoingIrcCommand: backend-twitch-outgoing-irc-command
+            incomingIrcCommand: "external:backend:twitch:incoming:irc:command"
+            outgoingIrcCommand: "external:backend:twitch:outgoing:irc:command"
+            incomingPubSubEvent: "external:backend:twitch:incoming:pubsub:event"
     twitch:
         appClientId: null
         appClientSecret: null
@@ -44,13 +45,13 @@ shared:
         level: error
     topic:
         twitch:
-            incomingCheeringEvent: shared-twitch-incoming-cheering-event
-            incomingCheeringWithCheermotesEvent: shared-twitch-incoming-cheering-with-cheermotes-event
-            incomingCheermotesEvent: shared-twitch-incoming-cheermotes-event
-            incomingFollowingEvent: shared-twitch-incoming-following-event
-            incomingStreamingEvent: shared-twitch-incoming-streaming-event
-            incomingSubscriptionEvent: shared-twitch-incoming-subscription-event
+            incomingCheeringEvent: "internal:shared:twitch:incoming:cheering:event"
+            incomingCheeringWithCheermotesEvent: "internal:shared:twitch:incoming:cheering:with:cheermotes:event"
+            incomingCheermotesEvent: "internal:shared:twitch:incoming:cheermotes:event"
+            incomingFollowingEvent: "internal:shared:twitch:incoming:following:event"
+            incomingStreamingEvent: "internal:shared:twitch:incoming:streaming:event"
+            incomingSubscriptionEvent: "internal:shared:twitch:incoming:subscription:event"
         vidy:
-            incomingSearchResultEvent: shared-vidy-incoming-search-result-event
-            outgoingSearchCommand: shared-vidy-outgoing-search-command
+            incomingSearchResultEvent: "external:shared:vidy:incoming:search:result:event"
+            outgoingSearchCommand: "external:shared:vidy:outgoing:search:command"
     zmqAddress: "tcp://127.0.0.1:54859"

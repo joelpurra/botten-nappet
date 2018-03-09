@@ -24,10 +24,10 @@ import {
 
 import PinoLogger from "../../../shared/src/util/pino-logger";
 
+import IDistributedEvent from "../../../backend/src/storage/idistributed-event";
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
-import IZeroMqTopicMessages from "./izeromq-topic-message";
 
-export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {
+export default class RawTopicsSubscriber extends IntersectionTopicsSubscriber<IDistributedEvent> {
     constructor(logger: PinoLogger, address: string, ...topics: string[]) {
         super(logger, address, ...topics);
 
@@ -41,17 +41,16 @@ export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopic
         // TODO: configurable.
         const topicsStringSeparator = ":";
 
-        this.logger = logger.child(`SingleItemJsonTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`RawTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
     }
 
-    protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T> {
+    protected async parseMessages(topicMessages: IDistributedEvent): Promise<IDistributedEvent> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof topicMessages, "object");
         assert.nonEmptyArray(topicMessages.messages);
-        assert.hasLength(topicMessages.messages, 1);
+        assert.equal(typeof topicMessages.topic, "string");
+        assert.nonEmptyString(topicMessages.topic);
 
-        const jsonMessage: T = JSON.parse(topicMessages.messages[0].toString());
-
-        return jsonMessage;
+        return topicMessages;
     }
 }

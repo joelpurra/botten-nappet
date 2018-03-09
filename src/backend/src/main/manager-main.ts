@@ -24,6 +24,8 @@ import Config from "../config/config";
 import DatabaseConnection from "../storage/database-connection";
 
 import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueueRawTopicsSubscriber from "../../../shared/src/message-queue/raw-topics-subscriber";
+import DistributedEventStorageManager from "../storage/manager/distributed-event-storage-manager";
 
 import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
 import TwitchPollingApplicationTokenConnection from "../twitch/authentication/polling-application-token-connection";
@@ -32,6 +34,8 @@ import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
 import TwitchRequestHelper from "../twitch/helper/request-helper";
 import TwitchTokenHelper from "../twitch/helper/token-helper";
 
+import DistributedEventManager from "../distributed-events/distributed-event-manager";
+import DistributedEventRepository from "../storage/repository/distributed-event-repository";
 import managedMain from "./managed-main";
 
 export default async function managerMain(
@@ -40,6 +44,7 @@ export default async function managerMain(
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     databaseConnection: DatabaseConnection,
+    messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
     messageQueuePublisher: MessageQueuePublisher,
     twitchRequestHelper: TwitchRequestHelper,
     twitchCSRFHelper: TwitchCSRFHelper,
@@ -48,10 +53,26 @@ export default async function managerMain(
     twitchApplicationTokenManager: TwitchApplicationTokenManager,
 ): Promise<void> {
     await databaseConnection.connect();
+    await messageQueueAllRawTopicsSubscriber.connect();
+
+    // TODO: ensure event distributed event manager starts sooner?
+    const distributedEventStorageManager = new DistributedEventStorageManager(
+        mainLogger,
+        DistributedEventRepository,
+    );
+    const distributedEventManager = new DistributedEventManager(
+        mainLogger,
+        messageQueueAllRawTopicsSubscriber,
+        distributedEventStorageManager,
+    );
+
+    await distributedEventManager.start();
 
     mainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
+        await distributedEventManager.stop();
+        await messageQueueAllRawTopicsSubscriber.disconnect();
         await databaseConnection.disconnect();
 
         if (incomingError) {

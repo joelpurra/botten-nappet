@@ -65,6 +65,7 @@ import TwitchSubscriptionIrcReplyHandler from "../twitch/polling/handler/subscri
 import IncomingCheeringCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheering-event-translator";
 import IncomingCheermotesCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheermotes-event-translator";
 import IncomingFollowingCommandEventTranslator from "../twitch/polling/event-handler/incoming-following-event-translator";
+import IncomingPubSubEventTranslator from "../twitch/polling/event-handler/incoming-pubsub-event-translator";
 import IncomingStreamingCommandEventTranslator from "../twitch/polling/event-handler/incoming-streaming-event-translator";
 import IncomingSubscriptionCommandEventTranslator from "../twitch/polling/event-handler/incoming-subscription-event-translator";
 /* tslint:enable max-line-length */
@@ -73,6 +74,7 @@ import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-e
 import IIncomingCheeringWithCheermotesEvent from "../twitch/polling/event/iincoming-cheering-with-cheermotes-event";
 import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
+import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
 import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
 import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
 
@@ -97,6 +99,8 @@ export default async function perUserHandlersMain(
     twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
     twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
     twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
         MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
@@ -128,6 +132,19 @@ export default async function perUserHandlersMain(
     const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(
         rootLogger,
         twitchAllPubSubTopicsForTwitchUserIdConnection,
+    );
+
+    const messageQueueTopicPublisherForIIncomingPubSubEvent =
+        new MessageQueueTopicPublisher<IIncomingPubSubEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingPubSubEvent,
+        );
+
+    const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
+        rootLogger,
+        twitchAllPubSubTopicsForTwitchUserIdConnection,
+        messageQueueTopicPublisherForIIncomingPubSubEvent,
     );
 
     const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
@@ -326,7 +343,7 @@ export default async function perUserHandlersMain(
 
     const twitchIncomingCheeringCommandEventTranslator = new IncomingCheeringCommandEventTranslator(
         rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
         messageQueueTopicPublisherForIIncomingCheeringEvent,
     );
     const twitchCheeringIrcReplyHandler = new TwitchCheeringIrcReplyHandler(
@@ -353,6 +370,7 @@ export default async function perUserHandlersMain(
         twitchPubSubPingHandler,
         twitchPubSubReconnectHandler,
         twitchPubSubLoggingHandler,
+        twitchIncomingPubSubEventTranslator,
         twitchIrcLoggingHandler,
         twitchIrcPingHandler,
         twitchIrcGreetingHandler,

@@ -41,9 +41,9 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
         assert.equal(typeof topic, "string");
         assert(topic.length > 0);
 
-        this.logger = logger.child("TopicPublisher");
         this.publisher = publisher;
         this.topic = topic;
+        this.logger = logger.child(`TopicPublisher  (${this.topic})`);
     }
 
     public async connect(): Promise<void> {
@@ -79,7 +79,7 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
             message = JSON.stringify(data);
         }
 
-        this.logger.trace(data, message, "send");
+        this.logger.trace(data, message, this.topic, "send");
 
         await this.publisher.send(
             this.topic,

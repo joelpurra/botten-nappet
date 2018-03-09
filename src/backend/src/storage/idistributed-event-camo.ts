@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUser from "./iuser";
+import IDistributedEvent from "./idistributed-event";
 
-export default interface IUserCamo extends IUser {
+export default interface IDistributedEventCamo extends IDistributedEvent {
     _schema?: object;
 }

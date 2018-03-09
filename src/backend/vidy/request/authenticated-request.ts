@@ -44,7 +44,7 @@ export default class AuthenticatedRequest {
         assert.equal(typeof logger, "object");
         assert.equal(typeof config, "object");
 
-        this.logger = logger.child("IncomingIrcCommandEventHandler");
+        this.logger = logger.child("AuthenticatedRequest");
         this.config = config;
     }
 
@@ -117,7 +117,14 @@ export default class AuthenticatedRequest {
             .join("\n");
         hmac.update(signingString);
         const signingStringHash = hmac.digest("base64");
-        const clientAuthorizationHeader = `Signature keyId="${this.config.vidyKeyId}",algorithm="hmac-sha256",headers="${signingHeaderKeysString}",signature="${signingStringHash}"`;
+        const clientAuthorizationHeader =
+            `Signature keyId="${
+            this.config.vidyKeyId
+            }",algorithm="hmac-sha256",headers="${
+            signingHeaderKeysString
+            }",signature="${
+            signingStringHash
+            }"`;
 
         const headers = {
             "content-type": contentType,

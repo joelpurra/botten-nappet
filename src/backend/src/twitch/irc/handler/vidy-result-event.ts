@@ -32,6 +32,7 @@ import IIncomingSearchResultEvent from "../../../../vidy/command/iincoming-searc
 import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
 export default class VidyResultEventHandler extends EventSubscriptionManager<IIncomingSearchResultEvent> {
+    public vidyVideoLinkBaseUrl: string;
     private channelName: string;
     private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
 
@@ -57,6 +58,7 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         this.logger = logger.child("TextResponseCommandIrcHandler");
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.channelName = channelName;
+        this.vidyVideoLinkBaseUrl = vidyVideoLinkBaseUrl;
     }
 
     public async dataHandler(data: IIncomingSearchResultEvent): Promise<void> {
@@ -64,15 +66,20 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         assert.equal(typeof data, "object");
 
         this.logger.trace(data, "dataHandler");
-        this.logger.warn(data, "functionality disabled", "dataHandler");
 
+        this.logger.warn(data, "functionality disabled", "dataHandler");
         return;
 
-        // TODO: response template.
-        // const response = `Got ${data.clips.results.length} results for ${data.search.q}: ${data.clips.results.map((result) => `${vidyShortIdBaseUrl}${result.shortId}`).join(" ")}`;
-        const response = `Got ${data.clips.results.length} results for ${data.search.q}: ${data.clips.results.map((result) => `${this.vidyVideoLinkBaseUrl}${result.id}`).join(" ")}`;
+        const clipLinks = data.clips.results.map((result) => `${this.vidyVideoLinkBaseUrl}${result.id}`);
 
-        // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer username, search query-response validity checks.// TODO: merge with IOutgoingSearchCommand to get channel context, triggerer username, search query-response validity checks.
+        // TODO: response template.
+        /* tslint:disable max-line-length */
+        const response = `Got ${data.clips.results.length} results for ${data.search.q}: ${clipLinks.join(" ")}`;
+        /* tslint:enable max-line-length */
+
+        // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer username,
+        // search query-response validity checks.// TODO: merge with IOutgoingSearchCommand to
+        // get channel context, triggerer username, search query-response validity checks.
         const command: IOutgoingIrcCommand = {
             channel: this.channelName,
             command: "PRIVMSG",
@@ -89,7 +96,8 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer username, search query-response validity checks.
+        // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer
+        // username, search query-response validity checks.
         return true;
     }
 }

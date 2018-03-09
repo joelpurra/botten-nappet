@@ -144,7 +144,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
                 this.logger.error(error, "error", "openedObserver");
             },
             next: (message) => {
-                this.logger.trace(message, "next", "openedObserver");
+                // this.logger.trace(message, "next", "openedObserver");
             },
         };
 
@@ -154,7 +154,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
             .do((val) => this.logger.trace(val, "pollingSubject"));
 
         this.sharedpollingObservable = this.pollingSubject.share()
-            .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
+            // .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
             .concatMap((message) => Rx.Observable.from(this.parseMessage(message)));
 
         this.pollingSubcription = this.sharedpollingObservable
@@ -369,7 +369,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
                 this.logger.error(error, "error", "openedObserver");
             },
             next: (response) => {
-                this.logger.trace(response, "next", "openedObserver");
+                // this.logger.trace(response, "next", "openedObserver");
 
                 // TODO: better null handling.
                 this.pollingSubject!.next(response);

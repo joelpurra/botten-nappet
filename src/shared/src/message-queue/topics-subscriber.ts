@@ -18,7 +18,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -39,7 +38,7 @@ import {
 
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
     protected logger: PinoLogger;
-    private topics: string[];
+    protected topics: string[];
     private socket: any | null;
     private address: string;
     private zmqSubject: Subject<IZeroMqTopicMessages> | null;
@@ -47,16 +46,19 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     private zmqSubcription: Subscription | null;
 
     constructor(logger: PinoLogger, address: string, ...topics: string[]) {
-        assert.hasLength(arguments, 3);
+        // NOTE: variable arguments length.
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
         assert(address.length > 0);
         assert(address.startsWith("tcp://"));
         assert.array(topics);
 
-        this.logger = logger.child("TopicsSubscriber");
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+
         this.address = address;
         this.topics = topics;
+        this.logger = logger.child(`TopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
 
         this.zmqSubject = null;
         this.sharedzmqObservable = null;
@@ -87,7 +89,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
                 this.logger.error(error, "error", "openedObserver");
             },
             next: (message) => {
-                this.logger.trace(message, "next", "openedObserver");
+                // this.logger.trace(message, "next", "openedObserver");
             },
         };
 
@@ -97,6 +99,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
             .do((val) => this.logger.trace(val, "zmqSubject"));
 
         this.sharedzmqObservable = this.zmqSubject.share()
+            .concatFilter((data: IZeroMqTopicMessages) => Rx.Observable.from(this.filterMessages(data)))
             .concatMap((message) => Rx.Observable.from(this.parseMessages(message)));
 
         this.zmqSubcription = this.sharedzmqObservable
@@ -141,6 +144,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         return this.sharedzmqObservable!;
     }
 
+    protected abstract async filterMessages(topicMessages: IZeroMqTopicMessages): Promise<boolean>;
     protected abstract async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T>;
 
     private async listen(): Promise<void> {

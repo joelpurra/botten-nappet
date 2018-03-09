@@ -29,7 +29,11 @@ import "../../lib/rxjs-extensions/async-filter";
 
 import configLibrary from "config";
 import pkgDir from "pkg-dir";
+
+/* tslint:disable no-var-requires */
+// TODO: fix typings.
 const thenReadJson = require("then-read-json");
+/* tslint:enable no-var-requires */
 
 import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "../../../shared/src/util/pino-logger";
@@ -37,6 +41,7 @@ import Config from "../config/config";
 import DatabaseConnection from "../storage/database-connection";
 
 import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueueRawTopicsSubscriber from "../../../shared/src/message-queue/raw-topics-subscriber";
 
 import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
 import TwitchPollingApplicationTokenConnection from "../twitch/authentication/polling-application-token-connection";
@@ -69,6 +74,14 @@ export default async function main(
     const backendLogger = logger.child("backend");
 
     const databaseConnection = new DatabaseConnection(backendLogger, config.databaseUri);
+
+    const messageQueueAllRawTopicsSubscriber =
+        new MessageQueueRawTopicsSubscriber(
+            backendLogger,
+            config.zmqAddress,
+            "external",
+        );
+
     const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(
         backendLogger,
         config.twitchAppClientId,
@@ -101,6 +114,7 @@ export default async function main(
         backendLogger,
         gracefulShutdownManager,
         databaseConnection,
+        messageQueueAllRawTopicsSubscriber,
         messageQueuePublisher,
         twitchRequestHelper,
         twitchCSRFHelper,

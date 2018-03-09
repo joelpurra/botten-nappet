@@ -20,5 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import ITwitchApiV5ChannelCheermotes from "./itwitch-api-v5-channel-cheermotes";
 
-export default interface IPollingCheermotesResponse extends ITwitchApiV5ChannelCheermotes {
-}
+/* tslint:disable no-empty-interface */
+export default interface IPollingCheermotesResponse extends ITwitchApiV5ChannelCheermotes { }
+/* tslint:enable no-empty-interface */

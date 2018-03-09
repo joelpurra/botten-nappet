@@ -18,6 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -33,6 +34,7 @@ interface ICamoDatabaseConnection {
 }
 
 export default class DatabaseConnection {
+    public autocompactionInterval: number;
     private database: ICamoDatabaseConnection | null;
     private uri: string;
     private logger: PinoLogger;
@@ -48,6 +50,9 @@ export default class DatabaseConnection {
         this.uri = uri;
 
         this.database = null;
+
+        // NOTE: non-even minute/second interval, just because I feel like it.
+        this.autocompactionInterval = 63912;
     }
 
     public async connect() {
@@ -63,6 +68,34 @@ export default class DatabaseConnection {
     public async disconnect() {
         assert.hasLength(arguments, 0);
         assert.not.equal(this.database, null);
+
+        // NOTE: hack to reach NeDB through Camo.
+        const collections = this.database._collections;
+
+        const dbs = Object.values(collections);
+
+        // NOTE: flush data to disk.
+        // https://github.com/louischatriot/nedb#persistence
+        // NOTE: could be done on a timer, but it's unclear when the database/collection has been loaded by camo.
+        /* tslint:disable max-line-length */
+        // https://github.com/scottwrobinson/camo/blob/3acde553b37ec7d2161a20424fa1975243f96179/lib/clients/nedbclient.js#L335-L337
+        /* tslint:enable max-line-length */
+        await Bluebird.map(dbs, (db) => new Promise((resolve, reject) => {
+            // NOTE: can't seem to find any error event.
+            db.once("compaction.done", () => resolve());
+
+            try {
+                db.persistence.compactDatafile();
+            } catch (error) {
+                reject(error);
+            }
+        }))
+            .tap(() => {
+                this.logger.info("database written to disk", "disconnect");
+            })
+            .tapCatch((error) => {
+                this.logger.error(error, "disconnect");
+            });
 
         return this.database!.close();
     }

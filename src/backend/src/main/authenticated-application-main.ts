@@ -25,6 +25,7 @@ import IConnectable from "../../../shared/src/connection/iconnectable";
 import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "../../../shared/src/util/pino-logger";
 import Config from "../config/config";
+
 import UserStorageManager from "../storage/manager/user-storage-manager";
 import UserRepository from "../storage/repository/user-repository";
 
@@ -57,9 +58,11 @@ import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
 
 import IIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
 import IOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
+import DistributedEventManager from "../distributed-events/distributed-event-manager";
 import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
 import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
+import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
 import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
 import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
 import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
@@ -90,6 +93,7 @@ export default async function authenticatedApplicationMain(
     );
 
     const userStorageManager = new UserStorageManager(rootLogger, UserRepository);
+
     const twitchUserTokenHelper = new TwitchUserTokenHelper(
         rootLogger,
         twitchCSRFHelper,
@@ -175,60 +179,72 @@ export default async function authenticatedApplicationMain(
         cheermotesPollingUri,
         "get",
     );
+
+    // TODO: configurable.
+    const topicsStringSeparator = ":";
+    const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>(
+            rootLogger,
+            config.zmqAddress,
+            ...splitTopics(config.topicTwitchIncomingPubSubEvent),
+        );
+
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
         new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingIrcCommand,
+            ...splitTopics(config.topicTwitchIncomingIrcCommand),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
         new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchOutgoingIrcCommand,
+            ...splitTopics(config.topicTwitchOutgoingIrcCommand),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingFollowingEvent,
+            ...splitTopics(config.topicTwitchIncomingFollowingEvent),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingStreamingEvent,
+            ...splitTopics(config.topicTwitchIncomingStreamingEvent),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingCheermotesEvent,
+            ...splitTopics(config.topicTwitchIncomingCheermotesEvent),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingCheeringEvent,
+            ...splitTopics(config.topicTwitchIncomingCheeringEvent),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingSubscriptionEvent,
+            ...splitTopics(config.topicTwitchIncomingSubscriptionEvent),
         );
 
     const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
         new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
             rootLogger,
             config.zmqAddress,
-            config.topicVidyOutgoingSearchCommand,
+            ...splitTopics(config.topicVidyOutgoingSearchCommand),
         );
     const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
             rootLogger,
             config.zmqAddress,
-            config.topicVidyIncomingSearchResultEvent,
+            ...splitTopics(config.topicVidyIncomingSearchResultEvent),
         );
 
     const connectables: IConnectable[] = [
@@ -237,6 +253,7 @@ export default async function authenticatedApplicationMain(
         twitchPollingFollowingConnection,
         twitchPollingStreamingConnection,
         twitchPollingCheermotesConnection,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
@@ -284,6 +301,7 @@ export default async function authenticatedApplicationMain(
             twitchPollingStreamingConnection,
             twitchPollingCheermotesConnection,
             twitchAllPubSubTopicsForTwitchUserIdConnection,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,

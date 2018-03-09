@@ -42,7 +42,10 @@ import ITwitchIncomingIrcCommand from "../../../backend/src/twitch/irc/command/i
 import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
 /* tslint:enable max-line-length */
 
+/* tslint:disable max-line-length */
 import IIncomingCheeringWithCheermotesEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-with-cheermotes-event";
+/* tslint:enable max-line-length */
+
 import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/iincoming-following-event";
 import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
 import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
@@ -73,12 +76,16 @@ export default async function managerMain(
     const server = http.createServer(app.callback());
     const io = SocketIo(server);
 
+    // TODO: configurable.
+    const topicsStringSeparator = ":";
+    const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
         new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
             mainLogger,
             config.zmqAddress,
             // TODO: no backend events.
-            "backend-twitch-incoming-irc-command",
+            ...splitTopics("external:backend:twitch:incoming:irc:command"),
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.connect();
 
@@ -86,7 +93,7 @@ export default async function managerMain(
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
             mainLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingFollowingEvent,
+            ...splitTopics(config.topicTwitchIncomingFollowingEvent),
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.connect();
 
@@ -94,7 +101,7 @@ export default async function managerMain(
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
             mainLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingCheeringWithCheermotesEvent,
+            ...splitTopics(config.topicTwitchIncomingCheeringWithCheermotesEvent),
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.connect();
 
@@ -102,7 +109,7 @@ export default async function managerMain(
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
             mainLogger,
             config.zmqAddress,
-            config.topicTwitchIncomingSubscriptionEvent,
+            ...splitTopics(config.topicTwitchIncomingSubscriptionEvent),
         );
     await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.connect();
 
@@ -110,12 +117,15 @@ export default async function managerMain(
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
             mainLogger,
             config.zmqAddress,
-            config.topicVidyIncomingSearchResultEvent,
+            ...splitTopics(config.topicVidyIncomingSearchResultEvent),
         );
     await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.connect();
 
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable.forEach((data) => {
         let msg = null;
+
+        const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
+        const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
 
         switch (data.command) {
             case "PRIVMSG":
@@ -171,14 +181,14 @@ export default async function managerMain(
                                                 amount: 1,
                                                 prefix: "cheer",
                                             },
-                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif",
+                                            url: exampleCheermote1,
                                         },
                                         {
                                             cheerToken: {
                                                 amount: 100,
                                                 prefix: "cheer",
                                             },
-                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif",
+                                            url: exampleCheermote100,
                                         },
                                     ],
                                     message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",

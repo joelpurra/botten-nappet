@@ -53,6 +53,7 @@ export default class Config implements IZmqConfig {
         assert.match(this.databaseUri, /^nedb:\/\//);
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
+        assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
@@ -97,6 +98,14 @@ export default class Config implements IZmqConfig {
 
     public get topicTwitchOutgoingIrcCommand(): string {
         const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingIrcCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingPubSubEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingPubSubEvent`);
 
         assert.nonEmptyString(value);
 
