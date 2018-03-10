@@ -35,7 +35,8 @@ import { deepParseIso8601UtcDates } from "./utilities";
 import VidyHandler from "./vidy-handler";
 
 export default class EventManager {
-    public vidyHandler: VidyHandler;
+    private animateBallTimeout: number;
+    private vidyHandler: VidyHandler;
     private dataHandlerSubscription: Rx.Subscription | null;
     private handlerObservable: Rx.Observable<any> | null;
     private handlers: {
@@ -70,6 +71,7 @@ export default class EventManager {
 
         this.dataHandlerSubscription = null;
         this.handlerObservable = null;
+        this.animateBallTimeout = 60 * 1000;
 
         this.handlers = {
             // "chat-message": (data: any) => {
@@ -80,7 +82,7 @@ export default class EventManager {
                 const text = data.username;
                 const color = data.args[0];
 
-                this.ballzManager.add(text, color);
+                this.ballzManager.add(text, color, this.animateBallTimeout);
             },
 
             "following": (data: any) => {
