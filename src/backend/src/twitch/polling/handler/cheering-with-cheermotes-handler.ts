@@ -103,6 +103,8 @@ export default class CheeringWithCheermotesHandler
             };
 
             this.incomingCheeringWithCheermotesEvent.emit(event);
+
+            return;
         }
 
         throw new Error(`Unknown data object: ${Object.keys(data)}`);
