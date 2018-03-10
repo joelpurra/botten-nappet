@@ -70,6 +70,7 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
             // NOTE: emoticons.
             /\bheyguys\b/,
             /\bvohiyo\b/,
+            /\bkoncha\b/,
         ];
     }
 
