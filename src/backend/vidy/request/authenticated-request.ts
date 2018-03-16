@@ -26,6 +26,7 @@ import crypto from "crypto";
 import os from "os";
 
 import axios from "axios";
+import moment from "moment";
 
 import PinoLogger from "../../../shared/src/util/pino-logger";
 import Config from "../../src/config/config";
@@ -150,7 +151,8 @@ export default class AuthenticatedRequest {
             },
 
             // TODO: store localtime as Date, move serialization deeper in the code?
-            localtime: new Date().toISOString(),
+            // YYYY-MM-DDThh:mm:ss.mm-hh:mm (RFC 3339, explicit timezone offset)
+            localtime: moment().format(),
         };
 
         return clientContext;
