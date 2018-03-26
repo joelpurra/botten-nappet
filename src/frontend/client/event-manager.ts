@@ -30,6 +30,7 @@ import CheeringWithCheermotesHandler from "./cheering-with-cheermotes-handler";
 import ConsoleLog from "./console-log";
 import FollowingHandler from "./following-handler";
 import SoundManager from "./sound-manager";
+import SpeechManager from "./speech-manager";
 import SubscriptionHandler from "./subscription-handler";
 import { deepParseIso8601UtcDates } from "./utilities";
 import VidyHandler from "./vidy-handler";
@@ -47,6 +48,7 @@ export default class EventManager {
     private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler;
     private followingHandler: FollowingHandler;
     private soundManager: SoundManager;
+    private speechManager: SpeechManager;
     private botSocket: BotSocket;
     private logger: ConsoleLog;
 
@@ -54,6 +56,7 @@ export default class EventManager {
         logger: ConsoleLog,
         botSocket: BotSocket,
         soundManager: SoundManager,
+        speechManager: SpeechManager,
         followingHandler: FollowingHandler,
         cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
         subscriptionHandler: SubscriptionHandler,
@@ -63,6 +66,7 @@ export default class EventManager {
         this.logger = logger;
         this.botSocket = botSocket;
         this.soundManager = soundManager;
+        this.speechManager = speechManager;
         this.followingHandler = followingHandler;
         this.cheeringWithCheermotesHandler = cheeringWithCheermotesHandler;
         this.subscriptionHandler = subscriptionHandler;
@@ -83,6 +87,9 @@ export default class EventManager {
                 const color = data.args[0];
 
                 this.ballzManager.add(text, color, this.animateBallTimeout);
+
+                // NOTE: fake-phonetic version of "balls".
+                this.speechManager.say(`Hey, ${data.username}, you've got baullzzz!`);
             },
 
             "following": (data: any) => {
@@ -99,6 +106,10 @@ export default class EventManager {
 
             "cowbell": (data: any) => {
                 this.soundManager.playRandom("cowbell");
+            },
+
+            "say": (data: any) => {
+                this.speechManager.say(data.args.join(" "));
             },
 
             "vidy": (data: any) => {

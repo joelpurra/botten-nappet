@@ -144,6 +144,7 @@ export default async function managerMain(
                         // TODO: check arguments.
                         case "animate":
                         case "cowbell":
+                        case "say":
                         // TODO: remove after testing.
                         case "following":
                             msg = {

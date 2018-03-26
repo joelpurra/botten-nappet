@@ -27,6 +27,7 @@ import FollowingHandler from "./following-handler";
 import NotificationManager from "./notification-manager";
 import ScreenLog from "./screen-log";
 import SoundManager from "./sound-manager";
+import SpeechManager from "./speech-manager";
 import statusScroller from "./status-scroller";
 import SubscriptionHandler from "./subscription-handler";
 import VidyHandler from "./vidy-handler";
@@ -43,6 +44,9 @@ export default async function client() {
 
     const soundRootPath = "/sound";
     const soundManager = new SoundManager(logger, soundRootPath);
+
+    const defaultVoiceName = "Fiona";
+    const speechManager = new SpeechManager(logger, defaultVoiceName);
 
     const notificationHandlerContainerElementId = "notification-container";
     const notificationManager = new NotificationManager(logger, notificationHandlerContainerElementId);
@@ -79,6 +83,7 @@ export default async function client() {
         logger,
         botSocket,
         soundManager,
+        speechManager,
         followingHandler,
         cheeringWithCheermotesHandler,
         subscriptionHandler,
