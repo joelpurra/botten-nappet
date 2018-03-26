@@ -48,8 +48,8 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
-        assert.equal(typeof channelName, "string");
-        assert.greater(channelName.length, 0);
+        assert.nonEmptyString(channelName);
+        assert(channelName.startsWith("#"));
 
         this.logger = logger.child("FollowReminderIrcHandler");
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;

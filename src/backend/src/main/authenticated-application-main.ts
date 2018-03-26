@@ -58,13 +58,13 @@ import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
 
 import IIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
 import IOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
-import DistributedEventManager from "../distributed-events/distributed-event-manager";
 import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
 import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
 import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
 import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
 import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
+import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-event";
 import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
 import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
 import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
@@ -227,6 +227,12 @@ export default async function authenticatedApplicationMain(
             config.zmqAddress,
             ...splitTopics(config.topicTwitchIncomingCheeringEvent),
         );
+    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent =
+        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>(
+            rootLogger,
+            config.zmqAddress,
+            ...splitTopics(config.topicTwitchIncomingWhisperEvent),
+        );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
             rootLogger,
@@ -260,6 +266,7 @@ export default async function authenticatedApplicationMain(
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
         vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
         vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
@@ -308,6 +315,7 @@ export default async function authenticatedApplicationMain(
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
             vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
             vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,

@@ -60,6 +60,7 @@ import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-poll
 /* tslint:disable max-line-length */
 import TwitchStreamingStatisticsCollectorHandler from "../twitch/polling/handler/streaming-statistics-collector-handler";
 import TwitchSubscriptionIrcReplyHandler from "../twitch/polling/handler/subscription-irc-reply-handler";
+import TwitchWhisperIrcReplyHandler from "../twitch/polling/handler/whisper-irc-reply-handler";
 
 /* tslint:disable max-line-length */
 import IncomingCheeringCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheering-event-translator";
@@ -82,6 +83,9 @@ import VidyIIncomingSearchResultEvent from "../../vidy/command/iincoming-search-
 import VidyIOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
 import VidyOutgoingSearchCommandHandler from "../../vidy/outgoing-search-command-handler";
 import VidyAuthenticatedRequest from "../../vidy/request/authenticated-request";
+
+import IncomingWhisperCommandEventTranslator from "../twitch/polling/event-handler/incoming-whisper-event-translator";
+import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-event";
 
 import TwitchPubSubLoggingHandler from "../twitch/pubsub/handler/logging";
 import TwitchPubSubPingHandler from "../twitch/pubsub/handler/ping";
@@ -113,6 +117,8 @@ export default async function perUserHandlersMain(
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>,
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
+        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
@@ -192,6 +198,13 @@ export default async function perUserHandlersMain(
             rootLogger,
             messageQueuePublisher,
             config.topicTwitchIncomingCheeringEvent,
+        );
+
+    const messageQueueTopicPublisherForIIncomingWhisperEvent =
+        new MessageQueueTopicPublisher<IIncomingWhisperEvent>(
+            rootLogger,
+            messageQueuePublisher,
+            config.topicTwitchIncomingWhisperEvent,
         );
 
     const messageQueueTopicPublisherForIIncomingSubscriptionEvent =
@@ -341,6 +354,18 @@ export default async function perUserHandlersMain(
         twitchUserId,
     );
 
+    const twitchIncomingWhisperCommandEventTranslator = new IncomingWhisperCommandEventTranslator(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
+        messageQueueTopicPublisherForIIncomingWhisperEvent,
+    );
+    const twitchWhisperIrcReplyHandler = new TwitchWhisperIrcReplyHandler(
+        rootLogger,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
+        messageQueueTopicPublisherForIOutgoingIrcCommand,
+        config.twitchChannelName,
+    );
+
     const twitchIncomingCheeringCommandEventTranslator = new IncomingCheeringCommandEventTranslator(
         rootLogger,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
@@ -384,7 +409,9 @@ export default async function perUserHandlersMain(
         twitchCheeringWithCheermotesHandler,
         twitchIncomingCheermotesCommandEventTranslator,
         twitchIncomingCheeringCommandEventTranslator,
+        twitchIncomingWhisperCommandEventTranslator,
         twitchCheeringIrcReplyHandler,
+        twitchWhisperIrcReplyHandler,
         twitchIncomingSubscriptionCommandEventTranslator,
         twitchSubscriptionIrcReplyHandler,
         twitchIncomingIrcCommandEventTranslator,

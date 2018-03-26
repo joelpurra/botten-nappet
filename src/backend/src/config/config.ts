@@ -55,6 +55,7 @@ export default class Config implements IZmqConfig {
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingWhisperEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheermotesEvent);
@@ -162,6 +163,14 @@ export default class Config implements IZmqConfig {
 
     public get topicTwitchIncomingCheeringEvent(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingWhisperEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingWhisperEvent`);
 
         assert.nonEmptyString(value);
 

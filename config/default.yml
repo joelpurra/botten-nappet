@@ -46,6 +46,7 @@ shared:
     topic:
         twitch:
             incomingCheeringEvent: "internal:shared:twitch:incoming:cheering:event"
+            incomingWhisperEvent: "internal:shared:twitch:incoming:whisper:event"
             incomingCheeringWithCheermotesEvent: "internal:shared:twitch:incoming:cheering:with:cheermotes:event"
             incomingCheermotesEvent: "internal:shared:twitch:incoming:cheermotes:event"
             incomingFollowingEvent: "internal:shared:twitch:incoming:following:event"
