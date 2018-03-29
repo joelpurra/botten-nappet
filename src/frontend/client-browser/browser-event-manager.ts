@@ -24,30 +24,19 @@ import {
     NextObserver,
 } from "rxjs/internal/Observer";
 
-import BallzManager from "./ballz-manager";
-import BotSocket from "./bot-socket";
-import CheeringWithCheermotesHandler from "./cheering-with-cheermotes-handler";
-import ConsoleLog from "./console-log";
-import FollowingHandler from "./following-handler";
-import SoundManager from "./sound-manager";
-import SpeechManager from "./speech-manager";
-import SubscriptionHandler from "./subscription-handler";
-import { deepParseIso8601UtcDates } from "./utilities";
-import VidyHandler from "./vidy-handler";
+import BotSocket from "../shared/bot-socket";
+import ConsoleLog from "../shared/console-log";
+import SpeechManager from "../shared/speech-manager";
+import { deepParseIso8601UtcDates } from "../shared/utilities";
 
-export default class EventManager {
-    private animateBallTimeout: number;
-    private vidyHandler: VidyHandler;
+export default class BrowserEventManager {
+    public chatMessageSayIgnoredStrings: string[];
+    public chatMessageSayIgnoredUsernames: string[];
     private dataHandlerSubscription: Rx.Subscription | null;
     private handlerObservable: Rx.Observable<any> | null;
     private handlers: {
         [key: string]: (data: any) => void;
     };
-    private ballzManager: BallzManager;
-    private subscriptionHandler: SubscriptionHandler;
-    private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler;
-    private followingHandler: FollowingHandler;
-    private soundManager: SoundManager;
     private speechManager: SpeechManager;
     private botSocket: BotSocket;
     private logger: ConsoleLog;
@@ -55,65 +44,46 @@ export default class EventManager {
     constructor(
         logger: ConsoleLog,
         botSocket: BotSocket,
-        soundManager: SoundManager,
         speechManager: SpeechManager,
-        followingHandler: FollowingHandler,
-        cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
-        subscriptionHandler: SubscriptionHandler,
-        ballzManager: BallzManager,
-        vidyHandler: VidyHandler,
     ) {
+        // TODO: share this code.
         this.logger = logger;
         this.botSocket = botSocket;
-        this.soundManager = soundManager;
         this.speechManager = speechManager;
-        this.followingHandler = followingHandler;
-        this.cheeringWithCheermotesHandler = cheeringWithCheermotesHandler;
-        this.subscriptionHandler = subscriptionHandler;
-        this.ballzManager = ballzManager;
-        this.vidyHandler = vidyHandler;
 
         this.dataHandlerSubscription = null;
         this.handlerObservable = null;
-        this.animateBallTimeout = 60 * 1000;
+
+        this.chatMessageSayIgnoredUsernames = [
+            // TODO: configure ignored username(s).
+            // "joelpurra",
+        ];
+
+        this.chatMessageSayIgnoredStrings = [
+            // TODO: configure ignored strings(s).
+            "😀",
+        ];
 
         this.handlers = {
-            // "chat-message": (data: any) => {
-            //      logger.log("chat-message", data);
-            // },
+            "chat-message": (data: any) => {
+                logger.log("chat-message", data);
+
+                const shouldSay = this.shouldSayChatMessageOutLoud(data);
+
+                const cleanedUsername = data.username.replace(/\d+/, " ");
+
+                if (shouldSay) {
+                    this.speechManager.say(`${cleanedUsername} says: ${data.message}`);
+                }
+            },
 
             "animate": (data: any) => {
-                const text = data.username;
-                const color = data.args[0];
-
-                this.ballzManager.add(text, color, this.animateBallTimeout);
-
                 // NOTE: fake-phonetic version of "balls".
                 this.speechManager.say(`Hey, ${data.username}, you've got baullzzz!`);
             },
 
-            "following": (data: any) => {
-                this.followingHandler.handle(data);
-            },
-
-            "cheering-with-cheermotes": (data: any) => {
-                this.cheeringWithCheermotesHandler.handle(data);
-            },
-
-            "subscription": (data: any) => {
-                this.subscriptionHandler.handle(data);
-            },
-
-            "cowbell": (data: any) => {
-                this.soundManager.playRandom("cowbell");
-            },
-
             "say": (data: any) => {
                 this.speechManager.say(data.args.join(" "));
-            },
-
-            "vidy": (data: any) => {
-                this.vidyHandler.handle(data.videoUrl);
             },
 
             // "message": (data: any) => {
@@ -123,6 +93,7 @@ export default class EventManager {
     }
 
     public async start(): Promise<void> {
+        // TODO: share this code.
         this.handlerObservable = this.botSocket.dataObservable
             .do((botEvent) => {
                 this.logger.log("botEvent", botEvent);
@@ -143,11 +114,28 @@ export default class EventManager {
     }
 
     public trigger(botEvent: any): void {
+        // TODO: share this code.
         if (!this.handlers[botEvent.event]) {
             this.logger.error("Missing event handler", botEvent.event);
             return;
         }
 
         this.handlers[botEvent.event](botEvent.data);
+    }
+
+    private shouldSayChatMessageOutLoud(data: any) {
+        if (data.isSubscriber !== true) {
+            return false;
+        }
+
+        if (this.chatMessageSayIgnoredUsernames.includes(data.username)) {
+            return false;
+        }
+
+        if (this.chatMessageSayIgnoredStrings.some((ignoredStr) => data.message.includes(ignoredStr))) {
+            return false;
+        }
+
+        return true;
     }
 }

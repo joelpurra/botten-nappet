@@ -54,6 +54,7 @@ export default class SpeechManager {
 
         this.logger.log("Utterance", utterance, voice);
 
+        // TODO: queue speech.
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
     }

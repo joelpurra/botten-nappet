@@ -203,9 +203,11 @@ export default async function managerMain(
                             break;
                     }
                 } else {
-                    // TODO: remove?
+                    const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
+
                     msg = {
                         data: {
+                            isSubscriber,
                             message: data.message,
                             timestamp: data.timestamp,
                             username: data.username,

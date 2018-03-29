@@ -26,8 +26,8 @@ import typescript from "./rollup.config.typescript.js";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "client.ts";
-const outputName = "./src/frontend/public/dist/client.js";
+const inputName = "client.obs.ts";
+const outputName = "./src/frontend/public/dist/client.obs.js";
 
 export default {
     external: [
