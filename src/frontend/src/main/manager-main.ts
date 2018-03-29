@@ -50,8 +50,13 @@ import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/i
 import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
 import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
 
-import managedMain from "./managed-main";
 import { isValidColor } from "../../shared/colors";
+import managedMain from "./managed-main";
+
+interface ICustomWebSocketEventData {
+    eventName: string;
+    customData: object;
+}
 
 export default async function managerMain(
     config: Config,
@@ -122,125 +127,40 @@ export default async function managerMain(
         );
     await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.connect();
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable.forEach((data) => {
-        let msg = null;
+    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable
+        .forEach((data) => {
+            let customWebSocketEventData: ICustomWebSocketEventData | null = null;
 
-        const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
-        const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
+            switch (data.command) {
+                case "PRIVMSG":
+                    customWebSocketEventData = getIrcPrivMsgWebsocketEventData(data);
+                    break;
+            }
 
-        switch (data.command) {
-            case "PRIVMSG":
-                if (data.message === null) {
-                    return;
-                }
+            if (customWebSocketEventData === null) {
+                return;
+            }
 
-                const commandPrefix = "!";
-                const messageParts = data.message.trim().split(/\s+/);
+            assert.nonEmptyString(customWebSocketEventData.eventName);
+            assert.not.null(customWebSocketEventData.customData);
+            assert.object(customWebSocketEventData.customData);
 
-                if (messageParts[0].startsWith(commandPrefix)) {
-                    const messageCommand = messageParts[0].slice(commandPrefix.length);
-                    const commandArguments = messageParts.slice(1);
+            const msg = {
+                data: Object.assign(
+                    {},
+                    customWebSocketEventData.customData,
 
-                    switch (messageCommand) {
-                        // TODO: check arguments.
-                        case "animate":
-                            let color = commandArguments[0];
+                    // NOTE: always keep default data, no overrides.
+                    {
+                        timestamp: data.timestamp,
+                        username: data.username,
+                    },
+                ),
+                event: customWebSocketEventData.eventName,
+            };
 
-                            if (!isValidColor(color)) {
-                                color = "rgba(255,255,255,0.5)";
-                            }
-
-                            msg = {
-                                data: {
-                                    color,
-                                    timestamp: data.timestamp,
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-
-                        case "cowbell":
-                        case "say":
-                        // TODO: remove after testing.
-                        case "following":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    timestamp: data.timestamp,
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-
-                        case "subscription":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    // TODO: use random library.
-                                    months: Math.floor(Math.random() * 3),
-                                    timestamp: data.timestamp,
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-
-                        case "cheering-with-cheermotes":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    // TODO: use random library.
-                                    bits: Math.floor(Math.random() * 500),
-                                    cheermotes: [
-                                        {
-                                            cheerToken: {
-                                                amount: 1,
-                                                prefix: "cheer",
-                                            },
-                                            url: exampleCheermote1,
-                                        },
-                                        {
-                                            cheerToken: {
-                                                amount: 100,
-                                                prefix: "cheer",
-                                            },
-                                            url: exampleCheermote100,
-                                        },
-                                    ],
-                                    message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
-                                    timestamp: data.timestamp,
-                                    // TODO: use random library.
-                                    total: Math.floor(Math.random() * 50000),
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-                    }
-                } else {
-                    const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
-
-                    msg = {
-                        data: {
-                            isSubscriber,
-                            message: data.message,
-                            timestamp: data.timestamp,
-                            username: data.username,
-                        },
-                        event: "chat-message",
-                    };
-                }
-                break;
-        }
-
-        if (msg === null) {
-            return;
-        }
-
-        io.send(msg);
-    });
+            io.send(msg);
+        });
 
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable.forEach((data) => {
         const msg = {
@@ -356,5 +276,116 @@ export default async function managerMain(
         await shutdown();
     } catch (error) {
         shutdown(error);
+    }
+
+    function getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
+        if (data.message === null) {
+            throw new Error("data.message");
+        }
+
+        let handled = false;
+        let eventName: string | null = null;
+        let customData: object | null = null;
+
+        const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
+
+        const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
+        const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
+
+        const commandPrefix = "!";
+        const messageParts = data.message.trim().split(/\s+/);
+        const isCommandMessage = messageParts[0].startsWith(commandPrefix);
+
+        if (isCommandMessage) {
+            const messageCommand = messageParts[0].slice(commandPrefix.length);
+            const commandArguments = messageParts.slice(1);
+
+            eventName = messageCommand;
+
+            // TODO: remove commands after testing.
+            switch (messageCommand) {
+                case "animate":
+                    let color = commandArguments[0];
+                    if (!isValidColor(color)) {
+                        color = "rgba(255,255,255,0.5)";
+                    }
+                    customData = {
+                        color,
+                    };
+                    handled = true;
+                    break;
+
+                case "cowbell":
+                case "following":
+                    customData = {};
+                    handled = true;
+                    break;
+
+                case "say":
+                    customData = {
+                        message: commandArguments.join(" "),
+                    };
+                    handled = true;
+                    break;
+
+                case "subscription":
+                    customData = {
+                        // TODO: use random library.
+                        months: Math.floor(Math.random() * 3),
+                    };
+                    handled = true;
+                    break;
+
+                case "cheering-with-cheermotes":
+                    customData = {
+                        // TODO: use random library.
+                        bits: Math.floor(Math.random() * 500),
+                        cheermotes: [
+                            {
+                                cheerToken: {
+                                    amount: 1,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote1,
+                            },
+                            {
+                                cheerToken: {
+                                    amount: 100,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote100,
+                            },
+                        ],
+                        message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
+                        // TODO: use random library.
+                        total: Math.floor(Math.random() * 50000),
+                    };
+                    handled = true;
+                    break;
+
+                default:
+                    handled = false;
+            }
+        } else {
+            eventName = "chat-message";
+
+            customData = {
+                isSubscriber,
+                message: data.message,
+            };
+
+            handled = true;
+        }
+
+        if (handled === false) {
+            return null;
+        }
+
+        const result = {
+            customData: customData!,
+            eventName: eventName!,
+        };
+
+        return result;
     }
 }

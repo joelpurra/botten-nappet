@@ -83,7 +83,7 @@ export default class BrowserEventManager {
             },
 
             "say": (data: any) => {
-                this.speechManager.say(data.args.join(" "));
+                this.speechManager.say(data.message);
             },
 
             // "message": (data: any) => {
