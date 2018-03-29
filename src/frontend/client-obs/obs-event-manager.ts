@@ -27,11 +27,16 @@ import {
 import BallzManager from "../shared/ballz-manager";
 import BotSocket from "../shared/bot-socket";
 import CheeringWithCheermotesHandler from "../shared/cheering-with-cheermotes-handler";
+import {
+    isValidColor,
+} from "../shared/colors";
 import ConsoleLog from "../shared/console-log";
 import FollowingHandler from "../shared/following-handler";
 import SoundManager from "../shared/sound-manager";
 import SubscriptionHandler from "../shared/subscription-handler";
-import { deepParseIso8601UtcDates } from "../shared/utilities";
+import {
+    deepParseIso8601UtcDates,
+} from "../shared/utilities";
 import VidyHandler from "../shared/vidy-handler";
 
 export default class ObsEventManager {
@@ -81,7 +86,11 @@ export default class ObsEventManager {
 
             "animate": (data: any) => {
                 const text = data.username;
-                const color = data.args[0];
+                const color = data.color;
+
+                if (!isValidColor(color)) {
+                    throw new Error("color");
+                }
 
                 this.ballzManager.add(text, color, this.animateBallTimeout);
             },

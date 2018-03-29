@@ -51,6 +51,7 @@ import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/even
 import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
 
 import managedMain from "./managed-main";
+import { isValidColor } from "../../shared/colors";
 
 export default async function managerMain(
     config: Config,
@@ -143,6 +144,22 @@ export default async function managerMain(
                     switch (messageCommand) {
                         // TODO: check arguments.
                         case "animate":
+                            let color = commandArguments[0];
+
+                            if (!isValidColor(color)) {
+                                color = "rgba(255,255,255,0.5)";
+                            }
+
+                            msg = {
+                                data: {
+                                    color,
+                                    timestamp: data.timestamp,
+                                    username: data.username,
+                                },
+                                event: messageCommand,
+                            };
+                            break;
+
                         case "cowbell":
                         case "say":
                         // TODO: remove after testing.
