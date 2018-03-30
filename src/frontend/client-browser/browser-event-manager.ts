@@ -60,7 +60,10 @@ export default class BrowserEventManager {
         ];
 
         this.chatMessageSayIgnoredStrings = [
-            // TODO: configure ignored strings(s).
+            // TODO: configure ignored strings(s)
+            "http://",
+            "https://",
+            "www.",
             "😀",
         ];
 
