@@ -23,33 +23,45 @@ import {
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
 
-export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IIRCConnection from "../connection/iirc-connection";
+import IrcManager from "../connection/irc-manager";
+
+export default class IncomingIrcCommandEventTranslator extends IrcManager {
+    private incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>;
+
+    constructor(
+        logger: PinoLogger,
+        connection: IIRCConnection,
+        incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof incomingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child("IncomingIrcCommandEventHandler");
+        this.incomingIrcCommandEventEmitter = incomingIrcCommandEventEmitter;
     }
 
-    protected async dataHandler(data: object): Promise<void> {
+    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        // TODO: verify that the data contains both the topic and the actual message data.
         this.logger.trace(data, "dataHandler");
+
+        this.incomingIrcCommandEventEmitter.emit(data);
     }
 
-    protected async filter(data: object): Promise<boolean> {
+    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        // TODO: verify that the data contains both the topic and the actual message data.
         return true;
     }
 }

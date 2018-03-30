@@ -24,9 +24,9 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
-import IHttpData from "../ihttp-data";
-import IHttpHeaders from "../ihttp-header";
-import PollingConnection from "../polling-connection";
+import IHttpData from "../interface/ihttp-data";
+import IHttpHeaders from "../interface/ihttp-header";
+import PollingConnection from "./polling-connection";
 
 export default class PollingClientIdConnection<T> extends PollingConnection<T> {
     private applicationClientId: string;

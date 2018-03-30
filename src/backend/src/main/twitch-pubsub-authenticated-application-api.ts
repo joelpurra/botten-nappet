@@ -32,7 +32,7 @@ import {
     UserAccessTokenProviderType,
 } from "@botten-nappet/backend-twitch/authentication/provider-types";
 
-import TwitchPubSubConnection from "@botten-nappet/backend-twitch/pubsub/pubsub-connection";
+import TwitchPubSubConnection from "@botten-nappet/backend-twitch/pubsub/connection/pubsub-connection";
 
 import twitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
 

@@ -26,13 +26,10 @@ import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdow
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import UserStorageManager from "../storage/manager/user-storage-manager";
-import UserRepository from "../storage/repository/user-repository";
+/* tslint:disable:max-line-length */
 
 import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
-/* tslint:disable:max-line-length */
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
-/* tslint:enable:max-line-length */
 
 import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/authentication/application-token-manager";
 import {
@@ -48,28 +45,34 @@ import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper
 import TwitchUserHelper from "@botten-nappet/backend-twitch/helper/user-helper";
 import TwitchUserTokenHelper from "@botten-nappet/backend-twitch/helper/user-token-helper";
 
-import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/command/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/command/ioutgoing-irc-command";
-import TwitchIrcConnection from "@botten-nappet/backend-twitch/irc/irc-connection";
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
 
 import PollingClientIdConnection from "@botten-nappet/backend-twitch/polling/connection/polling-clientid-connection";
 
-import IIncomingCheeringEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-event";
-import IIncomingCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-following-event";
-import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-pubsub-event";
-import IIncomingStreamingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-streaming-event";
-import IIncomingSubscriptionEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-subscription-event";
-import IIncomingWhisperEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-whisper-event";
-import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/polling/handler/icheermotes-polling-response";
-import IPollingFollowingResponse from "@botten-nappet/backend-twitch/polling/handler/ifollowing-polling-response";
-import IPollingStreamingResponse from "@botten-nappet/backend-twitch/polling/handler/istreaming-polling-response";
+import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-event";
+import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/event/iincoming-following-event";
+import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iincoming-streaming-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
+import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincoming-whisper-event";
 
-import IIncomingSearchResultEvent from "@botten-nappet/backend-vidy/command/iincoming-search-result-event";
-import IOutgoingSearchCommand from "@botten-nappet/backend-vidy/command/ioutgoing-search-command";
+import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface/iincoming-pubsub-event";
+
+import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/interface/response/polling/icheermotes-polling-response";
+import IPollingFollowingResponse from "@botten-nappet/backend-twitch/interface/response/polling/ifollowing-polling-response";
+import IPollingStreamingResponse from "@botten-nappet/backend-twitch/interface/response/polling/istreaming-polling-response";
+
+import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
+import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
+
+import UserStorageManager from "../storage/manager/user-storage-manager";
+import UserRepository from "../storage/repository/user-repository";
 
 import perUserHandlersMain from "./per-user-handlers-main";
+import backendTwitchIrcAuthenticatedApplicationApi from "./twitch-irc-authenticated-application-api";
 import backendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";
+
+/* tslint:enable:max-line-length */
 
 export default async function backendAuthenticatedApplicationMain(
     config: Config,
@@ -135,14 +138,6 @@ export default async function backendAuthenticatedApplicationMain(
     // TODO: externalize/configure base url.
     const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${twitchUserId}`;
 
-    const twitchIrcConnection = new TwitchIrcConnection(
-        rootLogger,
-        config.twitchIrcWebSocketUri,
-        config.twitchChannelName,
-        config.twitchUserName,
-        twitchUserAccessTokenProvider,
-    );
-
     const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
         rootLogger,
         config.twitchAppClientId,
@@ -184,12 +179,6 @@ export default async function backendAuthenticatedApplicationMain(
             rootLogger,
             config.zmqAddress,
             ...splitTopics(config.topicTwitchIncomingIrcCommand),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchOutgoingIrcCommand),
         );
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
@@ -242,13 +231,11 @@ export default async function backendAuthenticatedApplicationMain(
         );
 
     const connectables: IConnectable[] = [
-        twitchIrcConnection,
         twitchPollingFollowingConnection,
         twitchPollingStreamingConnection,
         twitchPollingCheermotesConnection,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
@@ -294,19 +281,26 @@ export default async function backendAuthenticatedApplicationMain(
                 twitchUserId,
             ),
 
+            backendTwitchIrcAuthenticatedApplicationApi(
+                config,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+                twitchUserAccessTokenProvider,
+                twitchUserId,
+            ),
+
             perUserHandlersMain(
                 config,
                 authenticatedApplicationMainLogger,
                 rootLogger,
                 gracefulShutdownManager,
                 messageQueuePublisher,
-                twitchIrcConnection,
                 twitchPollingFollowingConnection,
                 twitchPollingStreamingConnection,
                 twitchPollingCheermotesConnection,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,

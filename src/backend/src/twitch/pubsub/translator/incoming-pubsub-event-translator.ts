@@ -23,33 +23,44 @@ import {
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
 
-export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+
+import PubSubConnection from "../../pubsub/connection/pubsub-connection";
+import PubSubManager from "../../pubsub/connection/pubsub-manager";
+import IIncomingPubSubEvent from "../../pubsub/interface/iincoming-pubsub-event";
+import IPubSubResponse from "../../pubsub/interface/ipubsub-response";
+
+export default class IncomingPubSubEventTranslator extends PubSubManager {
+    private incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>;
+
+    constructor(
+        logger: PinoLogger,
+        connection: PubSubConnection,
+        incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>,
+    ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
+        assert.equal(typeof incomingPubSubEventEmitter, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child("IncomingPubSubEventTranslator");
+        this.incomingPubSubEventEmitter = incomingPubSubEventEmitter;
     }
 
-    protected async dataHandler(data: object): Promise<void> {
+    protected async dataHandler(data: IPubSubResponse): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        // TODO: verify that the data contains both the topic and the actual message data.
-        this.logger.trace(data, "dataHandler");
+        this.incomingPubSubEventEmitter.emit(data);
     }
 
-    protected async filter(data: object): Promise<boolean> {
+    protected async filter(data: IPubSubResponse): Promise<boolean> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        // TODO: verify that the data contains both the topic and the actual message data.
         return true;
     }
 }

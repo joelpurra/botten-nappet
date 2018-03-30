@@ -26,9 +26,9 @@ import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
 
-import IHttpData from "../polling/ihttp-data";
-import IHttpHeaders from "../polling/ihttp-header";
-import PollingConnection from "../polling/polling-connection";
+import PollingConnection from "../polling/connection/polling-connection";
+import IHttpData from "../polling/interface/ihttp-data";
+import IHttpHeaders from "../polling/interface/ihttp-header";
 
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     private scopes: string[];

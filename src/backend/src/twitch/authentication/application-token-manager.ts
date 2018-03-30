@@ -30,7 +30,7 @@ import ConnectionManager from "@botten-nappet/shared/connection/connection-manag
 
 import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
 
-import IPollingConnection from "../polling/ipolling-connection";
+import IPollingConnection from "../polling/connection/ipolling-connection";
 
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;

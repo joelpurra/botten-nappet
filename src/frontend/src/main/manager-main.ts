@@ -40,10 +40,10 @@ import Config from "../config/config";
 import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
 
-import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/command/iincoming-irc-command";
-import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-following-event";
-import IIncomingSubscriptionEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-subscription-event";
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/event/iincoming-following-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
 import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
 
 /* tslint:enable max-line-length */

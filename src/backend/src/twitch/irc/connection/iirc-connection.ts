@@ -18,15 +18,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* tslint:disable max-line-length */
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
+import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
 
-// TODO: don't reference backend interfaces.
-import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/interface/response/polling/itwitch-api-v5-channel-cheermotes";
-
-/* tslint:enable max-line-length */
-
-import IChannelEvent from "./ichannel-event";
-
-export default interface IIncomingCheermotesEvent extends IChannelEvent {
-    cheermotes: ITwitchApiV5ChannelCheermotes;
+export default interface IIRCConnection extends IWebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand> {
+    readonly channel: string;
 }

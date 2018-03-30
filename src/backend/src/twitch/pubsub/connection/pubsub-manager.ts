@@ -23,10 +23,13 @@ import {
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
 
-export default class LoggingPubSubHandler extends PubSubManager {
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+
+import IPubSubResponse from "../interface/ipubsub-response";
+import IPubSubConnection from "./ipubsub-connection";
+
+export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse> {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
         super(logger, connection);
 
@@ -34,22 +37,9 @@ export default class LoggingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child("PubSubManager");
     }
 
-    protected async dataHandler(data: object): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // TODO: verify that the data contains both the topic and the actual message data.
-        this.logger.trace(data, "dataHandler");
-    }
-
-    protected async filter(data: object): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // TODO: verify that the data contains both the topic and the actual message data.
-        return true;
-    }
+    protected abstract async dataHandler(data: IPubSubResponse): Promise<void>;
+    protected abstract async filter(data: IPubSubResponse): Promise<boolean>;
 }

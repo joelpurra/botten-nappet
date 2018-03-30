@@ -18,15 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* tslint:disable max-line-length */
+import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
+import IPubSubResponse from "../interface/ipubsub-response";
 
-// TODO: don't reference backend interfaces.
-import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/interface/response/polling/itwitch-api-v5-channel-cheermotes";
-
-/* tslint:enable max-line-length */
-
-import IChannelEvent from "./ichannel-event";
-
-export default interface IIncomingCheermotesEvent extends IChannelEvent {
-    cheermotes: ITwitchApiV5ChannelCheermotes;
+export default interface IPubSubConnection extends IWebSocketConnection<IPubSubResponse, any> {
 }

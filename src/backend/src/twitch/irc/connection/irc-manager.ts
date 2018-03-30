@@ -23,33 +23,26 @@ import {
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
 
-export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IIRCConnection from "./iirc-connection";
+
+export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {
+    protected connection: IIRCConnection;
+
+    constructor(logger: PinoLogger, connection: IIRCConnection) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child("IrcManager");
+        this.connection = connection;
     }
 
-    protected async dataHandler(data: object): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // TODO: verify that the data contains both the topic and the actual message data.
-        this.logger.trace(data, "dataHandler");
-    }
-
-    protected async filter(data: object): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // TODO: verify that the data contains both the topic and the actual message data.
-        return true;
-    }
+    protected abstract async dataHandler(data: IIncomingIrcCommand): Promise<void>;
+    protected abstract async filter(data: IIncomingIrcCommand): Promise<boolean>;
 }

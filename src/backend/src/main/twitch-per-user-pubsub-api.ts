@@ -30,14 +30,14 @@ import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher
 import MessageQueueTopicPublisher from "@botten-nappet/shared/message-queue/topic-publisher";
 
 /* tslint:disable max-line-length */
-import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-pubsub-event-translator";
-import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-pubsub-event";
+import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface/iincoming-pubsub-event";
+import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/pubsub/translator/incoming-pubsub-event-translator";
 /* tslint:enable max-line-length */
 
+import PubSubConnection from "@botten-nappet/backend-twitch/pubsub/connection/pubsub-connection";
 import PubSubLoggingHandler from "@botten-nappet/backend-twitch/pubsub/handler/logging";
 import PubSubPingHandler from "@botten-nappet/backend-twitch/pubsub/handler/ping";
 import PubSubReconnectHandler from "@botten-nappet/backend-twitch/pubsub/handler/reconnect";
-import PubSubConnection from "@botten-nappet/backend-twitch/pubsub/pubsub-connection";
 
 export default async function twitchPerUserPubSubApi(
     config: Config,
