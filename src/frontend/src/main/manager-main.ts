@@ -186,7 +186,7 @@ export default async function managerMain(
                     total: data.total,
                     username: data.triggerer.name,
                 },
-                event: "cheering-with-cheermote",
+                event: "cheering-with-cheermotes",
             };
 
             io.send(msg);

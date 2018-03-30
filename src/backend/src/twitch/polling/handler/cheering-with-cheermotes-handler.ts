@@ -122,7 +122,7 @@ export default class CheeringWithCheermotesHandler
             return true;
         }
 
-        return false;
+        throw new Error("Unknown event type");
     }
 
     private getMatchingCheermotes(incomingCheeringEvent: IIncomingCheeringEvent): ICheerToken[] {
