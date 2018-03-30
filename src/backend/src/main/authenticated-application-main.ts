@@ -54,8 +54,6 @@ import TwitchIrcConnection from "../twitch/irc/irc-connection";
 
 import PollingClientIdConnection from "../twitch/polling/connection/polling-clientid-connection";
 
-import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
-
 import IIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
 import IOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
 import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
@@ -70,7 +68,7 @@ import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-poll
 import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
 
 import perUserHandlersMain from "./per-user-handlers-main";
-import twitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
+import backendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";
 
 export default async function backendAuthenticatedApplicationMain(
     config: Config,
@@ -126,13 +124,6 @@ export default async function backendAuthenticatedApplicationMain(
     // TODO: better null handling.
     const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken!);
 
-    const allPubSubTopicsForTwitchUserId = [
-        `channel-bits-events-v1.${twitchUserId}`,
-        `channel-subscribe-events-v1.${twitchUserId}`,
-        `channel-commerce-events-v1.${twitchUserId}`,
-        `whispers.${twitchUserId}`,
-    ];
-
     // TODO: externalize/configure base url.
     const followingPollingUri =
         `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${config.followingPollingLimit}`;
@@ -142,13 +133,6 @@ export default async function backendAuthenticatedApplicationMain(
 
     // TODO: externalize/configure base url.
     const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${twitchUserId}`;
-
-    const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
-        rootLogger,
-        config.twitchPubSubWebSocketUri,
-        allPubSubTopicsForTwitchUserId,
-        twitchUserAccessTokenProvider,
-    );
 
     const twitchIrcConnection = new TwitchIrcConnection(
         rootLogger,
@@ -257,7 +241,6 @@ export default async function backendAuthenticatedApplicationMain(
         );
 
     const connectables: IConnectable[] = [
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
         twitchIrcConnection,
         twitchPollingFollowingConnection,
         twitchPollingStreamingConnection,
@@ -301,12 +284,12 @@ export default async function backendAuthenticatedApplicationMain(
 
     try {
         await Promise.all([
-            twitchPerUserPubSubApi(
+            backendTwitchPubSubAuthenticatedApplicationApi(
                 config,
                 rootLogger,
                 gracefulShutdownManager,
                 messageQueuePublisher,
-                twitchAllPubSubTopicsForTwitchUserIdConnection,
+                twitchUserAccessTokenProvider,
                 twitchUserId,
             ),
 
