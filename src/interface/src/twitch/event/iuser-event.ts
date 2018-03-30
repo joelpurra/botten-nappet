@@ -1,5 +1,3 @@
-import IUserNameId from "./iuser-name-id";
-
 /*
 This file is part of botten-nappet -- a Twitch bot and streaming tool.
 <https://joelpurra.com/projects/botten-nappet/>
@@ -20,7 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default interface IChannelEvent {
-    channel: IUserNameId;
+import IUserNameId from "./iuser-name-id";
+
+export default interface IUserEvent {
+    recipient: IUserNameId;
     timestamp: Date;
 }

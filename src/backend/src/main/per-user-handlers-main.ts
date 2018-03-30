@@ -20,71 +20,69 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import Bluebird from "bluebird";
 
-import IStartableStoppable from "../../../shared/src/startable-stoppable/istartable-stoppable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
-/* tslint:disable:max-line-length */
-import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
-/* tslint:enable:max-line-length */
-import MessageQueueTopicPublisher from "../../../shared/src/message-queue/topic-publisher";
-
-import ITwitchIncomingIrcCommand from "../twitch/irc/command/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "../twitch/irc/command/ioutgoing-irc-command";
-import TwitchIrcFollowReminderHandler from "../twitch/irc/handler/follow-reminder";
-import TwitchIrcGreetingHandler from "../twitch/irc/handler/greeting";
-import TwitchIrcLoggingHandler from "../twitch/irc/handler/logging";
-import TwitchIrcNewChatterHandler from "../twitch/irc/handler/new-chatter";
-import TwitchIrcPingHandler from "../twitch/irc/handler/ping";
-import TwitchIrcReconnectHandler from "../twitch/irc/handler/reconnect";
-import TwitchIrcSubscribingHandler from "../twitch/irc/handler/subscribing";
-import TwitchIrcVidyCommandHandler from "../twitch/irc/handler/vidy-command";
-import TwitchIrcVidyResultEventHandler from "../twitch/irc/handler/vidy-result-event";
-import TwitchIrcConnection from "../twitch/irc/irc-connection";
-
-import TwitchIncomingIrcCommandEventTranslator from "../twitch/irc/event-handler/incoming-irc-command-event-translator";
-import TwitchOutgoingIrcCommandEventHandler from "../twitch/irc/event-handler/outgoing-irc-command-event-handler";
-import TwitchIrcTextResponseCommandHandler from "../twitch/irc/handler/text-response-command";
-
-import PollingClientIdConnection from "../twitch/polling/connection/polling-clientid-connection";
-import TwitchCheeringIrcReplyHandler from "../twitch/polling/handler/cheering-irc-reply-handler";
-/* tslint:enable max-line-length */
-import TwitchCheeringWithCheermotesHandler from "../twitch/polling/handler/cheering-with-cheermotes-handler";
-import TwitchFollowingIrcReplyHandler from "../twitch/polling/handler/following-irc-reply-handler";
-import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
-import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
-import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
 /* tslint:disable max-line-length */
-import TwitchStreamingStatisticsCollectorHandler from "../twitch/polling/handler/streaming-statistics-collector-handler";
-import TwitchSubscriptionIrcReplyHandler from "../twitch/polling/handler/subscription-irc-reply-handler";
-import TwitchWhisperIrcReplyHandler from "../twitch/polling/handler/whisper-irc-reply-handler";
 
-/* tslint:disable max-line-length */
-import IncomingCheeringCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheering-event-translator";
-import IncomingCheermotesCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheermotes-event-translator";
-import IncomingFollowingCommandEventTranslator from "../twitch/polling/event-handler/incoming-following-event-translator";
-import IncomingStreamingCommandEventTranslator from "../twitch/polling/event-handler/incoming-streaming-event-translator";
-import IncomingSubscriptionCommandEventTranslator from "../twitch/polling/event-handler/incoming-subscription-event-translator";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
+import MessageQueueTopicPublisher from "@botten-nappet/shared/message-queue/topic-publisher";
+
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/command/iincoming-irc-command";
+import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/command/ioutgoing-irc-command";
+import TwitchIrcFollowReminderHandler from "@botten-nappet/backend-twitch/irc/handler/follow-reminder";
+import TwitchIrcGreetingHandler from "@botten-nappet/backend-twitch/irc/handler/greeting";
+import TwitchIrcLoggingHandler from "@botten-nappet/backend-twitch/irc/handler/logging";
+import TwitchIrcNewChatterHandler from "@botten-nappet/backend-twitch/irc/handler/new-chatter";
+import TwitchIrcPingHandler from "@botten-nappet/backend-twitch/irc/handler/ping";
+import TwitchIrcReconnectHandler from "@botten-nappet/backend-twitch/irc/handler/reconnect";
+import TwitchIrcSubscribingHandler from "@botten-nappet/backend-twitch/irc/handler/subscribing";
+import TwitchIrcVidyCommandHandler from "@botten-nappet/backend-twitch/irc/handler/vidy-command";
+import TwitchIrcVidyResultEventHandler from "@botten-nappet/backend-twitch/irc/handler/vidy-result-event";
+import TwitchIrcConnection from "@botten-nappet/backend-twitch/irc/irc-connection";
+
+import TwitchIncomingIrcCommandEventTranslator from "@botten-nappet/backend-twitch/irc/event-handler/incoming-irc-command-event-translator";
+import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/irc/event-handler/outgoing-irc-command-event-handler";
+import TwitchIrcTextResponseCommandHandler from "@botten-nappet/backend-twitch/irc/handler/text-response-command";
+
+import PollingClientIdConnection from "@botten-nappet/backend-twitch/polling/connection/polling-clientid-connection";
+import TwitchCheeringIrcReplyHandler from "@botten-nappet/backend-twitch/polling/handler/cheering-irc-reply-handler";
+import TwitchCheeringWithCheermotesHandler from "@botten-nappet/backend-twitch/polling/handler/cheering-with-cheermotes-handler";
+import TwitchFollowingIrcReplyHandler from "@botten-nappet/backend-twitch/polling/handler/following-irc-reply-handler";
+import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/polling/handler/icheermotes-polling-response";
+import IPollingFollowingResponse from "@botten-nappet/backend-twitch/polling/handler/ifollowing-polling-response";
+import IPollingStreamingResponse from "@botten-nappet/backend-twitch/polling/handler/istreaming-polling-response";
+import TwitchStreamingStatisticsCollectorHandler from "@botten-nappet/backend-twitch/polling/handler/streaming-statistics-collector-handler";
+import TwitchSubscriptionIrcReplyHandler from "@botten-nappet/backend-twitch/polling/handler/subscription-irc-reply-handler";
+import TwitchWhisperIrcReplyHandler from "@botten-nappet/backend-twitch/polling/handler/whisper-irc-reply-handler";
+
+import IncomingCheeringCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-cheering-event-translator";
+import IncomingCheermotesCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-cheermotes-event-translator";
+import IncomingFollowingCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-following-event-translator";
+import IncomingStreamingCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-streaming-event-translator";
+import IncomingSubscriptionCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-subscription-event-translator";
+
+import IIncomingCheeringEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-event";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-following-event";
+import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-pubsub-event";
+import IIncomingStreamingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-streaming-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-subscription-event";
+
+import VidyIIncomingSearchResultEvent from "@botten-nappet/backend-vidy/command/iincoming-search-result-event";
+import VidyIOutgoingSearchCommand from "@botten-nappet/backend-vidy/command/ioutgoing-search-command";
+import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/outgoing-search-command-handler";
+import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/request/authenticated-request";
+
+import IncomingWhisperCommandEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-whisper-event-translator";
+import IIncomingWhisperEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-whisper-event";
+
 /* tslint:enable max-line-length */
-
-import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
-import IIncomingCheeringWithCheermotesEvent from "../twitch/polling/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
-import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
-import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
-import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
-
-import VidyIIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
-import VidyIOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
-import VidyOutgoingSearchCommandHandler from "../../vidy/outgoing-search-command-handler";
-import VidyAuthenticatedRequest from "../../vidy/request/authenticated-request";
-
-import IncomingWhisperCommandEventTranslator from "../twitch/polling/event-handler/incoming-whisper-event-translator";
-import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-event";
 
 export default async function perUserHandlersMain(
     config: Config,

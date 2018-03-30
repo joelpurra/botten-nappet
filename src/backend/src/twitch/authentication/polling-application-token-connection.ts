@@ -22,11 +22,13 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
 import IHttpData from "../polling/ihttp-data";
 import IHttpHeaders from "../polling/ihttp-header";
 import PollingConnection from "../polling/polling-connection";
-import IRawToken from "./iraw-token";
 
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     private scopes: string[];

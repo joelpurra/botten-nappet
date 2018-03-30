@@ -22,10 +22,10 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 

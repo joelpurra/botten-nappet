@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IIRCConnection from "../iirc-connection";
 import IrcManager from "../irc-manager";

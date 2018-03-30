@@ -22,13 +22,19 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+
+import IIncomingWhisperEvent,
+{
+    WhisperType,
+} from "@botten-nappet/interface-twitch/event/iincoming-whisper-event";
+
 import IPubSubResponse from "../../pubsub/ipubsub-response";
 import IIncomingPubSubEvent from "../event/iincoming-pubsub-event";
-import IIncomingWhisperEvent, { WhisperType } from "../event/iincoming-whisper-event";
 
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     private incomingWhisperEventEmitter: IEventEmitter<IIncomingWhisperEvent>;

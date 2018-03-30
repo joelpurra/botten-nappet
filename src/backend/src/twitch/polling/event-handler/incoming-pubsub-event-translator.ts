@@ -22,8 +22,8 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IPubSubResponse from "../../pubsub/ipubsub-response";
 import PubSubConnection from "../../pubsub/pubsub-connection";
 import PubSubManager from "../../pubsub/pubsub-manager";

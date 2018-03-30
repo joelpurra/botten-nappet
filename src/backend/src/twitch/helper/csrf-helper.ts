@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 export default class CSRFHelper {
     private logger: PinoLogger;

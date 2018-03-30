@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     ICheerTokenWithCheermoteUrl,
-} from "../handler/icheertoken-with-cheermotes-url";
+} from "./icheertoken-with-cheermotes-url";
 import IUserChannelEvent from "./iuser-channel-event";
 
 export default interface IIncomingCheeringWithCheermotesEvent extends IUserChannelEvent {

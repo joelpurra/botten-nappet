@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IChannelEvent from "./ichannel-event";
+import IChannelEvent from "@botten-nappet/interface-twitch/event/ichannel-event";
 
 export default interface IIncomingPollingEvent extends IChannelEvent {
     data: any;

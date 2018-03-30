@@ -28,7 +28,7 @@ import os from "os";
 import axios from "axios";
 import moment from "moment";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../../src/config/config";
 import IClientContext from "./iclient-context";
 

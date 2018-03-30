@@ -24,7 +24,7 @@ import {
 
 import axios from "axios";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import { ApplicationAccessTokenProviderType } from "../authentication/provider-types";
 import RequestHelper from "./request-helper";
 

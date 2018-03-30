@@ -35,20 +35,22 @@ import pkgDir from "pkg-dir";
 const thenReadJson = require("then-read-json");
 /* tslint:enable no-var-requires */
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 import DatabaseConnection from "../storage/database-connection";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
-import MessageQueueRawTopicsSubscriber from "../../../shared/src/message-queue/raw-topics-subscriber";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import MessageQueueRawTopicsSubscriber from "@botten-nappet/shared/message-queue/raw-topics-subscriber";
 
-import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
-import TwitchPollingApplicationTokenConnection from "../twitch/authentication/polling-application-token-connection";
+/* tslint:disable max-line-length */
+import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/authentication/application-token-manager";
+import TwitchPollingApplicationTokenConnection from "@botten-nappet/backend-twitch/authentication/polling-application-token-connection";
+/* tslint:enable max-line-length */
 
-import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
-import TwitchRequestHelper from "../twitch/helper/request-helper";
-import TwitchTokenHelper from "../twitch/helper/token-helper";
+import TwitchCSRFHelper from "@botten-nappet/backend-twitch/helper/csrf-helper";
+import TwitchRequestHelper from "@botten-nappet/backend-twitch/helper/request-helper";
+import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper";
 
 import backendManagerMain from "./manager-main";
 

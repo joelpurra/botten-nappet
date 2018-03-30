@@ -18,9 +18,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ITwitchApiV5ChannelCheermotes from "../handler/itwitch-api-v5-channel-cheermotes";
 import IChannelEvent from "./ichannel-event";
 
-export default interface IIncomingCheermotesEvent extends IChannelEvent {
-    cheermotes: ITwitchApiV5ChannelCheermotes;
+export default interface IIncomingStreamingEvent extends IChannelEvent {
+    type: "live" | "vodcast" | "";
+    title: string;
+    viewers: number;
+    startedAt: string;
 }

@@ -20,19 +20,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import Bluebird from "bluebird";
 
-import IConnectable from "../../../shared/src/connection/iconnectable";
+import IConnectable from "@botten-nappet/shared/connection/iconnectable";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
 import {
     UserAccessTokenProviderType,
-} from "../twitch/authentication/provider-types";
+} from "@botten-nappet/backend-twitch/authentication/provider-types";
 
-import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
+import TwitchPubSubConnection from "@botten-nappet/backend-twitch/pubsub/pubsub-connection";
 
 import twitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
 

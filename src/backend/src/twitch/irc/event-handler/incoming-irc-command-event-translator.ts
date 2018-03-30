@@ -22,8 +22,8 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IIRCConnection from "../iirc-connection";
 import IrcManager from "../irc-manager";

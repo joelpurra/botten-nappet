@@ -24,10 +24,13 @@ import {
 
 import axios from "axios";
 
-import ConnectionManager from "../../../../shared/src/connection/connection-manager";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
 import IPollingConnection from "../polling/ipolling-connection";
-import IRawToken from "./iraw-token";
 
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;

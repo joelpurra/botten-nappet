@@ -20,22 +20,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import Bluebird from "bluebird";
 
-import IStartableStoppable from "../../../shared/src/startable-stoppable/istartable-stoppable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
-import MessageQueueTopicPublisher from "../../../shared/src/message-queue/topic-publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import MessageQueueTopicPublisher from "@botten-nappet/shared/message-queue/topic-publisher";
 
-import IncomingPubSubEventTranslator from "../twitch/polling/event-handler/incoming-pubsub-event-translator";
-import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
+/* tslint:disable max-line-length */
+import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/polling/event-handler/incoming-pubsub-event-translator";
+import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-pubsub-event";
+/* tslint:enable max-line-length */
 
-import PubSubLoggingHandler from "../twitch/pubsub/handler/logging";
-import PubSubPingHandler from "../twitch/pubsub/handler/ping";
-import PubSubReconnectHandler from "../twitch/pubsub/handler/reconnect";
-import PubSubConnection from "../twitch/pubsub/pubsub-connection";
+import PubSubLoggingHandler from "@botten-nappet/backend-twitch/pubsub/handler/logging";
+import PubSubPingHandler from "@botten-nappet/backend-twitch/pubsub/handler/ping";
+import PubSubReconnectHandler from "@botten-nappet/backend-twitch/pubsub/handler/reconnect";
+import PubSubConnection from "@botten-nappet/backend-twitch/pubsub/pubsub-connection";
 
 export default async function twitchPerUserPubSubApi(
     config: Config,

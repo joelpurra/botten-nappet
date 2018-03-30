@@ -22,12 +22,12 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
@@ -90,6 +90,7 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
             command: "PRIVMSG",
             message: `@${data.username}: ${response}`,
             tags: {},
+            timestamp: new Date(),
         };
 
         this.outgoingIrcCommandEventEmitter.emit(command);

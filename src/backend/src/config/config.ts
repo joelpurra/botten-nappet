@@ -25,7 +25,8 @@ import {
 import {
     IConfig,
 } from "config";
-import IZmqConfig from "../../../shared/src/util/izmq-config";
+
+import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
 
 export default class Config implements IZmqConfig {
     private packageJson: any;

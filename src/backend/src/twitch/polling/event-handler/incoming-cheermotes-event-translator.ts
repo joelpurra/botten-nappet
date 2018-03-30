@@ -22,9 +22,12 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingCheermotesEvent from "../event/iincoming-cheermotes-event";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+
+import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheermotes-event";
+
 import IPollingCheermotesResponse from "../handler/icheermotes-polling-response";
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";

@@ -22,12 +22,15 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event//iincoming-subscription-event";
+
 import IIncomingIrcCommand from "../../irc/command/iincoming-irc-command";
 import IrcConnection from "../../irc/irc-connection";
 import IrcManager from "../../irc/irc-manager";
-import IIncomingSubscriptionEvent from "../event/iincoming-subscription-event";
 
 export default class IncomingSubscriptionCommandEventTranslator extends IrcManager {
     public userid: number;

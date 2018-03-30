@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IZeroMqTopicMessages from "../../../shared/src/message-queue/izeromq-topic-message";
+import IZeroMqTopicMessages from "@botten-nappet/shared/message-queue/izeromq-topic-message";
 
 export default interface IDistributedEvent extends IZeroMqTopicMessages {
     _id?: string;

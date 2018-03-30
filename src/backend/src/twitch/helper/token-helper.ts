@@ -24,9 +24,11 @@ import {
 
 import axios from "axios";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
-import IAugmentedToken from "../authentication/iaugmented-token";
-import IRawToken from "../authentication/iraw-token";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
 import RequestHelper from "./request-helper";
 
 export default class TokenHelper {

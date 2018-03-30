@@ -22,6 +22,7 @@ import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
+
 import Rx, {
     Observer, Subject, Subscription,
 } from "rxjs";
@@ -36,7 +37,8 @@ import {
     rxios as Rxios,
 } from "../../../lib/rxios";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
 import IHttpData from "./ihttp-data";
 import IHttpHeaders from "./ihttp-header";
 import IPollingConnection from "./ipolling-connection";

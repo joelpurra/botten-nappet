@@ -18,18 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
-import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
-import TwitchPollingApplicationTokenConnection from "../twitch/authentication/polling-application-token-connection";
+/* tslint:disable max-line-length */
+import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/authentication/application-token-manager";
+import TwitchPollingApplicationTokenConnection from "@botten-nappet/backend-twitch/authentication/polling-application-token-connection";
+/* tslint:enable max-line-length */
 
-import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
-import TwitchRequestHelper from "../twitch/helper/request-helper";
-import TwitchTokenHelper from "../twitch/helper/token-helper";
+import TwitchCSRFHelper from "@botten-nappet/backend-twitch/helper/csrf-helper";
+import TwitchRequestHelper from "@botten-nappet/backend-twitch/helper/request-helper";
+import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper";
 
 import backendAuthenticatedApplicationMain from "./authenticated-application-main";
 

@@ -22,9 +22,9 @@ import {
     assert,
 } from "check-types";
 
-import ConnectionManager from "../../../../shared/src/connection/connection-manager";
-import IReceivingConnection from "../../../../shared/src/connection/ireceiving-connection";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+import IReceivingConnection from "@botten-nappet/shared/connection/ireceiving-connection";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 export default abstract class PollingManager<T> extends ConnectionManager<T> {
     constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {

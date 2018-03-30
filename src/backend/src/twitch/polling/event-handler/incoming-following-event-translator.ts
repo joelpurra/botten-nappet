@@ -24,11 +24,14 @@ import {
 
 import moment from "moment";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingFollowingEvent from "../event/iincoming-following-event";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+
+import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/event/iincoming-following-event";
 import IPollingFollowingResponse from "../handler/ifollowing-polling-response";
 import ITwitchApiV5ChannelFollowingEvent from "../handler/itwitch-api-v5-channel-following-event";
+
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 

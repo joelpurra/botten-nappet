@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 import TopicsSubscriber from "./topics-subscriber";

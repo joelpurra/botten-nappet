@@ -18,14 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    TwitchApiV6StreamingEventType,
-} from "../handler/twitch-api-v6-streaming-event-types";
-import IChannelEvent from "./ichannel-event";
+import IUserNameId from "./iuser-name-id";
 
-export default interface IIncomingStreamingEvent extends IChannelEvent {
-    type: TwitchApiV6StreamingEventType;
-    title: string;
-    viewers: number;
-    startedAt: string;
+export default interface IChannelEvent {
+    channel: IUserNameId;
+    timestamp: Date;
 }

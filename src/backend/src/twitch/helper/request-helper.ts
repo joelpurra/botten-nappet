@@ -26,7 +26,7 @@ import qs, {
     IStringifyOptions,
 } from "qs";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 export default class RequestHelper {
     private logger: PinoLogger;

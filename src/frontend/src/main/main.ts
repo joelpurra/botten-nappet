@@ -20,11 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import configLibrary from "config";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
 import managerMain from "./manager-main";
 

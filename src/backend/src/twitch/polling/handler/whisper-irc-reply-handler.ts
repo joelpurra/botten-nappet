@@ -18,17 +18,19 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+
+import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincoming-whisper-event";
+
 import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
-import IIncomingWhisperEvent from "../event/iincoming-whisper-event";
 
 export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIncomingWhisperEvent> {
     public channelName: string;

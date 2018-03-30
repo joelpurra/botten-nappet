@@ -22,10 +22,10 @@ import {
     assert,
 } from "check-types";
 
-import ConnectionManager from "../../../../../shared/src/connection/connection-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
 
@@ -131,6 +131,7 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
             command: "PRIVMSG",
             message: response,
             tags: {},
+            timestamp: new Date(),
         };
 
         this.outgoingIrcCommandEventEmitter.emit(command);

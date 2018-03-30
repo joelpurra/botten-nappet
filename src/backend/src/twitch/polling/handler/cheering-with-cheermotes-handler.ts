@@ -22,17 +22,24 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import MultiEventSubscriptionManager from "../../../../../shared/src/event/multi-event-subscription-manager";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingCheeringEvent from "../event/iincoming-cheering-event";
-import IIncomingCheeringWithCheermotesEvent from "../event/iincoming-cheering-with-cheermotes-event";
-import IIncomingCheermotesEvent from "../event/iincoming-cheermotes-event";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+import MultiEventSubscriptionManager from "@botten-nappet/shared/event/multi-event-subscription-manager";
+
+/* tslint:disable max-line-length */
+
 import {
     ICheerToken,
     ICheerTokenWithCheermoteUrl,
-} from "./icheertoken-with-cheermotes-url";
+} from "@botten-nappet/interface-twitch/event/icheertoken-with-cheermotes-url";
+import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-event";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheermotes-event";
+
+/* tslint:enable max-line-length */
+
 import {
     CheermoteBackground,
     CheermoteImageType,

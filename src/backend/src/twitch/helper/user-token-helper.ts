@@ -27,11 +27,15 @@ import readline from "readline";
 
 import axios from "axios";
 import qs from "qs";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
 import IUser from "../../storage/iuser";
 import UserStorageManager from "../../storage/manager/user-storage-manager";
-import IAugmentedToken from "../authentication/iaugmented-token";
-import IRawToken from "../authentication/iraw-token";
+
 import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 

@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IReceivingConnection from "../../../../shared/src/connection/ireceiving-connection";
-import ISendingConnection from "../../../../shared/src/connection/isending-connection";
+import IReceivingConnection from "@botten-nappet/shared/connection/ireceiving-connection";
+import ISendingConnection from "@botten-nappet/shared/connection/isending-connection";
 
 export default interface IWebSocketConnection<T, V> extends IReceivingConnection<T>, ISendingConnection<V> {
 }

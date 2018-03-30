@@ -24,13 +24,16 @@ import {
 
 import moment from "moment";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import MultiEventSubscriptionManager from "../../../../../shared/src/event/multi-event-subscription-manager";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+import MultiEventSubscriptionManager from "@botten-nappet/shared/event/multi-event-subscription-manager";
+
+import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iincoming-streaming-event";
+
 import IIncomingIrcCommand from "../../irc/command/iincoming-irc-command";
 import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
-import IIncomingStreamingEvent from "../event/iincoming-streaming-event";
 
 export default class StreamingStatisticsCollectorHandler
     extends MultiEventSubscriptionManager<IIncomingStreamingEvent | IIncomingIrcCommand> {

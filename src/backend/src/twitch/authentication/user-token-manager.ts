@@ -21,10 +21,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     assert,
 } from "check-types";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
+
 import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
-import IAugmentedToken from "./iaugmented-token";
 
 export default class UserTokenManager {
     private userTokenHelper: UserTokenHelper;

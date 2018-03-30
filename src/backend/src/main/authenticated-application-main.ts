@@ -20,52 +20,53 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import Bluebird from "bluebird";
 
-import IConnectable from "../../../shared/src/connection/iconnectable";
+import IConnectable from "@botten-nappet/shared/connection/iconnectable";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
 import UserStorageManager from "../storage/manager/user-storage-manager";
 import UserRepository from "../storage/repository/user-repository";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 /* tslint:disable:max-line-length */
-import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
+import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
 /* tslint:enable:max-line-length */
 
-import TwitchApplicationTokenManager from "../twitch/authentication/application-token-manager";
+import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/authentication/application-token-manager";
 import {
     ApplicationAccessTokenProviderType,
     AugmentedTokenProviderType,
     UserAccessTokenProviderType,
-} from "../twitch/authentication/provider-types";
-import TwitchUserTokenManager from "../twitch/authentication/user-token-manager";
+} from "@botten-nappet/backend-twitch/authentication/provider-types";
+import TwitchUserTokenManager from "@botten-nappet/backend-twitch/authentication/user-token-manager";
 
-import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
-import TwitchRequestHelper from "../twitch/helper/request-helper";
-import TwitchTokenHelper from "../twitch/helper/token-helper";
-import TwitchUserHelper from "../twitch/helper/user-helper";
-import TwitchUserTokenHelper from "../twitch/helper/user-token-helper";
+import TwitchCSRFHelper from "@botten-nappet/backend-twitch/helper/csrf-helper";
+import TwitchRequestHelper from "@botten-nappet/backend-twitch/helper/request-helper";
+import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper";
+import TwitchUserHelper from "@botten-nappet/backend-twitch/helper/user-helper";
+import TwitchUserTokenHelper from "@botten-nappet/backend-twitch/helper/user-token-helper";
 
-import ITwitchIncomingIrcCommand from "../twitch/irc/command/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "../twitch/irc/command/ioutgoing-irc-command";
-import TwitchIrcConnection from "../twitch/irc/irc-connection";
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/command/iincoming-irc-command";
+import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/command/ioutgoing-irc-command";
+import TwitchIrcConnection from "@botten-nappet/backend-twitch/irc/irc-connection";
 
-import PollingClientIdConnection from "../twitch/polling/connection/polling-clientid-connection";
+import PollingClientIdConnection from "@botten-nappet/backend-twitch/polling/connection/polling-clientid-connection";
 
-import IIncomingSearchResultEvent from "../../vidy/command/iincoming-search-result-event";
-import IOutgoingSearchCommand from "../../vidy/command/ioutgoing-search-command";
-import IIncomingCheeringEvent from "../twitch/polling/event/iincoming-cheering-event";
-import IIncomingCheermotesEvent from "../twitch/polling/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "../twitch/polling/event/iincoming-following-event";
-import IIncomingPubSubEvent from "../twitch/polling/event/iincoming-pubsub-event";
-import IIncomingStreamingEvent from "../twitch/polling/event/iincoming-streaming-event";
-import IIncomingSubscriptionEvent from "../twitch/polling/event/iincoming-subscription-event";
-import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-event";
-import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
-import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
-import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
+import IIncomingCheeringEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-event";
+import IIncomingCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-following-event";
+import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-pubsub-event";
+import IIncomingStreamingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-streaming-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-subscription-event";
+import IIncomingWhisperEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-whisper-event";
+import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/polling/handler/icheermotes-polling-response";
+import IPollingFollowingResponse from "@botten-nappet/backend-twitch/polling/handler/ifollowing-polling-response";
+import IPollingStreamingResponse from "@botten-nappet/backend-twitch/polling/handler/istreaming-polling-response";
+
+import IIncomingSearchResultEvent from "@botten-nappet/backend-vidy/command/iincoming-search-result-event";
+import IOutgoingSearchCommand from "@botten-nappet/backend-vidy/command/ioutgoing-search-command";
 
 import perUserHandlersMain from "./per-user-handlers-main";
 import backendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";

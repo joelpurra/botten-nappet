@@ -31,24 +31,22 @@ import Koa from "koa";
 import koaStatic from "koa-static";
 import SocketIo from "socket.io";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
-
-import ITwitchIncomingIrcCommand from "../../../backend/src/twitch/irc/command/iincoming-irc-command";
 /* tslint:disable max-line-length */
-import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
-/* tslint:enable max-line-length */
 
-/* tslint:disable max-line-length */
-import IIncomingCheeringWithCheermotesEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-with-cheermotes-event";
-/* tslint:enable max-line-length */
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
 
-import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/iincoming-following-event";
-import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
-import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/command/iincoming-irc-command";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-following-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/backend-twitch/polling/event/iincoming-subscription-event";
+import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
+
+/* tslint:enable max-line-length */
 
 import { isValidColor } from "../../shared/colors";
 import managedMain from "./managed-main";

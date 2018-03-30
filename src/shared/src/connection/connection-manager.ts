@@ -28,7 +28,7 @@ import {
     NextObserver,
 } from "rxjs/internal/Observer";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
 import IReceivingConnection from "./ireceiving-connection";
 

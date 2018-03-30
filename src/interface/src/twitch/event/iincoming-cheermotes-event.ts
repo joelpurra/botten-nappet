@@ -1,5 +1,3 @@
-import IUserNameId from "./iuser-name-id";
-
 /*
 This file is part of botten-nappet -- a Twitch bot and streaming tool.
 <https://joelpurra.com/projects/botten-nappet/>
@@ -20,7 +18,15 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default interface IUserEvent {
-    recipient: IUserNameId;
-    timestamp: Date;
+/* tslint:disable max-line-length */
+
+// TODO: don't reference backend interfaces.
+import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/polling/handler/itwitch-api-v5-channel-cheermotes";
+
+/* tslint:enable max-line-length */
+
+import IChannelEvent from "./ichannel-event";
+
+export default interface IIncomingCheermotesEvent extends IChannelEvent {
+    cheermotes: ITwitchApiV5ChannelCheermotes;
 }

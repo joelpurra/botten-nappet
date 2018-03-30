@@ -22,9 +22,11 @@ import {
     assert,
 } from "check-types";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
 import IIncomingPollingEvent from "../event/iincoming-polling-event";
+
 import IPollingConnection from "../ipolling-connection";
 import PollingManager from "../polling-manager";
 
@@ -37,6 +39,8 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         logger: PinoLogger,
         connection: IPollingConnection<any>,
         incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
+        username: string,
+        userid: number,
     ) {
         super(logger, connection);
 

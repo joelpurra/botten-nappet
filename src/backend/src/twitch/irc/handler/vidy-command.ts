@@ -22,13 +22,14 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import IOutgoingSearchCommand from "../../../../vidy/command/ioutgoing-search-command";
+import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+
 import IIncomingIrcCommand from "../command/iincoming-irc-command";
 
 export default class VidyCommandIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {

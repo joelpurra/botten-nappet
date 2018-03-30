@@ -22,7 +22,7 @@ import fs from "fs";
 
 import pino from "pino";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import ILoggingConfig from "./ilogging-config";
 
 export default async function createRootLogger(config: ILoggingConfig): Promise<PinoLogger> {

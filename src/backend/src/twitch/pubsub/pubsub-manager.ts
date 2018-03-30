@@ -22,8 +22,8 @@ import {
     assert,
 } from "check-types";
 
-import ConnectionManager from "../../../../shared/src/connection/connection-manager";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IPubSubConnection from "./ipubsub-connection";
 import IPubSubResponse from "./ipubsub-response";
 

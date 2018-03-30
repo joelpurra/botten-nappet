@@ -36,7 +36,7 @@ import {
 
 import WebSocket from "ws";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IWebSocketCommand from "./iwebsocket-command";
 import IWebSocketConnection from "./iwebsocket-connection";
 

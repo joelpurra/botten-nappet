@@ -22,12 +22,15 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import EventSubscriptionManager from "@botten-nappet/shared/event/event-subscription-manager";
+import IEventEmitter from "@botten-nappet/shared/event/ievent-emitter";
+import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-subscription-connection";
+
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
+
 import IOutgoingIrcCommand from "../../irc/command/ioutgoing-irc-command";
-import IIncomingSubscriptionEvent from "../event/iincoming-subscription-event";
 
 export default class SubscriptionIrcReplyHandler extends EventSubscriptionManager<IIncomingSubscriptionEvent> {
     private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;

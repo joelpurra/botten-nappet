@@ -24,7 +24,7 @@ import {
 
 import zmq from "zeromq-ng";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IConnectable from "../connection/iconnectable";
 import {
