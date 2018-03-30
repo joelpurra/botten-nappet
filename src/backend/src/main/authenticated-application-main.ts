@@ -68,11 +68,12 @@ import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-eve
 import IPollingCheermotesResponse from "../twitch/polling/handler/icheermotes-polling-response";
 import IPollingFollowingResponse from "../twitch/polling/handler/ifollowing-polling-response";
 import IPollingStreamingResponse from "../twitch/polling/handler/istreaming-polling-response";
-import perUserHandlersMain from "./per-user-handlers-main";
 
-export default async function authenticatedApplicationMain(
+import perUserHandlersMain from "./per-user-handlers-main";
+import twitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
+
+export default async function backendAuthenticatedApplicationMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
@@ -81,6 +82,8 @@ export default async function authenticatedApplicationMain(
     twitchCSRFHelper: TwitchCSRFHelper,
     twitchTokenHelper: TwitchTokenHelper,
 ): Promise<void> {
+    const authenticatedApplicationMainLogger = rootLogger.child("backendAuthenticatedApplicationMain");
+
     const twitchApplicationAccessTokenProvider: ApplicationAccessTokenProviderType =
         async () => twitchApplicationTokenManager.getOrWait();
 
@@ -274,53 +277,63 @@ export default async function authenticatedApplicationMain(
 
     await Bluebird.map(connectables, async (connectable) => connectable.connect());
 
-    mainLogger.info("Connected.");
+    authenticatedApplicationMainLogger.info("Connected.");
 
     const disconnect = async (incomingError?: Error) => {
         await Bluebird.map(connectables, async (connectable) => {
             try {
                 connectable.disconnect();
             } catch (error) {
-                mainLogger.error(error, connectable, "Swallowed error while disconnecting.");
+                authenticatedApplicationMainLogger.error(error, connectable, "Swallowed error while disconnecting.");
             }
         });
 
         if (incomingError) {
-            mainLogger.error(incomingError, "Disconnected.");
+            authenticatedApplicationMainLogger.error(incomingError, "Disconnected.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Disconnected.");
+        authenticatedApplicationMainLogger.info("Disconnected.");
 
         return undefined;
     };
 
     try {
-        await perUserHandlersMain(
-            config,
-            mainLogger,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
-            twitchIrcConnection,
-            twitchPollingFollowingConnection,
-            twitchPollingStreamingConnection,
-            twitchPollingCheermotesConnection,
-            twitchAllPubSubTopicsForTwitchUserIdConnection,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
-            vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-            vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
-            twitchUserId,
-        );
+        await Promise.all([
+            twitchPerUserPubSubApi(
+                config,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+                twitchAllPubSubTopicsForTwitchUserIdConnection,
+                twitchUserId,
+            ),
+
+            perUserHandlersMain(
+                config,
+                authenticatedApplicationMainLogger,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+                twitchIrcConnection,
+                twitchPollingFollowingConnection,
+                twitchPollingStreamingConnection,
+                twitchPollingCheermotesConnection,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
+                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
+                vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
+                vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
+                twitchUserId,
+            ),
+        ]);
 
         await disconnect();
     } catch (error) {

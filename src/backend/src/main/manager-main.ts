@@ -36,11 +36,10 @@ import TwitchTokenHelper from "../twitch/helper/token-helper";
 
 import DistributedEventManager from "../distributed-events/distributed-event-manager";
 import DistributedEventRepository from "../storage/repository/distributed-event-repository";
-import managedMain from "./managed-main";
+import backendManagedMain from "./managed-main";
 
-export default async function managerMain(
+export default async function backendManagerMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     databaseConnection: DatabaseConnection,
@@ -52,23 +51,25 @@ export default async function managerMain(
     twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
     twitchApplicationTokenManager: TwitchApplicationTokenManager,
 ): Promise<void> {
+    const backendManagerMainLogger = rootLogger.child("backendManagerMain");
+
     await databaseConnection.connect();
     await messageQueueAllRawTopicsSubscriber.connect();
 
     // TODO: ensure event distributed event manager starts sooner?
     const distributedEventStorageManager = new DistributedEventStorageManager(
-        mainLogger,
+        backendManagerMainLogger,
         DistributedEventRepository,
     );
     const distributedEventManager = new DistributedEventManager(
-        mainLogger,
+        backendManagerMainLogger,
         messageQueueAllRawTopicsSubscriber,
         distributedEventStorageManager,
     );
 
     await distributedEventManager.start();
 
-    mainLogger.info("Managed.");
+    backendManagerMainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
         await distributedEventManager.stop();
@@ -76,20 +77,19 @@ export default async function managerMain(
         await databaseConnection.disconnect();
 
         if (incomingError) {
-            mainLogger.error(incomingError, "Unmanaged.");
+            backendManagerMainLogger.error(incomingError, "Unmanaged.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Unmanaged.");
+        backendManagerMainLogger.info("Unmanaged.");
 
         return undefined;
     };
 
     try {
-        await managedMain(
+        await backendManagedMain(
             config,
-            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             messageQueuePublisher,

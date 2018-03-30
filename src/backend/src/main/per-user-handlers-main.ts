@@ -66,7 +66,6 @@ import TwitchWhisperIrcReplyHandler from "../twitch/polling/handler/whisper-irc-
 import IncomingCheeringCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheering-event-translator";
 import IncomingCheermotesCommandEventTranslator from "../twitch/polling/event-handler/incoming-cheermotes-event-translator";
 import IncomingFollowingCommandEventTranslator from "../twitch/polling/event-handler/incoming-following-event-translator";
-import IncomingPubSubEventTranslator from "../twitch/polling/event-handler/incoming-pubsub-event-translator";
 import IncomingStreamingCommandEventTranslator from "../twitch/polling/event-handler/incoming-streaming-event-translator";
 import IncomingSubscriptionCommandEventTranslator from "../twitch/polling/event-handler/incoming-subscription-event-translator";
 /* tslint:enable max-line-length */
@@ -87,11 +86,6 @@ import VidyAuthenticatedRequest from "../../vidy/request/authenticated-request";
 import IncomingWhisperCommandEventTranslator from "../twitch/polling/event-handler/incoming-whisper-event-translator";
 import IIncomingWhisperEvent from "../twitch/polling/event/iincoming-whisper-event";
 
-import TwitchPubSubLoggingHandler from "../twitch/pubsub/handler/logging";
-import TwitchPubSubPingHandler from "../twitch/pubsub/handler/ping";
-import TwitchPubSubReconnectHandler from "../twitch/pubsub/handler/reconnect";
-import TwitchPubSubConnection from "../twitch/pubsub/pubsub-connection";
-
 export default async function perUserHandlersMain(
     config: Config,
     mainLogger: PinoLogger,
@@ -102,7 +96,6 @@ export default async function perUserHandlersMain(
     twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
     twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
     twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
-    twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
@@ -127,32 +120,6 @@ export default async function perUserHandlersMain(
         MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
     twitchUserId: number,
 ): Promise<void> {
-    const twitchPubSubPingHandler = new TwitchPubSubPingHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
-    const twitchPubSubReconnectHandler = new TwitchPubSubReconnectHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
-    const twitchPubSubLoggingHandler = new TwitchPubSubLoggingHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
-
-    const messageQueueTopicPublisherForIIncomingPubSubEvent =
-        new MessageQueueTopicPublisher<IIncomingPubSubEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingPubSubEvent,
-        );
-
-    const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-        messageQueueTopicPublisherForIIncomingPubSubEvent,
-    );
-
     const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
         rootLogger,
         twitchIrcConnection,
@@ -392,10 +359,6 @@ export default async function perUserHandlersMain(
 
     const startables: IStartableStoppable[] = [
         twitchIrcReconnectHandler,
-        twitchPubSubPingHandler,
-        twitchPubSubReconnectHandler,
-        twitchPubSubLoggingHandler,
-        twitchIncomingPubSubEventTranslator,
         twitchIrcLoggingHandler,
         twitchIrcPingHandler,
         twitchIrcGreetingHandler,

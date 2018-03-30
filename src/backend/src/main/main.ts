@@ -50,9 +50,9 @@ import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
 import TwitchRequestHelper from "../twitch/helper/request-helper";
 import TwitchTokenHelper from "../twitch/helper/token-helper";
 
-import managerMain from "./manager-main";
+import backendManagerMain from "./manager-main";
 
-export default async function main(
+export default async function backendMain(
     logger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
@@ -71,7 +71,7 @@ export default async function main(
 
     config.validate();
 
-    const backendLogger = logger.child("backend");
+    const backendLogger = logger.child("backendMain");
 
     const databaseConnection = new DatabaseConnection(backendLogger, config.databaseUri);
 
@@ -108,9 +108,8 @@ export default async function main(
         config.twitchAppClientId,
     );
 
-    await managerMain(
+    await backendManagerMain(
         config,
-        backendLogger,
         backendLogger,
         gracefulShutdownManager,
         databaseConnection,

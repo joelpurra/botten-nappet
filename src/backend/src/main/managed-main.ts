@@ -31,11 +31,10 @@ import TwitchCSRFHelper from "../twitch/helper/csrf-helper";
 import TwitchRequestHelper from "../twitch/helper/request-helper";
 import TwitchTokenHelper from "../twitch/helper/token-helper";
 
-import authenticatedApplicationMain from "./authenticated-application-main";
+import backendAuthenticatedApplicationMain from "./authenticated-application-main";
 
-export default async function managedMain(
+export default async function backendManagedMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
@@ -45,31 +44,32 @@ export default async function managedMain(
     twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
     twitchApplicationTokenManager: TwitchApplicationTokenManager,
 ): Promise<void> {
+    const backendManagedMainLogger = rootLogger.child("backendManagedMain");
+
     await twitchPollingApplicationTokenConnection.connect();
     await twitchApplicationTokenManager.start();
     await twitchApplicationTokenManager.getOrWait();
 
-    mainLogger.info("Application authenticated.");
+    backendManagedMainLogger.info("Application authenticated.");
 
     const disconnectAuthentication = async (incomingError?: Error) => {
         await twitchApplicationTokenManager.stop();
         await twitchPollingApplicationTokenConnection.disconnect();
 
         if (incomingError) {
-            mainLogger.error(incomingError, "Unauthenticated.");
+            backendManagedMainLogger.error(incomingError, "Unauthenticated.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Unauthenticated.");
+        backendManagedMainLogger.info("Unauthenticated.");
 
         return undefined;
     };
 
     try {
-        await authenticatedApplicationMain(
+        await backendAuthenticatedApplicationMain(
             config,
-            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             messageQueuePublisher,
