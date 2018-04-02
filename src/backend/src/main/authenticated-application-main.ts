@@ -47,8 +47,6 @@ import TwitchUserTokenHelper from "@botten-nappet/backend-twitch/helper/user-tok
 
 import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
 
-import PollingClientIdConnection from "@botten-nappet/backend-twitch/polling/connection/polling-clientid-connection";
-
 import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-event";
 import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/event/iincoming-following-event";
@@ -58,10 +56,6 @@ import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincomi
 
 import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface/iincoming-pubsub-event";
 
-import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/interface/response/polling/icheermotes-polling-response";
-import IPollingFollowingResponse from "@botten-nappet/backend-twitch/interface/response/polling/ifollowing-polling-response";
-import IPollingStreamingResponse from "@botten-nappet/backend-twitch/interface/response/polling/istreaming-polling-response";
-
 import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
 import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 
@@ -70,6 +64,7 @@ import UserRepository from "../storage/repository/user-repository";
 
 import perUserHandlersMain from "./per-user-handlers-main";
 import backendTwitchIrcAuthenticatedApplicationApi from "./twitch-irc-authenticated-application-api";
+import backendTwitchPollingAuthenticatedApplicationApi from "./twitch-polling-authenticated-application-api";
 import backendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";
 
 /* tslint:enable:max-line-length */
@@ -127,41 +122,6 @@ export default async function backendAuthenticatedApplicationMain(
     const twitchUserRawToken = twitchAugmentedToken.token;
     // TODO: better null handling.
     const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken!);
-
-    // TODO: externalize/configure base url.
-    const followingPollingUri =
-        `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${config.followingPollingLimit}`;
-
-    // TODO: externalize/configure base url.
-    const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${twitchUserId}`;
-
-    // TODO: externalize/configure base url.
-    const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${twitchUserId}`;
-
-    const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetDefaultPollingInterval,
-        false,
-        followingPollingUri,
-        "get",
-    );
-    const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetStreamingPollingInterval,
-        true,
-        streamingPollingUri,
-        "get",
-    );
-    const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetCheermotesPollingInterval,
-        true,
-        cheermotesPollingUri,
-        "get",
-    );
 
     // TODO: configurable.
     const topicsStringSeparator = ":";
@@ -231,9 +191,6 @@ export default async function backendAuthenticatedApplicationMain(
         );
 
     const connectables: IConnectable[] = [
-        twitchPollingFollowingConnection,
-        twitchPollingStreamingConnection,
-        twitchPollingCheermotesConnection,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
@@ -290,14 +247,19 @@ export default async function backendAuthenticatedApplicationMain(
                 twitchUserId,
             ),
 
+            backendTwitchPollingAuthenticatedApplicationApi(
+                config,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+                twitchUserId,
+            ),
+
             perUserHandlersMain(
                 config,
                 rootLogger,
                 gracefulShutdownManager,
                 messageQueuePublisher,
-                twitchPollingFollowingConnection,
-                twitchPollingStreamingConnection,
-                twitchPollingCheermotesConnection,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
