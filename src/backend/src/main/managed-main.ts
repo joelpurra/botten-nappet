@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
+
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
@@ -33,66 +35,109 @@ import TwitchCSRFHelper from "@botten-nappet/backend-twitch/helper/csrf-helper";
 import TwitchRequestHelper from "@botten-nappet/backend-twitch/helper/request-helper";
 import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper";
 
-import backendAuthenticatedApplicationMain from "./authenticated-application-main";
-import backendVidyApplicationApi from "./vidy-application-api";
+import BackendAuthenticatedApplicationMain from "./authenticated-application-main";
+import BackendVidyApplicationApi from "./vidy-application-api";
 
-export default async function backendManagedMain(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchRequestHelper: TwitchRequestHelper,
-    twitchCSRFHelper: TwitchCSRFHelper ,
-    twitchTokenHelper: TwitchTokenHelper ,
-    twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-    twitchApplicationTokenManager: TwitchApplicationTokenManager,
-): Promise<void> {
-    const backendManagedMainLogger = rootLogger.child("backendManagedMain");
+export default class BackendManagedMain implements IStartableStoppable {
+    private backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain | null;
+    private backendVidyApplicationApi: BackendVidyApplicationApi | null;
+    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
+    private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection;
+    private twitchTokenHelper: TwitchTokenHelper;
+    private twitchCSRFHelper: TwitchCSRFHelper;
+    private twitchRequestHelper: TwitchRequestHelper;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    await twitchPollingApplicationTokenConnection.connect();
-    await twitchApplicationTokenManager.start();
-    await twitchApplicationTokenManager.getOrWait();
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchRequestHelper: TwitchRequestHelper,
+        twitchCSRFHelper: TwitchCSRFHelper ,
+        twitchTokenHelper: TwitchTokenHelper ,
+        twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        twitchApplicationTokenManager: TwitchApplicationTokenManager,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendManagedMain");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchRequestHelper = twitchRequestHelper;
+        this.twitchCSRFHelper = twitchCSRFHelper;
+        this.twitchTokenHelper = twitchTokenHelper;
+        this.twitchPollingApplicationTokenConnection = twitchPollingApplicationTokenConnection;
+        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
 
-    backendManagedMainLogger.info("Application authenticated.");
+        this.backendVidyApplicationApi = null;
+        this.backendAuthenticatedApplicationMain = null;
+    }
 
-    const disconnectAuthentication = async (incomingError?: Error) => {
-        await twitchApplicationTokenManager.stop();
-        await twitchPollingApplicationTokenConnection.disconnect();
+    public async start(): Promise<void> {
+        await this.twitchPollingApplicationTokenConnection.connect();
+        await this.twitchApplicationTokenManager.start();
 
-        if (incomingError) {
-            backendManagedMainLogger.error(incomingError, "Unauthenticated.");
+        // NOTE: warmup and server-side token verification.
+        await this.twitchApplicationTokenManager.getOrWait();
 
-            throw incomingError;
+        this.logger.info("Application authenticated.");
+
+        const disconnectAuthentication = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Unauthenticated.");
+
+                throw incomingError;
+            }
+
+            this.logger.info("Unauthenticated.");
+
+            return undefined;
+        };
+
+        this.backendVidyApplicationApi = new BackendVidyApplicationApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+        );
+
+        this.backendAuthenticatedApplicationMain = new BackendAuthenticatedApplicationMain(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            this.twitchApplicationTokenManager,
+            this.twitchRequestHelper,
+            this.twitchCSRFHelper,
+            this.twitchTokenHelper,
+        );
+
+        try {
+            await Promise.all([
+                this.backendVidyApplicationApi.start(),
+
+                this.backendAuthenticatedApplicationMain.start(),
+            ]);
+
+            await disconnectAuthentication();
+        } catch (error) {
+            await disconnectAuthentication(error);
         }
+    }
 
-        backendManagedMainLogger.info("Unauthenticated.");
-
-        return undefined;
-    };
-
-    try {
-        await Promise.all([
-            backendVidyApplicationApi(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-            ),
-
-            backendAuthenticatedApplicationMain(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-                twitchApplicationTokenManager,
-                twitchRequestHelper,
-                twitchCSRFHelper,
-                twitchTokenHelper,
-            ),
-        ]);
-
-        await disconnectAuthentication();
-    } catch (error) {
-        disconnectAuthentication(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await this.backendVidyApplicationApi!.stop();
+        await this.backendAuthenticatedApplicationMain!.stop();
+        await this.twitchApplicationTokenManager.stop();
+        await this.twitchPollingApplicationTokenConnection.disconnect();
     }
 }

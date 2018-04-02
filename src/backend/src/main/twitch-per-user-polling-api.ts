@@ -46,101 +46,133 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iinco
 
 /* tslint:enable max-line-length */
 
-export default async function twitchPerUserPollingApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
-    twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
-    twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
-    twitchUserId: number,
-): Promise<void> {
-    const perUserHandlersMainLogger = rootLogger.child("perUserHandlersMain");
+export default class TwitchPerUserPollingApi {
+    private startables: IStartableStoppable[];
+    private twitchUserId: number;
+    private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>;
+    private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>;
+    private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const messageQueueTopicPublisherForIIncomingFollowingEvent =
-        new MessageQueueTopicPublisher<IIncomingFollowingEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingFollowingEvent,
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
+        twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
+        twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("TwitchPerUserPollingApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchPollingFollowingConnection = twitchPollingFollowingConnection;
+        this.twitchPollingStreamingConnection = twitchPollingStreamingConnection;
+        this.twitchPollingCheermotesConnection = twitchPollingCheermotesConnection;
+        this.twitchUserId = twitchUserId;
+
+        this.startables = [];
+    }
+
+    public async start(): Promise<void> {
+        const messageQueueTopicPublisherForIIncomingFollowingEvent =
+            new MessageQueueTopicPublisher<IIncomingFollowingEvent>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicTwitchIncomingFollowingEvent,
+            );
+
+        const messageQueueTopicPublisherForIIncomingStreamingEvent =
+            new MessageQueueTopicPublisher<IIncomingStreamingEvent>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicTwitchIncomingStreamingEvent,
+            );
+
+        const messageQueueTopicPublisherForIIncomingCheermotesEvent =
+            new MessageQueueTopicPublisher<IIncomingCheermotesEvent>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicTwitchIncomingCheermotesEvent,
+            );
+
+        const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
+            this.logger,
+            this.twitchPollingFollowingConnection,
+            messageQueueTopicPublisherForIIncomingFollowingEvent,
+            this.config.twitchUserName,
+            this.twitchUserId,
         );
 
-    const messageQueueTopicPublisherForIIncomingStreamingEvent =
-        new MessageQueueTopicPublisher<IIncomingStreamingEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingStreamingEvent,
+        const twitchIncomingStreamingCommandEventTranslator = new IncomingStreamingCommandEventTranslator(
+            this.logger,
+            this.twitchPollingStreamingConnection,
+            messageQueueTopicPublisherForIIncomingStreamingEvent,
+            this.config.twitchUserName,
+            this.twitchUserId,
         );
 
-    const messageQueueTopicPublisherForIIncomingCheermotesEvent =
-        new MessageQueueTopicPublisher<IIncomingCheermotesEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingCheermotesEvent,
+        const twitchIncomingCheermotesCommandEventTranslator = new IncomingCheermotesCommandEventTranslator(
+            this.logger,
+            this.twitchPollingCheermotesConnection,
+            messageQueueTopicPublisherForIIncomingCheermotesEvent,
+            this.config.twitchUserName,
+            this.twitchUserId,
         );
 
-    const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
-        rootLogger,
-        twitchPollingFollowingConnection,
-        messageQueueTopicPublisherForIIncomingFollowingEvent,
-        config.twitchUserName,
-        twitchUserId,
-    );
+        this.startables.push(twitchIncomingFollowingCommandEventTranslator);
+        this.startables.push(twitchIncomingStreamingCommandEventTranslator);
+        this.startables.push(twitchIncomingCheermotesCommandEventTranslator);
 
-    const twitchIncomingStreamingCommandEventTranslator = new IncomingStreamingCommandEventTranslator(
-        rootLogger,
-        twitchPollingStreamingConnection,
-        messageQueueTopicPublisherForIIncomingStreamingEvent,
-        config.twitchUserName,
-        twitchUserId,
-    );
+        const stop = async (incomingError?: Error) => {
+            await this.stop();
 
-    const twitchIncomingCheermotesCommandEventTranslator = new IncomingCheermotesCommandEventTranslator(
-        rootLogger,
-        twitchPollingCheermotesConnection,
-        messageQueueTopicPublisherForIIncomingCheermotesEvent,
-        config.twitchUserName,
-        twitchUserId,
-    );
+            if (incomingError) {
+                this.logger.error(incomingError, "Stopped.");
 
-    const startables: IStartableStoppable[] = [
-        twitchIncomingFollowingCommandEventTranslator,
-        twitchIncomingStreamingCommandEventTranslator,
-        twitchIncomingCheermotesCommandEventTranslator,
-    ];
-
-    const stop = async (incomingError?: Error) => {
-        await Bluebird.map(startables, async (startable) => {
-            try {
-                startable.stop();
-            } catch (error) {
-                perUserHandlersMainLogger.error(error, startable, "Swallowed error while stopping.");
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            perUserHandlersMainLogger.error(incomingError, "Stopped.");
+            this.logger.info("Stopped.");
 
-            throw incomingError;
+            return undefined;
+        };
+
+        try {
+            await Bluebird.map(this.startables, async (startable) => startable.start());
+
+            this.logger.info({
+                twitchUserId: this.twitchUserId,
+                twitchUserName: this.config.twitchUserName,
+            }, "Started listening to events");
+
+            await this.gracefulShutdownManager.waitForShutdownSignal();
+
+            await stop();
+        } catch (error) {
+            await stop(error);
         }
+    }
 
-        perUserHandlersMainLogger.info("Stopped.");
-
-        return undefined;
-    };
-
-    try {
-        await Bluebird.map(startables, async (startable) => startable.start());
-
-        perUserHandlersMainLogger.info({
-            twitchUserId,
-            twitchUserName: config.twitchUserName,
-        }, "Started listening to events");
-
-        await gracefulShutdownManager.waitForShutdownSignal();
-
-        await stop();
-    } catch (error) {
-        stop(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await Bluebird.map(
+            this.startables,
+            async (startable) => {
+                try {
+                    await startable.stop();
+                } catch (error) {
+                    this.logger.error(error, startable, "Swallowed error while stopping.");
+                }
+            },
+        );
     }
 }

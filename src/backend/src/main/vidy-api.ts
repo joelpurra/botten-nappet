@@ -39,68 +39,96 @@ import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/io
 
 /* tslint:enable max-line-length */
 
-export default async function vidyApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
-): Promise<void> {
-    const perUserHandlersMainLogger = rootLogger.child("perUserHandlersMain");
+export default class BackendVidyApi implements IStartableStoppable {
+    private startables: IStartableStoppable[];
+    private messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+        MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const messageQueueTopicPublisherForIIncomingSearchResultEvent =
-        new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicVidyIncomingSearchResultEvent,
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+            MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendVidyApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand
+            = messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand;
+
+        this.startables = [];
+    }
+
+    public async start(): Promise<void> {
+        const messageQueueTopicPublisherForIIncomingSearchResultEvent =
+            new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicVidyIncomingSearchResultEvent,
+            );
+
+        const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(this.logger, this.config);
+
+        const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
+            this.logger,
+            this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
+            messageQueueTopicPublisherForIIncomingSearchResultEvent,
+            vidyAuthenticatedRequest,
+            this.config.vidyRootUrl,
         );
 
-    const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(rootLogger, config);
+        this.startables.push(vidyOutgoingSearchCommandHandler);
 
-    const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
-        rootLogger,
-        messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-        messageQueueTopicPublisherForIIncomingSearchResultEvent,
-        vidyAuthenticatedRequest,
-        config.vidyRootUrl,
-    );
+        const stop = async (incomingError?: Error) => {
+            await this.stop();
 
-    const startables: IStartableStoppable[] = [
-        vidyOutgoingSearchCommandHandler,
-    ];
+            if (incomingError) {
+                this.logger.error(incomingError, "Stopped.");
 
-    const stop = async (incomingError?: Error) => {
-        await Bluebird.map(startables, async (startable) => {
-            try {
-                startable.stop();
-            } catch (error) {
-                perUserHandlersMainLogger.error(error, startable, "Swallowed error while stopping.");
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            perUserHandlersMainLogger.error(incomingError, "Stopped.");
+            this.logger.info("Stopped.");
 
-            throw incomingError;
+            return undefined;
+        };
+
+        try {
+            await Bluebird.map(this.startables, async (startable) => startable.start());
+
+            this.logger.info({
+                vidyKeyId: this.config.vidyKeyId,
+            }, "Started listening to events");
+
+            await this.gracefulShutdownManager.waitForShutdownSignal();
+
+            await stop();
+        } catch (error) {
+            await stop(error);
         }
+    }
 
-        perUserHandlersMainLogger.info("Stopped.");
-
-        return undefined;
-    };
-
-    try {
-        await Bluebird.map(startables, async (startable) => startable.start());
-
-        perUserHandlersMainLogger.info({
-            vidyKeyId: config.vidyKeyId,
-        }, "Started listening to events");
-
-        await gracefulShutdownManager.waitForShutdownSignal();
-
-        await stop();
-    } catch (error) {
-        stop(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await Bluebird.map(
+            this.startables,
+            async (startable) => {
+                try {
+                    await startable.stop();
+                } catch (error) {
+                    this.logger.error(error, startable, "Swallowed error while stopping.");
+                }
+            },
+        );
     }
 }

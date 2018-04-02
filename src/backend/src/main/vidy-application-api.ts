@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
@@ -33,68 +34,97 @@ import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/me
 
 import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 
-import vidyApi from "./vidy-api";
+import VidyApi from "./vidy-api";
 
 /* tslint:enable:max-line-length */
 
-export default async function backendVidyApplicationApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-): Promise<void> {
-    const authenticatedApplicationMainLogger = rootLogger.child("backendVidyApplicationApi");
+export default class BackendVidyApplicationApi implements IStartableStoppable {
+    private vidyApi: VidyApi | null;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: any;
+    private config: Config;
+    private connectables: IConnectable[];
 
-    // TODO: configurable.
-    const topicsStringSeparator = ":";
-    const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+    ) {
+        this.config = config;
+        this.logger = logger.child("BackendVidyApplicationApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
 
-    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicVidyOutgoingSearchCommand),
-        );
+        this.vidyApi = null;
+        this.connectables = [];
+    }
 
-    const connectables: IConnectable[] = [
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-    ];
+    public async start(): Promise<void> {
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
 
-    await Bluebird.map(connectables, async (connectable) => connectable.connect());
+        const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicVidyOutgoingSearchCommand),
+            );
 
-    authenticatedApplicationMainLogger.info("Connected.");
+        this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
 
-    const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => {
-            try {
-                connectable.disconnect();
-            } catch (error) {
-                authenticatedApplicationMainLogger.error(error, connectable, "Swallowed error while disconnecting.");
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
+
+        this.logger.info("Connected.");
+
+        const disconnect = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Disconnected.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            authenticatedApplicationMainLogger.error(incomingError, "Disconnected.");
+            this.logger.info("Disconnected.");
 
-            throw incomingError;
-        }
+            return undefined;
+        };
 
-        authenticatedApplicationMainLogger.info("Disconnected.");
-
-        return undefined;
-    };
-
-    try {
-        await vidyApi(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
+        this.vidyApi = new VidyApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
             vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
         );
 
-        await disconnect();
-    } catch (error) {
-        disconnect(error);
+        try {
+            await this.vidyApi.start();
+
+            await disconnect();
+        } catch (error) {
+            await disconnect(error);
+        }
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        this.vidyApi!.stop();
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger.error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
@@ -34,74 +35,106 @@ import {
 
 import TwitchPubSubConnection from "@botten-nappet/backend-twitch/pubsub/connection/pubsub-connection";
 
-import twitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
+import TwitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
 
-export default async function backendTwitchPubSubAuthenticatedApplicationApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchUserAccessTokenProvider: UserAccessTokenProviderType,
-    twitchUserId: number,
-): Promise<void> {
-    const backendTwitchPubSubAuthenticatedApplicationApiLogger
-        = rootLogger.child("backendATwitchPubSubuthenticatedApplicationApi");
+export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {
+    private twitchPerUserPubSubApi: TwitchPerUserPubSubApi | null;
+    private connectables: IConnectable[];
+    private twitchUserId: number;
+    private twitchUserAccessTokenProvider: UserAccessTokenProviderType;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const allPubSubTopicsForTwitchUserId = [
-        `channel-bits-events-v1.${twitchUserId}`,
-        `channel-subscribe-events-v1.${twitchUserId}`,
-        `channel-commerce-events-v1.${twitchUserId}`,
-        `whispers.${twitchUserId}`,
-    ];
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchUserAccessTokenProvider: UserAccessTokenProviderType,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendATwitchPubSubuthenticatedApplicationApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchUserAccessTokenProvider = twitchUserAccessTokenProvider;
+        this.twitchUserId = twitchUserId;
 
-    const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
-        rootLogger,
-        config.twitchPubSubWebSocketUri,
-        allPubSubTopicsForTwitchUserId,
-        twitchUserAccessTokenProvider,
-    );
+        this.twitchPerUserPubSubApi = null;
+        this.connectables = [];
+    }
 
-    const connectables: IConnectable[] = [
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    ];
+    public async start(): Promise<void> {
+        const allPubSubTopicsForTwitchUserId = [
+            `channel-bits-events-v1.${this.twitchUserId}`,
+            `channel-subscribe-events-v1.${this.twitchUserId}`,
+            `channel-commerce-events-v1.${this.twitchUserId}`,
+            `whispers.${this.twitchUserId}`,
+        ];
 
-    await Bluebird.map(connectables, async (connectable) => connectable.connect());
+        const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
+            this.logger,
+            this.config.twitchPubSubWebSocketUri,
+            allPubSubTopicsForTwitchUserId,
+            this.twitchUserAccessTokenProvider,
+        );
+        this.connectables.push(twitchAllPubSubTopicsForTwitchUserIdConnection);
 
-    backendTwitchPubSubAuthenticatedApplicationApiLogger.info("Connected.");
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
-    const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => {
-            try {
-                connectable.disconnect();
-            } catch (error) {
-                backendTwitchPubSubAuthenticatedApplicationApiLogger
-                    .error(error, connectable, "Swallowed error while disconnecting.");
+        this.logger.info("Connected.");
+
+        const disconnect = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Disconnected.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            backendTwitchPubSubAuthenticatedApplicationApiLogger.error(incomingError, "Disconnected.");
+            this.logger.info("Disconnected.");
 
-            throw incomingError;
-        }
+            return undefined;
+        };
 
-        backendTwitchPubSubAuthenticatedApplicationApiLogger.info("Disconnected.");
-
-        return undefined;
-    };
-
-    try {
-        await twitchPerUserPubSubApi(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
+        this.twitchPerUserPubSubApi = new TwitchPerUserPubSubApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
             twitchAllPubSubTopicsForTwitchUserIdConnection,
-            twitchUserId,
+            this.twitchUserId,
         );
 
-        await disconnect();
-    } catch (error) {
-        disconnect(error);
+        try {
+            await this.twitchPerUserPubSubApi.start();
+
+            await disconnect();
+        } catch (error) {
+            await disconnect(error);
+        }
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        this.twitchPerUserPubSubApi!.stop();
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

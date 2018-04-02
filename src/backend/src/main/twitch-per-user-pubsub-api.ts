@@ -39,81 +39,109 @@ import PubSubLoggingHandler from "@botten-nappet/backend-twitch/pubsub/handler/l
 import PubSubPingHandler from "@botten-nappet/backend-twitch/pubsub/handler/ping";
 import PubSubReconnectHandler from "@botten-nappet/backend-twitch/pubsub/handler/reconnect";
 
-export default async function twitchPerUserPubSubApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
-    twitchUserId: number,
-): Promise<void> {
-    const perUserPubSubApiLogger = rootLogger.child("perUserPubSubApi");
+export default class TwitchPerUserPubSubApi {
+    private startables: IStartableStoppable[];
+    private twitchUserId: number;
+    private twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const twitchPubSubPingHandler = new PubSubPingHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
-    const twitchPubSubReconnectHandler = new PubSubReconnectHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
-    const twitchPubSubLoggingHandler = new PubSubLoggingHandler(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-    );
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("TwitchPerUserPubSubApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchAllPubSubTopicsForTwitchUserIdConnection = twitchAllPubSubTopicsForTwitchUserIdConnection;
+        this.twitchUserId = twitchUserId;
 
-    const messageQueueTopicPublisherForIIncomingPubSubEvent =
-        new MessageQueueTopicPublisher<IIncomingPubSubEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingPubSubEvent,
+        this.startables = [];
+    }
+
+    public async start(): Promise<void> {
+        const twitchPubSubPingHandler = new PubSubPingHandler(
+            this.logger,
+            this.twitchAllPubSubTopicsForTwitchUserIdConnection,
+        );
+        const twitchPubSubReconnectHandler = new PubSubReconnectHandler(
+            this.logger,
+            this.twitchAllPubSubTopicsForTwitchUserIdConnection,
+        );
+        const twitchPubSubLoggingHandler = new PubSubLoggingHandler(
+            this.logger,
+            this.twitchAllPubSubTopicsForTwitchUserIdConnection,
         );
 
-    const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
-        rootLogger,
-        twitchAllPubSubTopicsForTwitchUserIdConnection,
-        messageQueueTopicPublisherForIIncomingPubSubEvent,
-    );
+        const messageQueueTopicPublisherForIIncomingPubSubEvent =
+            new MessageQueueTopicPublisher<IIncomingPubSubEvent>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicTwitchIncomingPubSubEvent,
+            );
 
-    const startables: IStartableStoppable[] = [
-        twitchPubSubPingHandler,
-        twitchPubSubReconnectHandler,
-        twitchPubSubLoggingHandler,
-        twitchIncomingPubSubEventTranslator,
-    ];
+        const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
+            this.logger,
+            this.twitchAllPubSubTopicsForTwitchUserIdConnection,
+            messageQueueTopicPublisherForIIncomingPubSubEvent,
+        );
 
-    const stop = async (incomingError?: Error) => {
-        await Bluebird.map(startables, async (startable) => {
-            try {
-                startable.stop();
-            } catch (error) {
-                perUserPubSubApiLogger.error(error, startable, "Swallowed error while stopping.");
+        this.startables.push(twitchPubSubPingHandler);
+        this.startables.push(twitchPubSubReconnectHandler);
+        this.startables.push(twitchPubSubLoggingHandler);
+        this.startables.push(twitchIncomingPubSubEventTranslator);
+
+        const stop = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Stopped.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            perUserPubSubApiLogger.error(incomingError, "Stopped.");
+            this.logger.info("Stopped.");
 
-            throw incomingError;
+            return undefined;
+        };
+
+        try {
+            await Bluebird.map(this.startables, async (startable) => startable.start());
+
+            this.logger.info({
+                twitchUserId: this.twitchUserId,
+                twitchUserName: this.config.twitchUserName,
+            }, "Started listening to events");
+
+            await this.gracefulShutdownManager.waitForShutdownSignal();
+
+            await stop();
+        } catch (error) {
+            await stop(error);
         }
+    }
 
-        perUserPubSubApiLogger.info("Stopped.");
-
-        return undefined;
-    };
-
-    try {
-        await Bluebird.map(startables, async (startable) => startable.start());
-
-        perUserPubSubApiLogger.info({
-            twitchUserId,
-            twitchUserName: config.twitchUserName,
-        }, "Started listening to events");
-
-        await gracefulShutdownManager.waitForShutdownSignal();
-
-        await stop();
-    } catch (error) {
-        stop(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await Bluebird.map(
+            this.startables,
+            async (startable) => {
+                try {
+                    await startable.stop();
+                } catch (error) {
+                    this.logger.error(error, startable, "Swallowed error while stopping.");
+                }
+            },
+        );
     }
 }

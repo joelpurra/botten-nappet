@@ -24,41 +24,62 @@ import Config from "../config/config";
 
 import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
-export default async function managedMain(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-): Promise<void> {
-    const managedMainLogger = rootLogger.child("managedMain");
+export default class FrontendManagedMain {
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    managedMainLogger.info("Managed.");
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("FrontendManagedMain");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+    }
 
-    const shutdown = async (incomingError?: Error) => {
-        if (incomingError) {
-            managedMainLogger.error(incomingError, "Unmanaged.");
+    public async start(): Promise<void> {
+        this.logger.info("Managed.");
 
-            throw incomingError;
+        const shutdown = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Unmanaged.");
+
+                throw incomingError;
+            }
+
+            this.logger.info("Unmanaged.");
+
+            return undefined;
+        };
+
+        try {
+            await this.gracefulShutdownManager.waitForShutdownSignal();
+
+            // await applicationXYZ(
+            //     config,
+            //     this.logger,
+            //     this.logger,
+            //     gracefulShutdownManager,
+            //     messageQueuePublisher,
+            // );
+
+            await shutdown();
+        } catch (error) {
+            await shutdown(error);
         }
+    }
 
-        managedMainLogger.info("Unmanaged.");
-
-        return undefined;
-    };
-
-    try {
-        await gracefulShutdownManager.waitForShutdownSignal();
-
-        // await applicationXYZ(
-        //     config,
-        //     managedMainLogger,
-        //     rootLogger,
-        //     gracefulShutdownManager,
-        //     messageQueuePublisher,
-        // );
-
-        await shutdown();
-    } catch (error) {
-        shutdown(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
     }
 }

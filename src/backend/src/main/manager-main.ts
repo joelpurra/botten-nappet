@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
+
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
@@ -40,71 +42,114 @@ import DistributedEventManager from "../distributed-events/distributed-event-man
 import DistributedEventRepository from "../storage/repository/distributed-event-repository";
 
 import backendManagedMain from "./managed-main";
+import BackendManagedMain from "./managed-main";
 
-export default async function backendManagerMain(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    databaseConnection: DatabaseConnection,
-    messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchRequestHelper: TwitchRequestHelper,
-    twitchCSRFHelper: TwitchCSRFHelper,
-    twitchTokenHelper: TwitchTokenHelper,
-    twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-    twitchApplicationTokenManager: TwitchApplicationTokenManager,
-): Promise<void> {
-    const backendManagerMainLogger = rootLogger.child("backendManagerMain");
+export default class BackendManagerMain implements IStartableStoppable {
+    private backendManagedMain: backendManagedMain | null;
+    private distributedEventManager: DistributedEventManager | null;
+    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
+    private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection;
+    private twitchTokenHelper: TwitchTokenHelper;
+    private twitchCSRFHelper: TwitchCSRFHelper;
+    private twitchRequestHelper: TwitchRequestHelper;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber;
+    private databaseConnection: DatabaseConnection;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private config: Config;
+    private logger: PinoLogger;
 
-    await databaseConnection.connect();
-    await messageQueueAllRawTopicsSubscriber.connect();
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        databaseConnection: DatabaseConnection,
+        messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchRequestHelper: TwitchRequestHelper,
+        twitchCSRFHelper: TwitchCSRFHelper,
+        twitchTokenHelper: TwitchTokenHelper,
+        twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        twitchApplicationTokenManager: TwitchApplicationTokenManager,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendManagerMain");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.databaseConnection = databaseConnection;
+        this.messageQueueAllRawTopicsSubscriber = messageQueueAllRawTopicsSubscriber;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchRequestHelper = twitchRequestHelper;
+        this.twitchCSRFHelper = twitchCSRFHelper;
+        this.twitchTokenHelper = twitchTokenHelper;
+        this.twitchPollingApplicationTokenConnection = twitchPollingApplicationTokenConnection;
+        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
 
-    // TODO: ensure event distributed event manager starts sooner?
-    const distributedEventStorageManager = new DistributedEventStorageManager(
-        backendManagerMainLogger,
-        DistributedEventRepository,
-    );
-    const distributedEventManager = new DistributedEventManager(
-        backendManagerMainLogger,
-        messageQueueAllRawTopicsSubscriber,
-        distributedEventStorageManager,
-    );
+        this.distributedEventManager = null;
+        this.backendManagedMain = null;
+    }
 
-    await distributedEventManager.start();
+    public async start(): Promise<void> {
+        await this.databaseConnection.connect();
+        await this.messageQueueAllRawTopicsSubscriber.connect();
 
-    backendManagerMainLogger.info("Managed.");
-
-    const shutdown = async (incomingError?: Error) => {
-        await distributedEventManager.stop();
-        await messageQueueAllRawTopicsSubscriber.disconnect();
-        await databaseConnection.disconnect();
-
-        if (incomingError) {
-            backendManagerMainLogger.error(incomingError, "Unmanaged.");
-
-            throw incomingError;
-        }
-
-        backendManagerMainLogger.info("Unmanaged.");
-
-        return undefined;
-    };
-
-    try {
-        await backendManagedMain(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
-            twitchRequestHelper,
-            twitchCSRFHelper,
-            twitchTokenHelper,
-            twitchPollingApplicationTokenConnection,
-            twitchApplicationTokenManager,
+        // TODO: ensure event distributed event manager starts sooner?
+        const distributedEventStorageManager = new DistributedEventStorageManager(
+            this.logger,
+            DistributedEventRepository,
+        );
+        this.distributedEventManager = new DistributedEventManager(
+            this.logger,
+            this.messageQueueAllRawTopicsSubscriber,
+            distributedEventStorageManager,
         );
 
-        await shutdown();
-    } catch (error) {
-        shutdown(error);
+        await this.distributedEventManager.start();
+
+        this.logger.info("Managed.");
+
+        const shutdown = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Unmanaged.");
+
+                throw incomingError;
+            }
+
+            this.logger.info("Unmanaged.");
+
+            return undefined;
+        };
+
+        this.backendManagedMain = new BackendManagedMain(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            this.twitchRequestHelper,
+            this.twitchCSRFHelper,
+            this.twitchTokenHelper,
+            this.twitchPollingApplicationTokenConnection,
+            this.twitchApplicationTokenManager,
+        );
+
+        try {
+            await this.backendManagedMain.start();
+
+            await shutdown();
+        } catch (error) {
+            await shutdown(error);
+        }
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await this.backendManagedMain!.stop();
+        await this.distributedEventManager!.stop();
+        await this.messageQueueAllRawTopicsSubscriber.disconnect();
+        await this.databaseConnection.disconnect();
     }
 }

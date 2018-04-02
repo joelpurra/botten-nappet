@@ -174,7 +174,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         if (this.socket) {
             // TODO: reconnect if the socket should stay open?
-            this.disconnect();
+            await this.disconnect();
         }
     }
 }

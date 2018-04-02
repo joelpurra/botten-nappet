@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
@@ -36,100 +37,135 @@ import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/interface/
 import IPollingFollowingResponse from "@botten-nappet/backend-twitch/interface/response/polling/ifollowing-polling-response";
 import IPollingStreamingResponse from "@botten-nappet/backend-twitch/interface/response/polling/istreaming-polling-response";
 
-import twitchPerUserPollingApi from "./twitch-per-user-polling-api";
+import TwitchPerUserPollingApi from "./twitch-per-user-polling-api";
 
 /* tslint:enable:max-line-length */
 
-export default async function backendTwitchPollingAuthenticatedApplicationApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchUserId: number,
-): Promise<void> {
-    const backendTwitchPollingAuthenticatedApplicationApiLogger
-        = rootLogger.child("backendTwitchPollingAuthenticatedApplicationApi");
+export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
+    private twitchPerUserPollingApi: TwitchPerUserPollingApi | null;
+    private connectables: IConnectable[];
+    private twitchUserId: number;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    // TODO: externalize/configure base url.
-    const followingPollingUri =
-        `https://api.twitch.tv/kraken/channels/${twitchUserId}/follows?limit=${config.followingPollingLimit}`;
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendTwitchPollingAuthenticatedApplicationApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchUserId = twitchUserId;
 
-    // TODO: externalize/configure base url.
-    const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${twitchUserId}`;
+        this.twitchPerUserPollingApi = null;
+        this.connectables = [];
+    }
 
-    // TODO: externalize/configure base url.
-    const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${twitchUserId}`;
+    public async start(): Promise<void> {
+        // TODO: externalize/configure base url.
+        const followingPollingUri =
+            `https://api.twitch.tv/kraken/channels/${
+            this.twitchUserId
+            }/follows?limit=${
+            this.config.followingPollingLimit
+            }`;
 
-    const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetDefaultPollingInterval,
-        false,
-        followingPollingUri,
-        "get",
-    );
-    const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetStreamingPollingInterval,
-        true,
-        streamingPollingUri,
-        "get",
-    );
-    const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
-        rootLogger,
-        config.twitchAppClientId,
-        config.bottenNappetCheermotesPollingInterval,
-        true,
-        cheermotesPollingUri,
-        "get",
-    );
+        // TODO: externalize/configure base url.
+        const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${this.twitchUserId}`;
 
-    const connectables: IConnectable[] = [
-        twitchPollingFollowingConnection,
-        twitchPollingStreamingConnection,
-        twitchPollingCheermotesConnection,
-    ];
+        // TODO: externalize/configure base url.
+        const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${this.twitchUserId}`;
 
-    await Bluebird.map(connectables, async (connectable) => connectable.connect());
+        const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
+            this.logger,
+            this.config.twitchAppClientId,
+            this.config.bottenNappetDefaultPollingInterval,
+            false,
+            followingPollingUri,
+            "get",
+        );
+        const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
+            this.logger,
+            this.config.twitchAppClientId,
+            this.config.bottenNappetStreamingPollingInterval,
+            true,
+            streamingPollingUri,
+            "get",
+        );
+        const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
+            this.logger,
+            this.config.twitchAppClientId,
+            this.config.bottenNappetCheermotesPollingInterval,
+            true,
+            cheermotesPollingUri,
+            "get",
+        );
 
-    backendTwitchPollingAuthenticatedApplicationApiLogger.info("Connected.");
+        this.connectables.push(twitchPollingFollowingConnection);
+        this.connectables.push(twitchPollingStreamingConnection);
+        this.connectables.push(twitchPollingCheermotesConnection);
 
-    const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => {
-            try {
-                connectable.disconnect();
-            } catch (error) {
-                backendTwitchPollingAuthenticatedApplicationApiLogger
-                    .error(error, connectable, "Swallowed error while disconnecting.");
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
+
+        this.logger.info("Connected.");
+
+        const disconnect = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Disconnected.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            backendTwitchPollingAuthenticatedApplicationApiLogger.error(incomingError, "Disconnected.");
+            this.logger.info("Disconnected.");
 
-            throw incomingError;
-        }
+            return undefined;
+        };
 
-        backendTwitchPollingAuthenticatedApplicationApiLogger.info("Disconnected.");
-
-        return undefined;
-    };
-
-    try {
-        await twitchPerUserPollingApi(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
+        this.twitchPerUserPollingApi = new TwitchPerUserPollingApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
             twitchPollingFollowingConnection,
             twitchPollingStreamingConnection,
             twitchPollingCheermotesConnection,
-            twitchUserId,
+            this.twitchUserId,
         );
 
-        await disconnect();
-    } catch (error) {
-        disconnect(error);
+        try {
+            await this.twitchPerUserPollingApi.start();
+
+            await disconnect();
+        } catch (error) {
+            await disconnect(error);
+        }
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await this.twitchPerUserPollingApi!.stop();
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

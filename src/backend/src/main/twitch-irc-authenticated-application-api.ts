@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
@@ -35,93 +36,127 @@ import TwitchIrcConnection from "@botten-nappet/backend-twitch/irc/connection/ir
 import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
 import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
-import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface/iincoming-pubsub-event";
+import {
+    UserAccessTokenProviderType,
+} from "@botten-nappet/backend-twitch/authentication/provider-types";
 
-import { UserAccessTokenProviderType } from "@botten-nappet/backend-twitch/authentication/provider-types";
-import twitchPerUserIrcApi from "./twitch-per-user-irc-api";
+import TwitchPerUserIrcApi from "./twitch-per-user-irc-api";
 
 /* tslint:enable:max-line-length */
 
-export default async function backendTwitchIrcAuthenticatedApplicationApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchUserAccessTokenProvider: UserAccessTokenProviderType,
-    twitchUserId: number,
-): Promise<void> {
-    const backendTwitchIrcAuthenticatedApplicationApiLogger
-        = rootLogger.child("backendTwitchIrcAuthenticatedApplicationApi");
+export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
+    private twitchPerUserIrcApi: TwitchPerUserIrcApi | null;
+    private connectables: IConnectable[];
+    private twitchUserId: number;
+    private twitchUserAccessTokenProvider: UserAccessTokenProviderType;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const twitchIrcConnection = new TwitchIrcConnection(
-        rootLogger,
-        config.twitchIrcWebSocketUri,
-        config.twitchChannelName,
-        config.twitchUserName,
-        twitchUserAccessTokenProvider,
-    );
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchUserAccessTokenProvider: UserAccessTokenProviderType,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("BackendTwitchIrcAuthenticatedApplicationApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchUserAccessTokenProvider = twitchUserAccessTokenProvider;
+        this.twitchUserId = twitchUserId;
 
-    // TODO: configurable.
-    const topicsStringSeparator = ":";
-    const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+        this.twitchPerUserIrcApi = null;
+        this.connectables = [];
+    }
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingIrcCommand),
+    public async start(): Promise<void> {
+        const twitchIrcConnection = new TwitchIrcConnection(
+            this.logger,
+            this.config.twitchIrcWebSocketUri,
+            this.config.twitchChannelName,
+            this.config.twitchUserName,
+            this.twitchUserAccessTokenProvider,
         );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchOutgoingIrcCommand),
-        );
 
-    const connectables: IConnectable[] = [
-        twitchIrcConnection,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
-    ];
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
 
-    await Bluebird.map(connectables, async (connectable) => connectable.connect());
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
+            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingIrcCommand),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
+            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchOutgoingIrcCommand),
+            );
 
-    backendTwitchIrcAuthenticatedApplicationApiLogger.info("Connected.");
+        this.connectables.push(twitchIrcConnection);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
 
-    const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => {
-            try {
-                connectable.disconnect();
-            } catch (error) {
-                backendTwitchIrcAuthenticatedApplicationApiLogger
-                    .error(error, connectable, "Swallowed error while disconnecting.");
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
+
+        this.logger.info("Connected.");
+
+        const disconnect = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Disconnected.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            backendTwitchIrcAuthenticatedApplicationApiLogger.error(incomingError, "Disconnected.");
+            this.logger.info("Disconnected.");
 
-            throw incomingError;
-        }
+            return undefined;
+        };
 
-        backendTwitchIrcAuthenticatedApplicationApiLogger.info("Disconnected.");
-
-        return undefined;
-    };
-
-    try {
-        await twitchPerUserIrcApi(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
+        this.twitchPerUserIrcApi = new TwitchPerUserIrcApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
             twitchIrcConnection,
             twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
-            twitchUserId,
+            this.twitchUserId,
         );
 
-        await disconnect();
-    } catch (error) {
-        disconnect(error);
+        try {
+            await this.twitchPerUserIrcApi.start();
+
+            await disconnect();
+        } catch (error) {
+            await disconnect(error);
+        }
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await this.twitchPerUserIrcApi!.stop();
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
@@ -61,212 +62,262 @@ import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/ii
 import UserStorageManager from "../storage/manager/user-storage-manager";
 import UserRepository from "../storage/repository/user-repository";
 
-import perUserHandlersMain from "./per-user-handlers-main";
-import backendTwitchIrcAuthenticatedApplicationApi from "./twitch-irc-authenticated-application-api";
-import backendTwitchPollingAuthenticatedApplicationApi from "./twitch-polling-authenticated-application-api";
-import backendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";
+import PerUserHandlersMain from "./per-user-handlers-main";
+import BackendTwitchIrcAuthenticatedApplicationApi from "./twitch-irc-authenticated-application-api";
+import BackendTwitchPollingAuthenticatedApplicationApi from "./twitch-polling-authenticated-application-api";
+import BackendTwitchPubSubAuthenticatedApplicationApi from "./twitch-pubsub-authenticated-application-api";
 
 /* tslint:enable:max-line-length */
 
-export default async function backendAuthenticatedApplicationMain(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchApplicationTokenManager: TwitchApplicationTokenManager,
-    twitchRequestHelper: TwitchRequestHelper,
-    twitchCSRFHelper: TwitchCSRFHelper,
-    twitchTokenHelper: TwitchTokenHelper,
-): Promise<void> {
-    const authenticatedApplicationMainLogger = rootLogger.child("backendAuthenticatedApplicationMain");
+export default class BackendAuthenticatedApplicationMain implements IStartableStoppable {
+    private perUserHandlersMain: PerUserHandlersMain | null;
+    private backendTwitchPollingAuthenticatedApplicationApi: BackendTwitchPollingAuthenticatedApplicationApi | null;
+    private backendTwitchIrcAuthenticatedApplicationApi: BackendTwitchIrcAuthenticatedApplicationApi | null;
+    private backendTwitchPubSubAuthenticatedApplicationApi: BackendTwitchPubSubAuthenticatedApplicationApi | null;
+    private connectables: IConnectable[];
+    private twitchTokenHelper: TwitchTokenHelper;
+    private twitchCSRFHelper: TwitchCSRFHelper;
+    private twitchRequestHelper: TwitchRequestHelper;
+    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const twitchApplicationAccessTokenProvider: ApplicationAccessTokenProviderType =
-        async () => twitchApplicationTokenManager.getOrWait();
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        twitchRequestHelper: TwitchRequestHelper,
+        twitchCSRFHelper: TwitchCSRFHelper,
+        twitchTokenHelper: TwitchTokenHelper,
+    ) {
+        this.config = config;
+        this.logger = logger.child("BackendAuthenticatedApplicationMain");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
+        this.twitchRequestHelper = twitchRequestHelper;
+        this.twitchCSRFHelper = twitchCSRFHelper;
+        this.twitchTokenHelper = twitchTokenHelper;
 
-    // TODO: find usage for the TwitchUserHelper.
-    const twitchUserHelper = new TwitchUserHelper(
-        rootLogger,
-        twitchRequestHelper,
-        config.twitchUsersDataUri,
-        twitchApplicationAccessTokenProvider,
-    );
+        this.backendTwitchPubSubAuthenticatedApplicationApi = null;
+        this.backendTwitchIrcAuthenticatedApplicationApi = null;
+        this.backendTwitchPollingAuthenticatedApplicationApi = null;
+        this.perUserHandlersMain = null;
+        this.connectables = [];
+    }
 
-    const userStorageManager = new UserStorageManager(rootLogger, UserRepository);
+    public async start(): Promise<void> {
+        const twitchApplicationAccessTokenProvider: ApplicationAccessTokenProviderType =
+            async () => this.twitchApplicationTokenManager.getOrWait();
 
-    const twitchUserTokenHelper = new TwitchUserTokenHelper(
-        rootLogger,
-        twitchCSRFHelper,
-        userStorageManager,
-        twitchRequestHelper,
-        config.twitchOAuthAuthorizationUri,
-        config.twitchAppOAuthRedirectUrl,
-        config.twitchOAuthTokenUri,
-        config.twitchAppClientId,
-        config.twitchAppClientSecret,
-    );
-    const userTokenManager = new TwitchUserTokenManager(rootLogger, twitchTokenHelper, twitchUserTokenHelper);
-    const twitchAugmentedTokenProvider: AugmentedTokenProviderType =
-        async () => userTokenManager.get(config.twitchUserName);
-    const twitchUserAccessTokenProvider: UserAccessTokenProviderType = async () => {
-        const augmentedToken = await twitchAugmentedTokenProvider();
-
-        // TODO: better null handling.
-        if (augmentedToken.token === null) {
-            throw new Error("augmentedToken.token is null.");
-        }
-
-        return augmentedToken.token.access_token;
-    };
-    const twitchAugmentedToken = await twitchAugmentedTokenProvider();
-    const twitchUserRawToken = twitchAugmentedToken.token;
-    // TODO: better null handling.
-    const twitchUserId = await twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken!);
-
-    // TODO: configurable.
-    const topicsStringSeparator = ":";
-    const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
-
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingPubSubEvent),
+        // TODO: find usage for the TwitchUserHelper.
+        const twitchUserHelper = new TwitchUserHelper(
+            this.logger,
+            this.twitchRequestHelper,
+            this.config.twitchUsersDataUri,
+            twitchApplicationAccessTokenProvider,
         );
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingIrcCommand),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingFollowingEvent),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingStreamingEvent),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingCheermotesEvent),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingCheeringEvent),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingWhisperEvent),
-        );
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicTwitchIncomingSubscriptionEvent),
-        );
+        const userStorageManager = new UserStorageManager(this.logger, UserRepository);
 
-    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicVidyIncomingSearchResultEvent),
+        const twitchUserTokenHelper = new TwitchUserTokenHelper(
+            this.logger,
+            this.twitchCSRFHelper,
+            userStorageManager,
+            this.twitchRequestHelper,
+            this.config.twitchOAuthAuthorizationUri,
+            this.config.twitchAppOAuthRedirectUrl,
+            this.config.twitchOAuthTokenUri,
+            this.config.twitchAppClientId,
+            this.config.twitchAppClientSecret,
         );
+        const userTokenManager = new TwitchUserTokenManager(this.logger, this.twitchTokenHelper, twitchUserTokenHelper);
+        const twitchAugmentedTokenProvider: AugmentedTokenProviderType =
+            async () => userTokenManager.get(this.config.twitchUserName);
+        const twitchUserAccessTokenProvider: UserAccessTokenProviderType = async () => {
+            const augmentedToken = await twitchAugmentedTokenProvider();
 
-    const connectables: IConnectable[] = [
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
-    ];
-
-    await Bluebird.map(connectables, async (connectable) => connectable.connect());
-
-    authenticatedApplicationMainLogger.info("Connected.");
-
-    const disconnect = async (incomingError?: Error) => {
-        await Bluebird.map(connectables, async (connectable) => {
-            try {
-                connectable.disconnect();
-            } catch (error) {
-                authenticatedApplicationMainLogger.error(error, connectable, "Swallowed error while disconnecting.");
+            // TODO: better null handling.
+            if (augmentedToken.token === null) {
+                throw new Error("augmentedToken.token is null.");
             }
-        });
 
-        if (incomingError) {
-            authenticatedApplicationMainLogger.error(incomingError, "Disconnected.");
+            return augmentedToken.token.access_token;
+        };
+        const twitchAugmentedToken = await twitchAugmentedTokenProvider();
+        const twitchUserRawToken = twitchAugmentedToken.token;
+        // TODO: better null handling.
+        const twitchUserId = await this.twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken!);
 
-            throw incomingError;
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingPubSubEvent),
+            );
+
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
+            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingIrcCommand),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingFollowingEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingStreamingEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingCheermotesEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingCheeringEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingWhisperEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingSubscriptionEvent),
+            );
+
+        const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicVidyIncomingSearchResultEvent),
+            );
+
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
+        this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
+
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
+
+        this.logger.info("Connected.");
+
+        const disconnect = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Disconnected.");
+
+                throw incomingError;
+            }
+
+            this.logger.info("Disconnected.");
+
+            return undefined;
+        };
+
+        this.backendTwitchPubSubAuthenticatedApplicationApi = new BackendTwitchPubSubAuthenticatedApplicationApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            twitchUserAccessTokenProvider,
+            twitchUserId,
+        );
+
+        this.backendTwitchIrcAuthenticatedApplicationApi = new BackendTwitchIrcAuthenticatedApplicationApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            twitchUserAccessTokenProvider,
+            twitchUserId,
+        );
+
+        this.backendTwitchPollingAuthenticatedApplicationApi = new BackendTwitchPollingAuthenticatedApplicationApi(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            twitchUserId,
+        );
+
+        this.perUserHandlersMain = new PerUserHandlersMain(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
+            twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
+            vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
+            twitchUserId,
+        );
+
+        try {
+            await Promise.all([
+                this.backendTwitchPubSubAuthenticatedApplicationApi.start(),
+                this.backendTwitchIrcAuthenticatedApplicationApi.start(),
+                this.backendTwitchPollingAuthenticatedApplicationApi.start(),
+                this.perUserHandlersMain.start(),
+            ]);
+
+            await disconnect();
+        } catch (error) {
+            await disconnect(error);
         }
+    }
 
-        authenticatedApplicationMainLogger.info("Disconnected.");
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        this.backendTwitchPubSubAuthenticatedApplicationApi!.stop();
+        this.backendTwitchIrcAuthenticatedApplicationApi!.stop();
+        this.backendTwitchPollingAuthenticatedApplicationApi!.stop();
+        this.perUserHandlersMain!.stop();
 
-        return undefined;
-    };
-
-    try {
-        await Promise.all([
-            backendTwitchPubSubAuthenticatedApplicationApi(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-                twitchUserAccessTokenProvider,
-                twitchUserId,
-            ),
-
-            backendTwitchIrcAuthenticatedApplicationApi(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-                twitchUserAccessTokenProvider,
-                twitchUserId,
-            ),
-
-            backendTwitchPollingAuthenticatedApplicationApi(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-                twitchUserId,
-            ),
-
-            perUserHandlersMain(
-                config,
-                rootLogger,
-                gracefulShutdownManager,
-                messageQueuePublisher,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
-                twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
-                vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
-                twitchUserId,
-            ),
-        ]);
-
-        await disconnect();
-    } catch (error) {
-        disconnect(error);
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

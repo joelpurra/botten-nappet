@@ -44,91 +44,123 @@ import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/
 
 /* tslint:enable max-line-length */
 
-export default async function twitchPerUserIrcApi(
-    config: Config,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-    twitchIrcConnection: TwitchIrcConnection,
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
-    twitchUserId: number,
-): Promise<void> {
-    const twitchPerUserIrcApiLogger = rootLogger.child("twitchPerUserIrcApi");
+export default class TwitchPerUserIrcApi implements IStartableStoppable {
+    private startables: IStartableStoppable[];
+    private twitchUserId: number;
+    private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>;
+    private twitchIrcConnection: TwitchIrcConnection;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
-        rootLogger,
-        twitchIrcConnection,
-    );
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+        twitchIrcConnection: TwitchIrcConnection,
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+            MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
+        twitchUserId: number,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child("TwitchPerUserIrcApi");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+        this.twitchIrcConnection = twitchIrcConnection;
+        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand
+            = twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand;
+        this.twitchUserId = twitchUserId;
 
-    const messageQueueTopicPublisherForIIncomingIrcCommand =
-        new MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicTwitchIncomingIrcCommand,
+        this.startables = [];
+    }
+
+    public async start(): Promise<void> {
+        const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
+            this.logger,
+            this.twitchIrcConnection,
         );
 
-    const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
-        rootLogger,
-        twitchIrcConnection,
-        messageQueueTopicPublisherForIIncomingIrcCommand,
-    );
+        const messageQueueTopicPublisherForIIncomingIrcCommand =
+            new MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>(
+                this.logger,
+                this.messageQueuePublisher,
+                this.config.topicTwitchIncomingIrcCommand,
+            );
 
-    const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(
-        rootLogger,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
-        twitchIrcConnection,
-    );
+        const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
+            this.logger,
+            this.twitchIrcConnection,
+            messageQueueTopicPublisherForIIncomingIrcCommand,
+        );
 
-    const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(
-        rootLogger,
-        twitchIrcConnection,
-    );
-    const twitchIrcPingHandler = new TwitchIrcPingHandler(
-        rootLogger,
-        twitchIrcConnection,
-    );
+        const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(
+            this.logger,
+            this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
+            this.twitchIrcConnection,
+        );
 
-    const startables: IStartableStoppable[] = [
-        twitchIrcReconnectHandler,
-        twitchIrcLoggingHandler,
-        twitchIrcPingHandler,
-        twitchIncomingIrcCommandEventTranslator,
-        twitchOutgoingIrcCommandEventHandler,
-    ];
+        const twitchIrcLoggingHandler = new TwitchIrcLoggingHandler(
+            this.logger,
+            this.twitchIrcConnection,
+        );
+        const twitchIrcPingHandler = new TwitchIrcPingHandler(
+            this.logger,
+            this.twitchIrcConnection,
+        );
 
-    const stop = async (incomingError?: Error) => {
-        await Bluebird.map(startables, async (startable) => {
-            try {
-                startable.stop();
-            } catch (error) {
-                twitchPerUserIrcApiLogger.error(error, startable, "Swallowed error while stopping.");
+        this.startables.push(twitchIrcReconnectHandler);
+        this.startables.push(twitchIrcLoggingHandler);
+        this.startables.push(twitchIrcPingHandler);
+        this.startables.push(twitchIncomingIrcCommandEventTranslator);
+        this.startables.push(twitchOutgoingIrcCommandEventHandler);
+
+        const stop = async (incomingError?: Error) => {
+            await this.stop();
+
+            if (incomingError) {
+                this.logger.error(incomingError, "Stopped.");
+
+                throw incomingError;
             }
-        });
 
-        if (incomingError) {
-            twitchPerUserIrcApiLogger.error(incomingError, "Stopped.");
+            this.logger.info("Stopped.");
 
-            throw incomingError;
+            return undefined;
+        };
+
+        try {
+            await Bluebird.map(this.startables, async (startable) => startable.start());
+
+            this.logger.info({
+                twitchUserId: this.twitchUserId,
+                twitchUserName: this.config.twitchUserName,
+            }, "Started listening to events");
+
+            await this.gracefulShutdownManager.waitForShutdownSignal();
+
+            await stop();
+        } catch (error) {
+            await stop(error);
         }
+    }
 
-        twitchPerUserIrcApiLogger.info("Stopped.");
-
-        return undefined;
-    };
-
-    try {
-        await Bluebird.map(startables, async (startable) => startable.start());
-
-        twitchPerUserIrcApiLogger.info({
-            twitchUserId,
-            twitchUserName: config.twitchUserName,
-        }, "Started listening to events");
-
-        await gracefulShutdownManager.waitForShutdownSignal();
-
-        await stop();
-    } catch (error) {
-        stop(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await Bluebird.map(
+            this.startables,
+            async (startable) => {
+                try {
+                    await startable.stop();
+                } catch (error) {
+                    this.logger.error(error, startable, "Swallowed error while stopping.");
+                }
+            },
+        );
     }
 }
