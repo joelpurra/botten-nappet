@@ -31,7 +31,7 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-sub
 import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
 import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 
-import AuthenticatedRequest from "./request/authenticated-request";
+import AuthenticatedRequest from "../request/authenticated-request";
 
 export default class OutgoingSearchCommandHandler extends EventSubscriptionManager<IOutgoingSearchCommand> {
     private vidyRootUrl: string;

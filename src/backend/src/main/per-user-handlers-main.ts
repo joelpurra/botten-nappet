@@ -71,8 +71,8 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iinco
 import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
 import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincoming-whisper-event";
 
-import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/outgoing-search-command-handler";
 import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/request/authenticated-request";
+import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/translator/outgoing-search-command-handler";
 import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
 import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 

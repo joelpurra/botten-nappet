@@ -29,7 +29,7 @@ import axios from "axios";
 import moment from "moment";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import Config from "../../src/config/config";
+import Config from "../../../src/config/config";
 import IClientContext from "./iclient-context";
 
 export default class AuthenticatedRequest {
