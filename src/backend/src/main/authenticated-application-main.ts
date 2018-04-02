@@ -292,7 +292,6 @@ export default async function backendAuthenticatedApplicationMain(
 
             perUserHandlersMain(
                 config,
-                authenticatedApplicationMainLogger,
                 rootLogger,
                 gracefulShutdownManager,
                 messageQueuePublisher,

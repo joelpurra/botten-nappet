@@ -80,7 +80,6 @@ import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/io
 
 export default async function perUserHandlersMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
@@ -109,6 +108,8 @@ export default async function perUserHandlersMain(
         MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
     twitchUserId: number,
 ): Promise<void> {
+    const perUserHandlersMainLogger = rootLogger.child("perUserHandlersMain");
+
     const messageQueueTopicPublisherForIOutgoingIrcCommand =
         new MessageQueueTopicPublisher<ITwitchOutgoingIrcCommand>(
             rootLogger,
@@ -341,17 +342,17 @@ export default async function perUserHandlersMain(
             try {
                 startable.stop();
             } catch (error) {
-                mainLogger.error(error, startable, "Swallowed error while stopping.");
+                perUserHandlersMainLogger.error(error, startable, "Swallowed error while stopping.");
             }
         });
 
         if (incomingError) {
-            mainLogger.error(incomingError, "Stopped.");
+            perUserHandlersMainLogger.error(incomingError, "Stopped.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Stopped.");
+        perUserHandlersMainLogger.info("Stopped.");
 
         return undefined;
     };
@@ -359,7 +360,7 @@ export default async function perUserHandlersMain(
     try {
         await Bluebird.map(startables, async (startable) => startable.start());
 
-        mainLogger.info({
+        perUserHandlersMainLogger.info({
             twitchUserId,
             twitchUserName: config.twitchUserName,
         }, "Started listening to events");

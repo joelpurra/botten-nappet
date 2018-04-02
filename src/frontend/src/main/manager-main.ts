@@ -58,15 +58,16 @@ interface ICustomWebSocketEventData {
 
 export default async function managerMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
 ): Promise<void> {
+    const managerMainLogger = rootLogger.child("managerMain");
+
     const app = new Koa();
     app.on("error", (err, ctx) => {
         // TODO: shut down server.
-        mainLogger.error(err, ctx, "server error");
+        managerMainLogger.error(err, ctx, "server error");
     });
 
     const projectRootDirectoryPath = await pkgDir(__dirname);
@@ -86,7 +87,7 @@ export default async function managerMain(
 
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
         new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-            mainLogger,
+            managerMainLogger,
             config.zmqAddress,
             // TODO: no backend events.
             ...splitTopics("external:backend:twitch:incoming:irc:command"),
@@ -95,7 +96,7 @@ export default async function managerMain(
 
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
-            mainLogger,
+            managerMainLogger,
             config.zmqAddress,
             ...splitTopics(config.topicTwitchIncomingFollowingEvent),
         );
@@ -103,7 +104,7 @@ export default async function managerMain(
 
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
-            mainLogger,
+            managerMainLogger,
             config.zmqAddress,
             ...splitTopics(config.topicTwitchIncomingCheeringWithCheermotesEvent),
         );
@@ -111,7 +112,7 @@ export default async function managerMain(
 
     const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
-            mainLogger,
+            managerMainLogger,
             config.zmqAddress,
             ...splitTopics(config.topicTwitchIncomingSubscriptionEvent),
         );
@@ -119,7 +120,7 @@ export default async function managerMain(
 
     const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
-            mainLogger,
+            managerMainLogger,
             config.zmqAddress,
             ...splitTopics(config.topicVidyIncomingSearchResultEvent),
         );
@@ -221,23 +222,23 @@ export default async function managerMain(
     });
 
     io.on("connection", (clientSocket) => {
-        // mainLogger.trace(clientSocket, "incoming connection");
-        mainLogger.trace(clientSocket.rooms, "incoming connection");
+        // managerMainLogger.trace(clientSocket, "incoming connection");
+        managerMainLogger.trace(clientSocket.rooms, "incoming connection");
 
         // clientSocket.on("HAI", (data) => {
-        //     mainLogger.trace(data, "HAI");
+        //     managerMainLogger.trace(data, "HAI");
         // });
 
         clientSocket.on("message", () => {
-            mainLogger.trace("message");
+            managerMainLogger.trace("message");
         });
 
         clientSocket.on("disconnect", () => {
-            mainLogger.trace("disconnect");
+            managerMainLogger.trace("disconnect");
         });
     });
 
-    mainLogger.info("Managed.");
+    managerMainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
         await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.disconnect();
@@ -250,12 +251,12 @@ export default async function managerMain(
         })();
 
         if (incomingError) {
-            mainLogger.error(incomingError, "Unmanaged.");
+            managerMainLogger.error(incomingError, "Unmanaged.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Unmanaged.");
+        managerMainLogger.info("Unmanaged.");
 
         return undefined;
     };
@@ -265,7 +266,6 @@ export default async function managerMain(
 
         await managedMain(
             config,
-            mainLogger,
             rootLogger,
             gracefulShutdownManager,
             messageQueuePublisher,

@@ -41,7 +41,6 @@ export default async function main(
 
     await managerMain(
         config,
-        frontendLogger,
         rootLogger,
         gracefulShutdownManager,
         messageQueuePublisher,

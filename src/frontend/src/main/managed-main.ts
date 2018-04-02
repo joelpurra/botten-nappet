@@ -26,21 +26,22 @@ import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher
 
 export default async function managedMain(
     config: Config,
-    mainLogger: PinoLogger,
     rootLogger: PinoLogger,
     gracefulShutdownManager: GracefulShutdownManager,
     messageQueuePublisher: MessageQueuePublisher,
 ): Promise<void> {
-    mainLogger.info("Managed.");
+    const managedMainLogger = rootLogger.child("managedMain");
+
+    managedMainLogger.info("Managed.");
 
     const shutdown = async (incomingError?: Error) => {
         if (incomingError) {
-            mainLogger.error(incomingError, "Unmanaged.");
+            managedMainLogger.error(incomingError, "Unmanaged.");
 
             throw incomingError;
         }
 
-        mainLogger.info("Unmanaged.");
+        managedMainLogger.info("Unmanaged.");
 
         return undefined;
     };
@@ -50,7 +51,7 @@ export default async function managedMain(
 
         // await applicationXYZ(
         //     config,
-        //     mainLogger,
+        //     managedMainLogger,
         //     rootLogger,
         //     gracefulShutdownManager,
         //     messageQueuePublisher,
