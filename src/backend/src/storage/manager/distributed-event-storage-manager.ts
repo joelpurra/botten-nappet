@@ -22,9 +22,8 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IDistributedEvent from "../idistributed-event";
-import IDistributedEventCamo from "../idistributed-event-camo";
 import DistributedEventRepositoryClass from "../repository/distributed-event-repository";
 
 export default class DistributedEventStorageManager {

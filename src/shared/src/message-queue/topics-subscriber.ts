@@ -29,7 +29,7 @@ import Rx, {
 
 import zmq from "zeromq-ng";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IEventSubscriptionConnection from "../event/ievent-subscription-connection";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 import {
@@ -100,9 +100,9 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         this.sharedzmqObservable = this.zmqSubject.share()
             .concatFilter((data: IZeroMqTopicMessages) => Rx.Observable.from(this.filterMessages(data)))
-            .concatMap((message) => Rx.Observable.from(this.parseMessages(message)));
+            .concatMap((message: IZeroMqTopicMessages) => Rx.Observable.from(this.parseMessages(message)));
 
-        this.zmqSubcription = this.sharedzmqObservable
+        this.zmqSubcription = this.sharedzmqObservable!
             .subscribe(openedObserver);
 
         // NOTE: listening outside of the async/await (promise) chain.
@@ -174,7 +174,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         if (this.socket) {
             // TODO: reconnect if the socket should stay open?
-            this.disconnect();
+            await this.disconnect();
         }
     }
 }

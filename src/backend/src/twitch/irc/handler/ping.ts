@@ -22,30 +22,25 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventEmitter from "../../../../../shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IOutgoingIrcCommand from "../command/ioutgoing-irc-command";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
-export default class PingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
+import IIRCConnection from "@botten-nappet/backend-twitch/irc/connection/iirc-connection";
+import IrcManager from "@botten-nappet/backend-twitch/irc/connection/irc-manager";
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
+export default class PingIrcHandler extends IrcManager {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        connection: IIRCConnection,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 3);
+        assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child("PingIrcHandler");
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
@@ -59,9 +54,10 @@ export default class PingIrcHandler extends EventSubscriptionManager<IIncomingIr
             command: "PONG",
             message: data.message,
             tags: {},
+            timestamp: new Date(),
         };
 
-        this.outgoingIrcCommandEventEmitter.emit(command);
+        this.connection.send(command);
     }
 
     protected async filter(data: IIncomingIrcCommand): Promise<boolean> {

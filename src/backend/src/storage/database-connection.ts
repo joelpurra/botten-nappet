@@ -26,7 +26,8 @@ import {
 import {
     connect,
 } from "camo";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 interface ICamoDatabaseConnection {
     // TODO: update and/or patch @types/camo.

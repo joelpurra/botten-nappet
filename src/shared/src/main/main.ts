@@ -27,8 +27,8 @@ import MessageQueuePublisher from "../message-queue/publisher";
 
 import createRootLogger from "../util/create-root-logger";
 
-import backendMain from "../../../backend/src/main/main";
-import frontendMain from "../../../frontend/src/main/main";
+import BackendMain from "../../../backend/src/main/main";
+import FrontendMain from "../../../frontend/src/main/main";
 
 export default async function main(): Promise<void> {
     const config = new Config(configLibrary);
@@ -46,9 +46,17 @@ export default async function main(): Promise<void> {
     await gracefulShutdownManager.start();
     await messageQueuePublisher.connect();
 
+    const backendMain = new BackendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher);
+    const frontendMain = new FrontendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher);
+
     await Promise.all([
-        backendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher),
-        frontendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher),
+        backendMain.start(),
+        frontendMain.start(),
+    ]);
+
+    await Promise.all([
+        backendMain.stop(),
+        frontendMain.stop(),
     ]);
 
     await messageQueuePublisher.disconnect();

@@ -20,30 +20,54 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import configLibrary from "config";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
+
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
-import managerMain from "./manager-main";
+import FrontendManagerMain from "./manager-main";
 
-export default async function main(
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-): Promise<void> {
-    const config = new Config(configLibrary);
+export default class FrontendMain implements IStartableStoppable {
+    private frontendManagerMain: FrontendManagerMain | null;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
 
-    config.validate();
+    constructor(
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+    ) {
+        // TODO: validate arguments.
+        this.logger = logger.child("frontend");
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
 
-    const frontendLogger = rootLogger.child("frontend");
+        this.frontendManagerMain = null;
+    }
 
-    await managerMain(
-        config,
-        frontendLogger,
-        rootLogger,
-        gracefulShutdownManager,
-        messageQueuePublisher,
-    );
+    public async start(): Promise<void> {
+        const config = new Config(configLibrary);
+
+        config.validate();
+
+        this.frontendManagerMain = new FrontendManagerMain(
+            config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
+        );
+
+        await this.frontendManagerMain.start();
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        await this.frontendManagerMain!.stop();
+    }
 }

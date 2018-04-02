@@ -22,9 +22,9 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IPubSubConnection from "../ipubsub-connection";
-import PubSubManager from "../pubsub-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+import IPubSubConnection from "../connection/ipubsub-connection";
+import PubSubManager from "../connection/pubsub-manager";
 
 export default class LoggingPubSubHandler extends PubSubManager {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {

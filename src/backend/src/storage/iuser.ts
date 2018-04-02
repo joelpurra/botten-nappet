@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IAugmentedToken from "../twitch/authentication/iaugmented-token";
+import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
 
 export default interface IUser {
     _id?: string;
