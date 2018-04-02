@@ -34,6 +34,7 @@ import TwitchRequestHelper from "@botten-nappet/backend-twitch/helper/request-he
 import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper";
 
 import backendAuthenticatedApplicationMain from "./authenticated-application-main";
+import backendVidyApplicationApi from "./vidy-application-api";
 
 export default async function backendManagedMain(
     config: Config,
@@ -70,16 +71,25 @@ export default async function backendManagedMain(
     };
 
     try {
-        await backendAuthenticatedApplicationMain(
-            config,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
-            twitchApplicationTokenManager,
-            twitchRequestHelper,
-            twitchCSRFHelper,
-            twitchTokenHelper,
-        );
+        await Promise.all([
+            backendVidyApplicationApi(
+                config,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+            ),
+
+            backendAuthenticatedApplicationMain(
+                config,
+                rootLogger,
+                gracefulShutdownManager,
+                messageQueuePublisher,
+                twitchApplicationTokenManager,
+                twitchRequestHelper,
+                twitchCSRFHelper,
+                twitchTokenHelper,
+            ),
+        ]);
 
         await disconnectAuthentication();
     } catch (error) {

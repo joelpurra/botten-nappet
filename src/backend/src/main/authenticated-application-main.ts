@@ -57,7 +57,6 @@ import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincomi
 import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface/iincoming-pubsub-event";
 
 import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
-import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 
 import UserStorageManager from "../storage/manager/user-storage-manager";
 import UserRepository from "../storage/repository/user-repository";
@@ -177,12 +176,6 @@ export default async function backendAuthenticatedApplicationMain(
             ...splitTopics(config.topicTwitchIncomingSubscriptionEvent),
         );
 
-    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
-            rootLogger,
-            config.zmqAddress,
-            ...splitTopics(config.topicVidyOutgoingSearchCommand),
-        );
     const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
         new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
             rootLogger,
@@ -199,7 +192,6 @@ export default async function backendAuthenticatedApplicationMain(
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
         twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
         vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
     ];
 
@@ -268,7 +260,6 @@ export default async function backendAuthenticatedApplicationMain(
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
                 twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
-                vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
                 vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
                 twitchUserId,
             ),

@@ -63,8 +63,6 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iinco
 import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
 import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincoming-whisper-event";
 
-import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/request/authenticated-request";
-import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/translator/outgoing-search-command-handler";
 import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
 import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgoing-search-command";
 
@@ -91,8 +89,6 @@ export default async function perUserHandlersMain(
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>,
     twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
     vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
         MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
     twitchUserId: number,
@@ -140,23 +136,6 @@ export default async function perUserHandlersMain(
             messageQueuePublisher,
             config.topicVidyOutgoingSearchCommand,
         );
-
-    const messageQueueTopicPublisherForIIncomingSearchResultEvent =
-        new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
-            rootLogger,
-            messageQueuePublisher,
-            config.topicVidyIncomingSearchResultEvent,
-        );
-
-    const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(rootLogger, config);
-
-    const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
-        rootLogger,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-        messageQueueTopicPublisherForIIncomingSearchResultEvent,
-        vidyAuthenticatedRequest,
-        config.vidyRootUrl,
-    );
 
     const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
         rootLogger,
@@ -275,7 +254,6 @@ export default async function perUserHandlersMain(
         twitchWhisperIrcReplyHandler,
         twitchSubscriptionIrcReplyHandler,
         twitchIrcTextResponseCommandHandler,
-        vidyOutgoingSearchCommandHandler,
         twitchIrcVidyCommandHandler,
         twitchIrcVidyResultEventHandler,
     ];
