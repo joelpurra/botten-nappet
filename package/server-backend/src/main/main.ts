@@ -25,9 +25,6 @@ import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 
-// NOTE: this is a hack, modifying the global Rx.Observable.prototype.
-import "@botten-nappet/backend-shared/lib/rxjs-extensions/async-filter";
-
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";

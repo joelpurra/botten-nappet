@@ -18,11 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Rx from "rxjs";
-
-import {
+import Rx, {
     NextObserver,
-} from "rxjs/internal/Observer";
+} from "rxjs";
+import {
+    map,
+} from "rxjs/operators";
 
 import BallzManager from "@botten-nappet/client-shared/src/ballz-manager";
 import BotSocket from "@botten-nappet/client-shared/src/bot-socket";
@@ -37,6 +38,7 @@ import SubscriptionHandler from "@botten-nappet/client-shared/src/subscription-h
 import {
     deepParseIso8601UtcDates,
 } from "@botten-nappet/client-shared/src/utilities";
+
 import VidyHandler from "@botten-nappet/client-shared/src/vidy-handler";
 
 export default class ObsEventManager {
@@ -105,15 +107,19 @@ export default class ObsEventManager {
     }
 
     public async start(): Promise<void> {
+        this.botSocket.dataObservable
+            .forEach((botEvent) => {
+                this.logger.log("botEvent", botEvent);
+            });
+
         // TODO: share this code.
         this.handlerObservable = this.botSocket.dataObservable
-            .do((botEvent) => {
-                this.logger.log("botEvent", botEvent);
-            })
-            .map((botEvent) => {
+            .pipe(map((botEvent) => {
                 return deepParseIso8601UtcDates(botEvent);
-            })
-            .do((botEvent) => {
+            }));
+
+        this.handlerObservable
+            .forEach((botEvent) => {
                 this.logger.log("botEvent", botEvent);
             });
 

@@ -18,7 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Rx from "rxjs";
+import Rx, {
+    fromEvent,
+} from "rxjs";
+import {
+    share,
+} from "rxjs/operators";
 
 import io from "socket.io-client";
 
@@ -45,8 +50,9 @@ export default class BotSocket {
         // TODO: disconnect.
         this.socket = io(this.url);
 
-        this.socketObservable = Rx.Observable.fromEvent<any>(this.socket, "message");
-        this.sharedSocketObservable = this.socketObservable.share();
+        this.socketObservable = fromEvent<any>(this.socket, "message");
+        this.sharedSocketObservable = this.socketObservable
+            .pipe(share());
 
         this.socket.on("connect", () => {
             this.logger.log("connect");

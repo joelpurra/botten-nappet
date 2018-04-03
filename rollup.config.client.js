@@ -39,7 +39,8 @@ export default function client(inputName, outputName) {
             format: "iife",
             globals: {
                 "animejs": "anime",
-                "rxjs": "Rx",
+                "rxjs": "rxjs",
+                "rxjs/operators": "rxjs.operators",
                 "socket.io-client": "io",
             },
             name: inputName,

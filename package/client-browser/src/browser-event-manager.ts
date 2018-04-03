@@ -18,18 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Rx from "rxjs";
+import Rx, {
+    NextObserver,
+} from "rxjs";
+import {
+    map,
+} from "rxjs/operators";
 
 import {
-    NextObserver,
-} from "rxjs/internal/Observer";
+    deepParseIso8601UtcDates,
+} from "@botten-nappet/client-shared/src/utilities";
 
 import BotSocket from "@botten-nappet/client-shared/src/bot-socket";
 import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
 import SpeechManager from "@botten-nappet/client-shared/src/speech-manager";
-import {
-    deepParseIso8601UtcDates,
-} from "@botten-nappet/client-shared/src/utilities";
 
 export default class BrowserEventManager {
     public chatMessageSayIgnoredStrings: string[];
@@ -91,15 +93,19 @@ export default class BrowserEventManager {
     }
 
     public async start(): Promise<void> {
+        this.botSocket.dataObservable
+            .forEach((botEvent) => {
+                this.logger.log("botEvent", botEvent);
+            });
+
         // TODO: share this code.
         this.handlerObservable = this.botSocket.dataObservable
-            .do((botEvent) => {
-                this.logger.log("botEvent", botEvent);
-            })
-            .map((botEvent) => {
+            .pipe(map((botEvent) => {
                 return deepParseIso8601UtcDates(botEvent);
-            })
-            .do((botEvent) => {
+            }));
+
+        this.handlerObservable
+            .forEach((botEvent) => {
                 this.logger.log("botEvent", botEvent);
             });
 

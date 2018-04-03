@@ -23,4 +23,4 @@ import client from "./rollup.config.client";
 const inputName = "./package/client-obs/index.js";
 const outputName = "./package/server-frontend/public/dist/client/obs/index.iife.js";
 
-export default client(inputName, outputName)
+export default client(inputName, outputName);

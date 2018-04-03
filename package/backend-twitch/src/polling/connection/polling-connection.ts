@@ -27,11 +27,17 @@ import {
 } from "check-types";
 
 import Rx, {
-    Observer, Subject, Subscription,
+    from,
+    interval,
+    Observable,
+    Observer,
+    Subject,
+    Subscription,
 } from "rxjs";
 import {
-    Observable,
-} from "rxjs/internal/Observable";
+    concatMap,
+    share,
+} from "rxjs/operators";
 
 // import {
 //     rxios as Rxios,
@@ -141,16 +147,19 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         this.pollingSubject = new Subject();
 
         this.pollingSubject.asObservable();
-        // .do((val) => this.logger.trace(val, "pollingSubject"));
 
-        this.sharedpollingObservable = this.pollingSubject.share()
-            // .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
-            .concatMap((message) => Rx.Observable.from(this.parseMessage(message)));
+        this.sharedpollingObservable = this.pollingSubject
+            .pipe(
+                // tap((val) => this.logger.trace(val, "pollingSubject")),
+                share(),
+                // tap((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable")),
+                concatMap((message) => from(this.parseMessage(message))),
+        );
 
         this.pollingSubcription = this.sharedpollingObservable
             .subscribe(openedObserver);
 
-        const intervalObservable = Rx.Observable.interval(this.intervalInMilliseconds);
+        const intervalObservable = interval(this.intervalInMilliseconds);
 
         const intervalObserver: Observer<number> = {
             complete: () => {
@@ -387,7 +396,9 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         };
 
         const responseSubscription = request
-            // .do((val) => this.logger.trace(val, uri, "response", "request"))
+            // .pipe(
+            //     tap((val) => this.logger.trace(val, uri, "response", "request")),
+            // )
             .subscribe(responseObserver);
     }
 }

@@ -29,11 +29,15 @@ import {
 } from "check-types";
 
 import Rx, {
+    fromEvent,
     Subject,
 } from "rxjs";
 import {
     EventTargetLike,
-} from "rxjs/internal/observable/FromEventObservable";
+} from "rxjs/internal/observable/fromEvent";
+import {
+    first,
+} from "rxjs/operators";
 
 import {
     EventEmitter,
@@ -104,7 +108,7 @@ export default class GracefulShutdownManager {
         this.shutdownObservableInternal = this.shutdownSubject.asObservable();
 
         this.shutdownPromise = this.shutdownObservableInternal
-            .first()
+            .pipe(first())
             .toPromise()
             .then(() => {
                 this.logger.warn("Detected shutdown.", "shutdownPromise");
@@ -113,31 +117,31 @@ export default class GracefulShutdownManager {
         // TODO: update rxjs or fix the type definitions for the nodejs event emitter mismatch.
         const processAsEventTargetLike = ((process as EventEmitter) as EventTargetLike);
 
-        this.subscriptions.SIGBREAK = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGBREAK")
+        this.subscriptions.SIGBREAK = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGBREAK")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGHUP = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGHUP")
+        this.subscriptions.SIGHUP = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGHUP")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGINT = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGINT")
+        this.subscriptions.SIGINT = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGINT")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGQUIT = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGQUIT")
+        this.subscriptions.SIGQUIT = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGQUIT")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGTERM = Rx.Observable.fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGTERM")
+        this.subscriptions.SIGTERM = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGTERM")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.exit = Rx.Observable.fromEvent<number>(processAsEventTargetLike, "exit")
+        this.subscriptions.exit = fromEvent<number>(processAsEventTargetLike, "exit")
             .subscribe(this.handleExitEvent);
 
-        this.subscriptions.uncaughtException = Rx.Observable
-            .fromEvent<Error>(processAsEventTargetLike, "uncaughtException")
-            .subscribe(this.handleUncaughtExceptionEvent);
+        this.subscriptions.uncaughtException =
+            fromEvent<Error>(processAsEventTargetLike, "uncaughtException")
+                .subscribe(this.handleUncaughtExceptionEvent);
 
-        this.subscriptions.unhandledRejection = Rx.Observable
-            .fromEvent(processAsEventTargetLike, "unhandledRejection", (reason, promise) => [reason, promise])
-            .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
+        this.subscriptions.unhandledRejection =
+            fromEvent(processAsEventTargetLike, "unhandledRejection", (reason, promise) => [reason, promise])
+                .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
     }
 
     @asrt(0)
@@ -204,9 +208,9 @@ export default class GracefulShutdownManager {
         return this.handleEvent("uncaughtException", error);
     }
 
-    @asrt(2)
+    // @asrt(2)
     private async handleUnhandledRejectionEvent(
-        reason: any,
+        @asrt() reason: any,
         promise: Promise<any>,
     ): Promise<void> {
         return this.handleEvent("unhandledRejection", reason, promise);
@@ -214,13 +218,21 @@ export default class GracefulShutdownManager {
 
     @asrt(1)
     private async handleSignalEvent(
-        signal: NodeJS.Signals,
+        @asrt() signalAndCode: NodeJS.Signals,
     ): Promise<void> {
-        return this.handleEvent(signal, signal);
+        const [
+            signal,
+            code,
+        ] = signalAndCode as [
+            NodeJS.Signals,
+            number
+        ];
+
+        return this.handleEvent(signal, code);
     }
 
     private async handleEvent(
-        shutdownEvent: ShutdownEvent,
+        @asrt() shutdownEvent: ShutdownEvent,
         ...args: any[],
     ): Promise<void> {
         assert.equal(typeof shutdownEvent, "string");

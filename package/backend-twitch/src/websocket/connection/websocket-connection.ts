@@ -27,30 +27,41 @@ import {
 } from "check-types";
 import Rx,
 {
+    concat,
+    from,
+    NextObserver,
     Observer,
     Subscription,
 } from "rxjs";
 import {
-    WebSocketSubject,
-} from "rxjs/internal/observable/dom/WebSocketSubject";
+    concatMap,
+    every,
+    first,
+    last,
+    map,
+    mergeMap,
+    share,
+    takeLast,
+    tap,
+} from "rxjs/operators";
 import {
-    NextObserver,
-} from "rxjs/internal/Observer";
+    webSocket,
+    WebSocketSubject,
+} from "rxjs/webSocket";
 
 import WebSocket from "ws";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
-
 import IWebSocketConnection from "./iwebsocket-connection";
 
 @asrt()
 export default abstract class WebSocketConnection<T, V> implements IWebSocketConnection<T, V> {
     protected logger: PinoLogger;
-    private sharedWebSocketObservable: Rx.Observable<any> | null;
+    private sharedWebSocketObservable: Rx.Observable<T> | null;
     private websocketSubcription: Rx.Subscription | null;
-    private websocketSubject: WebSocketSubject<any> | null;
+    private websocketSubject: WebSocketSubject<string> | null;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -107,20 +118,30 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         };
 
         // TODO: log sending data through the websocket.
-        this.websocketSubject = Rx.Observable.webSocket<string>({
+        this.websocketSubject = webSocket<string>({
             WebSocketCtor: WebSocket as any,
             protocol: this.protocol,
             url: this.uri,
 
-            resultSelector: (messageEvent) => messageEvent.data,
+            deserializer: (messageEvent) => {
+                return messageEvent.data as string;
+            },
+            serializer: (value) => {
+                return value;
+            },
 
             closeObserver,
             openObserver,
             // closingObserver: ...
         });
 
-        this.sharedWebSocketObservable = this.websocketSubject.share()
-            .concatMap((message) => Rx.Observable.from(this.parseMessage(message)));
+        this.sharedWebSocketObservable = this.websocketSubject
+            .pipe(
+                share(),
+        )
+            .pipe(
+                concatMap((message) => from(this.parseMessage(message))),
+        );
 
         this.websocketSubcription = this.sharedWebSocketObservable.subscribe(openedObserver);
 
@@ -143,11 +164,11 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert.not.null(this.websocketSubcription);
 
         if (!(this.websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
+            throw new TypeError("this.websocketSubject must be WebSocketSubject");
         }
 
         if (!(this.websocketSubcription instanceof Subscription)) {
-            throw new TypeError("this._websocketSubcription must be Subscription");
+            throw new TypeError("this.websocketSubcription must be Subscription");
         }
 
         // TODO: verify that the refcount reaches 0 for a proper websocket "close".
@@ -187,7 +208,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert.not.null(this.websocketSubject);
 
         if (!(this.websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
+            throw new TypeError("this.websocketSubject must be WebSocketSubject");
         }
 
         const message = await this.serializeMessage(data);
@@ -199,13 +220,19 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
 
     @asrt(0)
     private sendLoginCommands(): Rx.Observable<void> {
-        const commandObservables = Rx.Observable.from(this.getSetupConnectionCommands())
-            .concatMap((setupConnectionCommands) => Rx.Observable.from(setupConnectionCommands)
-                .concatMap(({ commands, verifier }) =>
-                    Rx.Observable.from(this.sendCommandsAndVerifyResponse(commands, verifier))),
+        const commandObservables = from(this.getSetupConnectionCommands())
+            .pipe(
+                concatMap(
+                    (setupConnectionCommands) => from(setupConnectionCommands)
+                        .pipe(
+                            concatMap(
+                                ({ commands, verifier }) => this.sendCommandsAndVerifyResponse(commands, verifier),
+                            ),
+                    ),
+                ),
         );
 
-        const allLoginCommandsObservable = Rx.Observable.concat(commandObservables);
+        const allLoginCommandsObservable = concat(commandObservables);
 
         return allLoginCommandsObservable;
     }
@@ -221,30 +248,44 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert.not.null(this.websocketSubject);
 
         if (!(this.websocketSubject instanceof WebSocketSubject)) {
-            throw new TypeError("this._websocketSubject must be WebSocketSubject");
+            throw new TypeError("this.websocketSubject must be WebSocketSubject");
         }
 
-        const loginCommandsObservable = Rx.Observable.from(cmds)
-            .do((val) => this.logger.trace(val, "Before sending", "loginCommandsObservable"))
-            .flatMap((cmd) => {
-                if (!(this.sharedWebSocketObservable instanceof Rx.Observable)) {
-                    throw new TypeError("this._openedWebSocketSubject must be WebSocketSubject");
-                }
+        const loginCommandsObservable = from(cmds)
+            .pipe(
+                tap((cmd) => this.logger.trace(cmd, "Before sending", "loginCommandsObservable")),
+                mergeMap(
+                    (cmd) => {
+                        if (!(this.sharedWebSocketObservable instanceof Rx.Observable)) {
+                            throw new TypeError("this.sharedWebSocketObservable must be WebSocketSubject");
+                        }
 
-                // TODO: timeout waiting for a verifiable message?
-                const verifiedCommandsObservable = this.sharedWebSocketObservable
-                    .do((val) => this.logger.trace(val, "unverified", "verifiedCommandsObservable"))
-                    .first(verifier)
-                    .do((val) => this.logger.trace(val, "verified", "verifiedCommandsObservable"))
-                    .mapTo(undefined);
+                        // TODO: timeout waiting for a verifiable message?
+                        const verifiedCommandsObservable = this.sharedWebSocketObservable
+                            .pipe(
+                                tap(
+                                    (message) =>
+                                        this.logger.trace(cmd, message, "unverified", "verifiedCommandsObservable"),
+                                ),
+                                first((incomingWebsocketMessage) => verifier(incomingWebsocketMessage)),
+                                tap(
+                                    (message) =>
+                                        this.logger.trace(cmd, message, "verified", "verifiedCommandsObservable"),
+                                ),
+                        );
 
-                // TODO: is this a hack? Should loginCommandsObservable be subscribed to _websocketSubject?
-                // NOTE: could be performed separately, outside of this map function?
-                this.sendInternal(cmd);
+                        // TODO: is this a hack? Should loginCommandsObservable be subscribed to websocketSubject?
+                        // NOTE: could be performed separately, outside of this map function?
+                        this.sendInternal(cmd);
 
-                return verifiedCommandsObservable;
-            })
-            .do((val) => this.logger.trace(val, "After sending", "loginCommandsObservable"));
+                        return verifiedCommandsObservable;
+                    },
+                ),
+                tap((val) => this.logger.trace(val, "After sending", "loginCommandsObservable")),
+                takeLast(1),
+                tap((val) => this.logger.trace(val, "Done sending", "loginCommandsObservable")),
+                map(() => undefined),
+        );
 
         return loginCommandsObservable;
     }

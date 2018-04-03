@@ -77,7 +77,7 @@ export default class TokenHelper {
         // TODO: define type/interface.
         const ok = data.status === "ok";
 
-        this.logger.trace(rawToken, data, "revoke");
+        this.logger.debug(rawToken, data, "revoke");
     }
 
     @asrt(1)

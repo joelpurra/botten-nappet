@@ -19,20 +19,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    concatFilter,
+} from "@botten-nappet/backend-shared/lib/rxjs-extensions/async-filter";
+import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 import {
     assert,
 } from "check-types";
-import Rx, {
+import {
+    from,
+    NextObserver,
     Subscription,
 } from "rxjs";
 import {
-    NextObserver,
-} from "rxjs/internal/Observer";
+    mergeAll,
+} from "rxjs/operators";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
+
 import IReceivingConnection from "./ireceiving-connection";
 
 @asrt(2)
@@ -59,11 +65,11 @@ export default abstract class MultiConnectionManager<T> implements IStartableSto
         const filter: ((data: T) => Promise<boolean>) = this.filter.bind(this);
         const dataHandler: ((data: T) => Promise<void>) = this.dataHandler.bind(this);
 
-        const filteredDataObservable = Rx.Observable.from(
+        const filteredDataObservable = from(
             this.connections.map((connection) => connection.dataObservable),
         )
-            .mergeAll()
-            .concatFilter((data: T) => Rx.Observable.from(filter(data)));
+            .pipe(mergeAll())
+            .pipe(concatFilter((data: T) => from(filter(data))));
 
         const dataHandlerObserver: NextObserver<T> = {
             next: (data: T) => dataHandler(data),

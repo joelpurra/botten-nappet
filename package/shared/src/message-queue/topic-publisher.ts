@@ -75,7 +75,7 @@ export default abstract class TopicPublisher<T> implements IConnectable, ISendin
             message = JSON.stringify(data);
         }
 
-        this.logger.trace(data, message, this.topicConfig.topic, "send");
+        // this.logger.trace(data, message, this.topicConfig.topic, "send");
 
         await this.publisher.send(
             this.topicConfig.topic,

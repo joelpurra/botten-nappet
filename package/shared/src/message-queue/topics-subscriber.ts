@@ -19,16 +19,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    concatFilter,
+} from "@botten-nappet/backend-shared/lib/rxjs-extensions/async-filter";
+import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 import {
     assert,
 } from "check-types";
 import Rx, {
+    from,
     Observer,
     Subject,
     Subscription,
 } from "rxjs";
+import {
+    concatMap,
+    share,
+    tap,
+} from "rxjs/operators";
 
 import zmq from "zeromq-ng";
 
@@ -38,6 +47,7 @@ import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 import IEventSubscriptionConnection from "../event/ievent-subscription-connection";
+
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 import {
     ZeroMqMessages,
@@ -98,12 +108,13 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         this.zmqSubject = new Subject<IZeroMqTopicMessages>();
 
-        this.zmqSubject.asObservable()
-            .do((val) => this.logger.trace(val, "zmqSubject"));
-
-        this.sharedzmqObservable = this.zmqSubject.share()
-            .concatFilter((data: IZeroMqTopicMessages) => Rx.Observable.from(this.filterMessages(data)))
-            .concatMap((message: IZeroMqTopicMessages) => Rx.Observable.from(this.parseMessages(message)));
+        this.sharedzmqObservable = this.zmqSubject
+            .pipe(
+                // tap((val) => this.logger.trace(val, "zmqSubject")),
+                share(),
+                concatFilter((data: IZeroMqTopicMessages) => from(this.filterMessages(data))),
+                concatMap((message: IZeroMqTopicMessages) => from(this.parseMessages(message))),
+        );
 
         this.zmqSubcription = this.sharedzmqObservable!
             .subscribe(openedObserver);
