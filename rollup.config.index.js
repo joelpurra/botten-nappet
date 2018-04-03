@@ -31,6 +31,8 @@ const outputName = "dist/index.js";
 
 export default {
     external: [
+        "aurelia-dependency-injection",
+        "aurelia-framework",
         "axios",
         "bluebird",
         "camo",
@@ -48,6 +50,7 @@ export default {
         "pkg-dir",
         "qs",
         "readline",
+        "reflect-metadata",
         "rxios",
         "rxjs",
         "rxjs/internal/observable/dom/WebSocketSubject",
