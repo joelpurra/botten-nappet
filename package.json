@@ -60,7 +60,7 @@
     "@types/socket.io-client": "^1.4.32",
     "@types/soundjs": "^0.6.27",
     "animejs": "^2.2.0",
-    "axios": "^0.17.1",
+    "axios": "^0.18.0",
     "bluebird": "^3.5.1",
     "camo": "^0.12.3",
     "check-types": "^7.3.0",
