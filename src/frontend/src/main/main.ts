@@ -68,6 +68,8 @@ export default class FrontendMain implements IStartableStoppable {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.frontendManagerMain!.stop();
+        if (this.frontendManagerMain) {
+            await this.frontendManagerMain.stop();
+        }
     }
 }

@@ -154,7 +154,9 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.twitchPerUserPollingApi!.stop();
+        if (this.twitchPerUserPollingApi) {
+            await this.twitchPerUserPollingApi.stop();
+        }
 
         await Bluebird.map(
             this.connectables,

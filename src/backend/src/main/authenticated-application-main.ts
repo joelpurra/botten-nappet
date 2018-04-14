@@ -303,10 +303,21 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        this.backendTwitchPubSubAuthenticatedApplicationApi!.stop();
-        this.backendTwitchIrcAuthenticatedApplicationApi!.stop();
-        this.backendTwitchPollingAuthenticatedApplicationApi!.stop();
-        this.perUserHandlersMain!.stop();
+        if (this.backendTwitchPubSubAuthenticatedApplicationApi) {
+            this.backendTwitchPubSubAuthenticatedApplicationApi.stop();
+        }
+
+        if (this.backendTwitchIrcAuthenticatedApplicationApi) {
+            this.backendTwitchIrcAuthenticatedApplicationApi.stop();
+        }
+
+        if (this.backendTwitchPollingAuthenticatedApplicationApi) {
+            this.backendTwitchPollingAuthenticatedApplicationApi.stop();
+        }
+
+        if (this.perUserHandlersMain) {
+            this.perUserHandlersMain.stop();
+        }
 
         await Bluebird.map(
             this.connectables,

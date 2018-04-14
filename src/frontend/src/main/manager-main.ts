@@ -413,7 +413,9 @@ export default class FrontendManagerMain {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.frontendManagedMain!.stop();
+        if (this.frontendManagedMain) {
+            await this.frontendManagedMain.stop();
+        }
 
         await Bluebird.map(
             this.connectables,

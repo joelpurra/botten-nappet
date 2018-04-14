@@ -145,7 +145,9 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.twitchPerUserIrcApi!.stop();
+        if (this.twitchPerUserIrcApi) {
+            await this.twitchPerUserIrcApi.stop();
+        }
 
         await Bluebird.map(
             this.connectables,

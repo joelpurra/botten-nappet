@@ -147,8 +147,14 @@ export default class BackendManagerMain implements IStartableStoppable {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.backendManagedMain!.stop();
-        await this.distributedEventManager!.stop();
+        if (this.backendManagedMain) {
+            await this.backendManagedMain.stop();
+        }
+
+        if (this.distributedEventManager) {
+            await this.distributedEventManager.stop();
+        }
+
         await this.messageQueueAllRawTopicsSubscriber.disconnect();
         await this.databaseConnection.disconnect();
     }
