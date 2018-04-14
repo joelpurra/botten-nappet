@@ -364,14 +364,14 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
         const responseObserver: Observer<any> = {
             complete: () => {
-                this.logger.trace("complete", "openedObserver");
+                this.logger.trace("complete", "responseObserver");
             },
             error: (error) => {
                 // TODO: handle errors.
-                this.logger.error(error, "error", "openedObserver");
+                this.logger.error(error, "error", "responseObserver");
             },
             next: (response) => {
-                // this.logger.trace(response, "next", "openedObserver");
+                // this.logger.trace(response, "next", "responseObserver");
 
                 // TODO: better null handling.
                 this.pollingSubject!.next(response);

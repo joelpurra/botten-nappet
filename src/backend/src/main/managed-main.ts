@@ -135,8 +135,14 @@ export default class BackendManagedMain implements IStartableStoppable {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.backendVidyApplicationApi!.stop();
-        await this.backendAuthenticatedApplicationMain!.stop();
+        if (this.backendVidyApplicationApi) {
+            await this.backendVidyApplicationApi.stop();
+        }
+
+        if (this.backendAuthenticatedApplicationMain) {
+            await this.backendAuthenticatedApplicationMain.stop();
+        }
+
         await this.twitchApplicationTokenManager.stop();
         await this.twitchPollingApplicationTokenConnection.disconnect();
     }

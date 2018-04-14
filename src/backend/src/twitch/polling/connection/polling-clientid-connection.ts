@@ -68,6 +68,9 @@ export default class PollingClientIdConnection<T> extends PollingConnection<T> {
         const headers = {
             "Accept": "application/vnd.twitchtv.v5+json",
             "Client-ID": `${this.applicationClientId}`,
+
+            // NOTE: required to get large (chunked) responses from the twitch api.
+            "Connection": "keep-alive",
         };
 
         return headers;
