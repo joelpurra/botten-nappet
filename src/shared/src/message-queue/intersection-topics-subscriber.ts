@@ -42,7 +42,7 @@ export default class IntersectionTopicsSubscriber<T> extends TopicsSubscriber<T>
 
         // TODO: configurable.
         this.topicsStringSeparator = ":";
-        this.logger = logger.child(`IntersectionTopicsSubscriber (${this.topics.join(this.topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
     }
 
     protected async filterMessages(topicMessages: IZeroMqTopicMessages): Promise<boolean> {
