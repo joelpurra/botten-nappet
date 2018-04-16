@@ -56,7 +56,7 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
         assert(vidyRootUrl.startsWith("https://"));
         assert(vidyRootUrl.endsWith("/"));
 
-        this.logger = logger.child("IncomingSearchEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingSearchResultEventEmitter = incomingSearchResultEventEmitter;
         this.authenticatedRequest = authenticatedRequest;
         this.vidyRootUrl = vidyRootUrl;

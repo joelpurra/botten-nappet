@@ -61,7 +61,7 @@ export default class StreamingStatisticsCollectorHandler
 
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
-        this.logger = logger.child("StreamingStatisticsCollectorHandler");
+        this.logger = logger.child(this.constructor.name);
 
         this.commandPrefix = "!";
         this.commandName = "live";

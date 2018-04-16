@@ -31,7 +31,7 @@ export default class CSRFHelper {
         assert.equal(arguments.length, 1);
         assert.equal(typeof logger, "object");
 
-        this.logger = logger.child("CSRFHelper");
+        this.logger = logger.child(this.constructor.name);
     }
 
     public async getRandomCSRF() {

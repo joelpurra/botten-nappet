@@ -64,7 +64,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("BackendTwitchIrcAuthenticatedApplicationApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchUserAccessTokenProvider = twitchUserAccessTokenProvider;

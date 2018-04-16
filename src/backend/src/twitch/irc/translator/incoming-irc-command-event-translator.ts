@@ -45,7 +45,7 @@ export default class IncomingIrcCommandEventTranslator extends IrcManager {
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("IncomingIrcCommandEventHandler");
+        this.logger = logger.child(this.constructor.name);
         this.incomingIrcCommandEventEmitter = incomingIrcCommandEventEmitter;
     }
 

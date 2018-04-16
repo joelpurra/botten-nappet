@@ -58,7 +58,7 @@ export default class BackendVidyApi implements IStartableStoppable {
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("BackendVidyApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand

@@ -51,7 +51,7 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingPollingEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingPollingEventEmitter = incomingPollingEventEmitter;
         this.username = username;
         this.userid = userid;

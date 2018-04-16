@@ -51,7 +51,7 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
         assert.nonEmptyString(channelName);
         assert(channelName.startsWith("#"));
 
-        this.logger = logger.child("WhisperIrcReplyHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.channelName = channelName;
     }

@@ -40,7 +40,7 @@ export default class UserStorageManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof UserRepository, "function");
 
-        this.logger = logger.child("UserStorageManager");
+        this.logger = logger.child(this.constructor.name);
         this.UserRepository = UserRepository;
     }
 

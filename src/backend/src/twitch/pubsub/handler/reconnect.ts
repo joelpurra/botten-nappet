@@ -35,7 +35,7 @@ export default class ReconnectPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("ReconnectPubSubHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IPubSubResponse): Promise<void> {

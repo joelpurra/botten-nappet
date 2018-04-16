@@ -51,7 +51,7 @@ export default class IncomingWhisperCommandEventTranslator extends EventSubscrip
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingWhisperEventEmitter, "object");
 
-        this.logger = logger.child("IncomingWhisperCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingWhisperEventEmitter = incomingWhisperEventEmitter;
     }
 

@@ -52,7 +52,7 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("TextResponseCommandIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
         this.commandPrefix = "!";

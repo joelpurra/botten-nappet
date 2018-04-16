@@ -43,7 +43,7 @@ export default class DistributedEventManager extends EventSubscriptionManager<ID
         assert.equal(typeof connection, "object");
         assert.equal(typeof distributedEventStorageManager, "object");
 
-        this.logger = logger.child("DistributedEventManager");
+        this.logger = logger.child(this.constructor.name);
         this.distributedEventStorageManager = distributedEventStorageManager;
     }
 

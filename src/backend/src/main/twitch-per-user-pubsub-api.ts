@@ -58,7 +58,7 @@ export default class TwitchPerUserPubSubApi {
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("TwitchPerUserPubSubApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchAllPubSubTopicsForTwitchUserIdConnection = twitchAllPubSubTopicsForTwitchUserIdConnection;

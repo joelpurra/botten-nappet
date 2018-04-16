@@ -75,7 +75,7 @@ export default class UserTokenHelper {
         assert.nonEmptyString(appClientId);
         assert.nonEmptyString(appClientSecret);
 
-        this.logger = logger.child("UserTokenHelper");
+        this.logger = logger.child(this.constructor.name);
         this.csrfHelper = csrfHelper;
         this.userStorageHelper = userStorageManager;
         this.requestHelper = requestHelper;

@@ -68,7 +68,7 @@ export default class BackendMain implements IStartableStoppable {
         messageQueuePublisher: MessageQueuePublisher,
     ) {
         // TODO: validate arguments.
-        this.logger = logger.child("BackendMain");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
 

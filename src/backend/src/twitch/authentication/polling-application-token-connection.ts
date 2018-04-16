@@ -67,7 +67,7 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
         assert(Array.isArray(scopes));
 
-        this.logger = logger.child("PollingApplicationTokenConnection");
+        this.logger = logger.child(this.constructor.name);
         this.applicationClientId = applicationClientId;
         this.applicationClientSecret = applicationClientSecret;
         this.scopes = scopes;

@@ -50,7 +50,7 @@ export default class VidyCommandIrcHandler extends EventSubscriptionManager<IInc
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingSearchCommandEventEmitter, "object");
 
-        this.logger = logger.child("VidyCommandIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingSearchCommandEventEmitter = outgoingSearchCommandEventEmitter;
 
         this.commandPrefix = "!";

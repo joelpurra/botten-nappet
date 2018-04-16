@@ -58,7 +58,7 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingCheermotesCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingCheermotesEventEmitter = incomingCheermotesEventEmitter;
         this.username = username;
         this.userid = userid;

@@ -42,7 +42,7 @@ export default class FrontendMain implements IStartableStoppable {
         messageQueuePublisher: MessageQueuePublisher,
     ) {
         // TODO: validate arguments.
-        this.logger = logger.child("frontend");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
 

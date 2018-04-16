@@ -51,7 +51,7 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         assert.equal(typeof username, "string");
         assert.greater(username.length, 0);
 
-        this.logger = logger.child("GreetingIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.username = username;
 

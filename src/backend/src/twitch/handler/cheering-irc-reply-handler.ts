@@ -49,7 +49,7 @@ export default class CheeringIrcReplyHandler extends EventSubscriptionManager<II
 
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
-        this.logger = logger.child("CheeringIrcReplyHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IIncomingCheeringEvent): Promise<void> {

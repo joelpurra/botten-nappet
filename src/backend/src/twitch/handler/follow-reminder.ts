@@ -53,7 +53,7 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         assert.nonEmptyString(channelName);
         assert(channelName.startsWith("#"));
 
-        this.logger = logger.child("FollowReminderIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.channelName = channelName;
 

@@ -96,7 +96,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        this.logger = logger.child("PollingConnection");
+        this.logger = logger.child(this.constructor.name);
         this.intervalMilliseconds = intervalInMilliseconds;
         this.atBegin = atBegin;
         this.uri = uri;

@@ -34,7 +34,7 @@ export default class LoggingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: object): Promise<void> {

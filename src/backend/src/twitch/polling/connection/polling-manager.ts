@@ -34,6 +34,6 @@ export default abstract class PollingManager<T> extends ConnectionManager<T> {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("PollingManager");
+        this.logger = logger.child(this.constructor.name);
     }
 }

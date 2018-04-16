@@ -55,7 +55,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         assert.nonEmptyArray(topics);
         assert.equal(typeof userAccessTokenProvider, "function");
 
-        this.logger = logger.child("PubSubConnection");
+        this.logger = logger.child(this.constructor.name);
 
         this.topics = topics;
         this.userAccessTokenProvider = userAccessTokenProvider;

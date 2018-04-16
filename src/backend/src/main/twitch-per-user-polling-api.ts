@@ -69,7 +69,7 @@ export default class TwitchPerUserPollingApi {
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("TwitchPerUserPollingApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchPollingFollowingConnection = twitchPollingFollowingConnection;

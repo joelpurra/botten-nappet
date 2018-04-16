@@ -59,7 +59,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("BackendTwitchPollingAuthenticatedApplicationApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchUserId = twitchUserId;

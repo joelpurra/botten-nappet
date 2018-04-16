@@ -78,7 +78,7 @@ export default class FrontendManagerMain {
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("FrontendManagerMain");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
 

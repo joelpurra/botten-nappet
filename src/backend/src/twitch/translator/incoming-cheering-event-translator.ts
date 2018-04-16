@@ -48,7 +48,7 @@ export default class IncomingCheeringCommandEventTranslator extends EventSubscri
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingCheeringEventEmitter, "object");
 
-        this.logger = logger.child("IncomingCheeringCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingCheeringEventEmitter = incomingCheeringEventEmitter;
     }
 

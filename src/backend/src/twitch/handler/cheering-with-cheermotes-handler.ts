@@ -65,7 +65,7 @@ export default class CheeringWithCheermotesHandler
 
         this.incomingCheeringWithCheermotesEvent = incomingCheeringWithCheermotesEvent;
 
-        this.logger = logger.child("CheeringWithCheermotesHandler");
+        this.logger = logger.child(this.constructor.name);
 
         // NOTE: expecting to collect data from a single channel event source, but not verifying that the
         // channel doesn't change over time and/or per command.

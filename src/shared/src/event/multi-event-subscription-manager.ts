@@ -35,7 +35,7 @@ export default abstract class MultiEventSubscriptionManager<T> extends MultiConn
         assert.equal(typeof logger, "object");
         assert.nonEmptyArray(connections);
 
-        this.logger = logger.child("MultiEventSubscriptionManager");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected abstract async dataHandler(data: T): Promise<void>;

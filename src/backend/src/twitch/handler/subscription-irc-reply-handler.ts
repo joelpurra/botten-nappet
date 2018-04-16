@@ -49,7 +49,7 @@ export default class SubscriptionIrcReplyHandler extends EventSubscriptionManage
 
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
-        this.logger = logger.child("SubscriptionIrcReplyHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IIncomingSubscriptionEvent): Promise<void> {
