@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IConnectable from "../connection/iconnectable";
 import ISendingConnection from "../connection/isending-connection";
@@ -41,9 +41,9 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
         assert.equal(typeof topic, "string");
         assert(topic.length > 0);
 
-        this.logger = logger.child("TopicPublisher");
         this.publisher = publisher;
         this.topic = topic;
+        this.logger = logger.child(`${this.constructor.name} (${this.topic})`);
     }
 
     public async connect(): Promise<void> {
@@ -79,7 +79,7 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
             message = JSON.stringify(data);
         }
 
-        this.logger.trace(data, message, "send");
+        this.logger.trace(data, message, this.topic, "send");
 
         await this.publisher.send(
             this.topic,

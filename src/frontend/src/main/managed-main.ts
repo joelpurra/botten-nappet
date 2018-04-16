@@ -18,46 +18,48 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
 
-export default async function managedMain(
-    config: Config,
-    mainLogger: PinoLogger,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-): Promise<void> {
-    mainLogger.info("Managed.");
+export default class FrontendManagedMain {
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    const shutdown = async (incomingError?: Error) => {
-        if (incomingError) {
-            mainLogger.error(incomingError, "Unmanaged.");
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child(this.constructor.name);
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
+    }
 
-            throw incomingError;
-        }
+    public async start(): Promise<void> {
+        this.logger.info("Managed.");
 
-        mainLogger.info("Unmanaged.");
-
-        return undefined;
-    };
-
-    try {
-        await gracefulShutdownManager.waitForShutdownSignal();
+        await this.gracefulShutdownManager.waitForShutdownSignal();
 
         // await applicationXYZ(
         //     config,
-        //     mainLogger,
-        //     rootLogger,
+        //     this.logger,
+        //     this.logger,
         //     gracefulShutdownManager,
         //     messageQueuePublisher,
         // );
+    }
 
-        await shutdown();
-    } catch (error) {
-        shutdown(error);
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
     }
 }

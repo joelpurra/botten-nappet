@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 export default class CSRFHelper {
     private logger: PinoLogger;
@@ -31,7 +31,7 @@ export default class CSRFHelper {
         assert.equal(arguments.length, 1);
         assert.equal(typeof logger, "object");
 
-        this.logger = logger.child("CSRFHelper");
+        this.logger = logger.child(this.constructor.name);
     }
 
     public async getRandomCSRF() {

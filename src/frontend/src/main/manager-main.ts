@@ -31,300 +31,450 @@ import Koa from "koa";
 import koaStatic from "koa-static";
 import SocketIo from "socket.io";
 
-import GracefulShutdownManager from "../../../shared/src/util/graceful-shutdown-manager";
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import IConnectable from "@botten-nappet/shared/connection/iconnectable";
+
+import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import Config from "../config/config";
 
-import MessageQueuePublisher from "../../../shared/src/message-queue/publisher";
-
-import ITwitchIncomingIrcCommand from "../../../backend/src/twitch/irc/command/iincoming-irc-command";
 /* tslint:disable max-line-length */
-import MessageQueueSingleItemJsonTopicsSubscriber from "../../../shared/src/message-queue/single-item-topics-subscriber";
+
+import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/message-queue/single-item-topics-subscriber";
+
+import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/event/iincoming-following-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event/iincoming-subscription-event";
+import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/command/iincoming-search-result-event";
+
 /* tslint:enable max-line-length */
 
-import IIncomingCheeringWithCheermotesEvent from "../../../backend/src/twitch/polling/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingFollowingEvent from "../../../backend/src/twitch/polling/event/iincoming-following-event";
-import IIncomingSubscriptionEvent from "../../../backend/src/twitch/polling/event/iincoming-subscription-event";
-import IIncomingSearchResultEvent from "../../../backend/vidy/command/iincoming-search-result-event";
+import {
+    isValidColor,
+} from "../../shared/colors";
 
-import managedMain from "./managed-main";
+import FrontendManagedMain from "./managed-main";
 
-export default async function managerMain(
-    config: Config,
-    mainLogger: PinoLogger,
-    rootLogger: PinoLogger,
-    gracefulShutdownManager: GracefulShutdownManager,
-    messageQueuePublisher: MessageQueuePublisher,
-): Promise<void> {
-    const app = new Koa();
-    app.on("error", (err, ctx) => {
-        // TODO: shut down server.
-        mainLogger.error(err, ctx, "server error");
-    });
+interface ICustomWebSocketEventData {
+    eventName: string;
+    customData: object;
+}
 
-    const projectRootDirectoryPath = await pkgDir(__dirname);
+export default class FrontendManagerMain {
+    private io: SocketIo.Server | null;
+    private server: http.Server | null;
+    private connectables: IConnectable[];
+    private frontendManagedMain: FrontendManagedMain | null;
+    private messageQueuePublisher: MessageQueuePublisher;
+    private gracefulShutdownManager: GracefulShutdownManager;
+    private logger: PinoLogger;
+    private config: Config;
 
-    // TODO: better null handling.
-    assert.nonEmptyString(projectRootDirectoryPath!);
+    constructor(
+        config: Config,
+        logger: PinoLogger,
+        gracefulShutdownManager: GracefulShutdownManager,
+        messageQueuePublisher: MessageQueuePublisher,
+    ) {
+        // TODO: validate arguments.
+        this.config = config;
+        this.logger = logger.child(this.constructor.name);
+        this.gracefulShutdownManager = gracefulShutdownManager;
+        this.messageQueuePublisher = messageQueuePublisher;
 
-    const staticPublicRootDirectoryPath = path.join(projectRootDirectoryPath!, config.staticPublicRootDirectory);
-    app.use(koaStatic(staticPublicRootDirectoryPath));
+        this.frontendManagedMain = null;
+        this.server = null;
+        this.io = null;
+        this.connectables = [];
+    }
 
-    const server = http.createServer(app.callback());
-    const io = SocketIo(server);
+    public async start(): Promise<void> {
+        const app = new Koa();
+        app.on("error", (err, ctx) => {
+            // TODO: shut down server.
+            this.logger.error(err, ctx, "server error");
+        });
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
-        new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-            mainLogger,
-            config.zmqAddress,
-            // TODO: no backend events.
-            "backend-twitch-incoming-irc-command",
+        const projectRootDirectoryPath = await pkgDir(__dirname);
+
+        // TODO: better null handling.
+        assert.nonEmptyString(projectRootDirectoryPath!);
+
+        const staticPublicRootDirectoryPath = path.join(
+            projectRootDirectoryPath!,
+            this.config.staticPublicRootDirectory,
         );
-    await twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.connect();
+        app.use(koaStatic(staticPublicRootDirectoryPath));
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
-            mainLogger,
-            config.zmqAddress,
-            config.topicTwitchIncomingFollowingEvent,
-        );
-    await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.connect();
+        this.server = http.createServer(app.callback());
+        this.io = SocketIo(this.server);
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
-            mainLogger,
-            config.zmqAddress,
-            config.topicTwitchIncomingCheeringWithCheermotesEvent,
-        );
-    await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.connect();
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
+            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
+                this.logger,
+                this.config.zmqAddress,
+                // TODO: no backend events.
+                ...splitTopics("external:backend:twitch:incoming:irc:command"),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingFollowingEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingCheeringWithCheermotesEvent),
+            );
+        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicTwitchIncomingSubscriptionEvent),
+            );
+        const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
+            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
+                this.logger,
+                this.config.zmqAddress,
+                ...splitTopics(this.config.topicVidyIncomingSearchResultEvent),
+            );
 
-    const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
-            mainLogger,
-            config.zmqAddress,
-            config.topicTwitchIncomingSubscriptionEvent,
-        );
-    await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.connect();
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent);
+        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
+        this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
 
-    const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
-        new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
-            mainLogger,
-            config.zmqAddress,
-            config.topicVidyIncomingSearchResultEvent,
-        );
-    await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.connect();
+        // TODO: separate connectables and startables/observers.
+        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable.forEach((data) => {
-        let msg = null;
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
 
-        switch (data.command) {
-            case "PRIVMSG":
-                if (data.message === null) {
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
+                let customWebSocketEventData: ICustomWebSocketEventData | null = null;
+
+                switch (data.command) {
+                    case "PRIVMSG":
+                        customWebSocketEventData = this.getIrcPrivMsgWebsocketEventData(data);
+                        break;
+                }
+
+                if (customWebSocketEventData === null) {
                     return;
                 }
 
-                const commandPrefix = "!";
-                const messageParts = data.message.trim().split(/\s+/);
+                assert.nonEmptyString(customWebSocketEventData.eventName);
+                assert.not.null(customWebSocketEventData.customData);
+                assert.object(customWebSocketEventData.customData);
 
-                if (messageParts[0].startsWith(commandPrefix)) {
-                    const messageCommand = messageParts[0].slice(commandPrefix.length);
-                    const commandArguments = messageParts.slice(1);
+                const msg = {
+                    data: Object.assign(
+                        {},
+                        customWebSocketEventData.customData,
 
-                    switch (messageCommand) {
-                        // TODO: check arguments.
-                        case "animate":
-                        case "cowbell":
-                        // TODO: remove after testing.
-                        case "following":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    timestamp: data.timestamp,
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-
-                        case "subscription":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    // TODO: use random library.
-                                    months: Math.floor(Math.random() * 3),
-                                    timestamp: data.timestamp,
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-
-                        case "cheering-with-cheermotes":
-                            msg = {
-                                data: {
-                                    args: commandArguments,
-                                    // TODO: use random library.
-                                    bits: Math.floor(Math.random() * 500),
-                                    cheermotes: [
-                                        {
-                                            cheerToken: {
-                                                amount: 1,
-                                                prefix: "cheer",
-                                            },
-                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif",
-                                        },
-                                        {
-                                            cheerToken: {
-                                                amount: 100,
-                                                prefix: "cheer",
-                                            },
-                                            url: "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif",
-                                        },
-                                    ],
-                                    message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
-                                    timestamp: data.timestamp,
-                                    // TODO: use random library.
-                                    total: Math.floor(Math.random() * 50000),
-                                    username: data.username,
-                                },
-                                event: messageCommand,
-                            };
-                            break;
-                    }
-                } else {
-                    // TODO: remove?
-                    msg = {
-                        data: {
-                            message: data.message,
+                        // NOTE: always keep default data, no overrides.
+                        {
                             timestamp: data.timestamp,
                             username: data.username,
                         },
-                        event: "chat-message",
-                    };
+                    ),
+                    event: customWebSocketEventData.eventName,
+                };
+
+                this.io.send(msg);
+            });
+
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
+
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
                 }
-                break;
-        }
 
-        if (msg === null) {
-            return;
-        }
+                const msg = {
+                    data: {
+                        timestamp: data.timestamp,
+                        username: data.triggerer.name,
+                    },
+                    event: "following",
+                };
 
-        io.send(msg);
-    });
+                this.io.send(msg);
+            });
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable.forEach((data) => {
-        const msg = {
-            data: {
-                timestamp: data.timestamp,
-                username: data.triggerer.name,
-            },
-            event: "following",
-        };
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
 
-        io.send(msg);
-    });
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent
-        .dataObservable.forEach((data) => {
-            const msg = {
-                data: {
-                    // args: commandArguments,
-                    bits: data.bits,
-                    cheermotes: data.cheermotes,
-                    message: data.message,
-                    timestamp: data.timestamp,
-                    total: data.total,
-                    username: data.triggerer.name,
-                },
-                event: "cheering-with-cheermote",
-            };
+                const msg = {
+                    data: {
+                        // args: commandArguments,
+                        bits: data.bits,
+                        cheermotes: data.cheermotes,
+                        message: data.message,
+                        timestamp: data.timestamp,
+                        total: data.total,
+                        username: data.triggerer.name,
+                    },
+                    event: "cheering-with-cheermotes",
+                };
 
-            io.send(msg);
+                this.io.send(msg);
+            });
+
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
+
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
+                const msg = {
+                    data: {
+                        timestamp: data.timestamp,
+                        username: data.triggerer.name,
+                    },
+                    event: "subscription",
+                };
+
+                this.io.send(msg);
+            });
+
+        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
+
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
+                const rnd = Math.floor(Math.random() * data.clips.results.length);
+                const randomResult = data.clips.results[rnd];
+                const randomVideoUrl = randomResult.files.landscapeVideo240.url;
+
+                const msg = {
+                    data: {
+                        // TODO: don't assume too much.
+                        videoUrl: randomVideoUrl,
+                        // timestamp: data.timestamp,
+                        // username: data.triggerer.name,
+                    },
+                    event: "vidy",
+                };
+
+                this.io.send(msg);
+            });
+
+        this.io.on("connection", (clientSocket) => {
+            // this.logger.trace(clientSocket, "incoming connection");
+            this.logger.trace(clientSocket.rooms, "incoming connection");
+
+            // clientSocket.on("HAI", (data) => {
+            //     this.logger.trace(data, "HAI");
+            // });
+
+            clientSocket.on("message", () => {
+                this.logger.trace("message");
+            });
+
+            clientSocket.on("disconnect", () => {
+                this.logger.trace("disconnect");
+            });
         });
 
-    twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable.forEach((data) => {
-        const msg = {
-            data: {
-                timestamp: data.timestamp,
-                username: data.triggerer.name,
-            },
-            event: "subscription",
-        };
+        this.logger.info("Managed.");
 
-        io.send(msg);
-    });
-
-    vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable.forEach((data) => {
-        const rnd = Math.floor(Math.random() * data.clips.results.length);
-        const randomResult = data.clips.results[rnd];
-        const randomVideoUrl = randomResult.files.landscapeVideo240.url;
-
-        const msg = {
-            data: {
-                // TODO: don't assume too much.
-                videoUrl: randomVideoUrl,
-                // timestamp: data.timestamp,
-                // username: data.triggerer.name,
-            },
-            event: "vidy",
-        };
-
-        io.send(msg);
-    });
-
-    io.on("connection", (clientSocket) => {
-        // mainLogger.trace(clientSocket, "incoming connection");
-        mainLogger.trace(clientSocket.rooms, "incoming connection");
-
-        // clientSocket.on("HAI", (data) => {
-        //     mainLogger.trace(data, "HAI");
-        // });
-
-        clientSocket.on("message", () => {
-            mainLogger.trace("message");
-        });
-
-        clientSocket.on("disconnect", () => {
-            mainLogger.trace("disconnect");
-        });
-    });
-
-    mainLogger.info("Managed.");
-
-    const shutdown = async (incomingError?: Error) => {
-        await vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.disconnect();
-        await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.disconnect();
-        await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.disconnect();
-        await twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.disconnect();
-        await twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.disconnect();
-        await Bluebird.promisify(server.close, {
-            context: server,
-        })();
-
-        if (incomingError) {
-            mainLogger.error(incomingError, "Unmanaged.");
-
-            throw incomingError;
-        }
-
-        mainLogger.info("Unmanaged.");
-
-        return undefined;
-    };
-
-    try {
-        server.listen(config.port);
-
-        await managedMain(
-            config,
-            mainLogger,
-            rootLogger,
-            gracefulShutdownManager,
-            messageQueuePublisher,
+        this.frontendManagedMain = new FrontendManagedMain(
+            this.config,
+            this.logger,
+            this.gracefulShutdownManager,
+            this.messageQueuePublisher,
         );
 
-        await shutdown();
-    } catch (error) {
-        shutdown(error);
+        await Bluebird.promisify<void, number>(this.server.listen, {
+            context: this.server,
+        })(this.config.port);
+
+        await this.frontendManagedMain.start();
+    }
+
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        if (this.frontendManagedMain) {
+            await this.frontendManagedMain.stop();
+        }
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
+
+        if (this.io) {
+            try {
+                await Bluebird.promisify(this.io.close, {
+                    context: this.io,
+                })();
+            } catch (error) {
+                this.logger
+                    .error(error, this.io, "Swallowed error while closing io.");
+            }
+
+            this.io = null;
+        }
+
+        if (this.server && this.server.listening) {
+            try {
+                await Bluebird.promisify(this.server.close, {
+                    context: this.server,
+                })();
+            } catch (error) {
+                this.logger
+                    .error(error, this.server, "Swallowed error while closing server.");
+            }
+        }
+
+        this.server = null;
+    }
+
+    private getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
+        if (data.message === null) {
+            throw new Error("data.message");
+        }
+
+        let handled = false;
+        let eventName: string | null = null;
+        let customData: object | null = null;
+
+        const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
+
+        const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
+        const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
+
+        const commandPrefix = "!";
+        const messageParts = data.message.trim().split(/\s+/);
+        const isCommandMessage = messageParts[0].startsWith(commandPrefix);
+
+        if (isCommandMessage) {
+            const messageCommand = messageParts[0].slice(commandPrefix.length);
+            const commandArguments = messageParts.slice(1);
+
+            eventName = messageCommand;
+
+            // TODO: remove commands after testing.
+            switch (messageCommand) {
+                case "animate":
+                    let color = commandArguments[0];
+                    if (!isValidColor(color)) {
+                        color = "rgba(255,255,255,0.5)";
+                    }
+                    customData = {
+                        color,
+                    };
+                    handled = true;
+                    break;
+
+                case "cowbell":
+                case "following":
+                    customData = {};
+                    handled = true;
+                    break;
+
+                case "say":
+                    customData = {
+                        message: commandArguments.join(" "),
+                    };
+                    handled = true;
+                    break;
+
+                case "subscription":
+                    customData = {
+                        // TODO: use random library.
+                        months: Math.floor(Math.random() * 3),
+                    };
+                    handled = true;
+                    break;
+
+                case "cheering-with-cheermotes":
+                    customData = {
+                        // TODO: use random library.
+                        bits: Math.floor(Math.random() * 500),
+                        cheermotes: [
+                            {
+                                cheerToken: {
+                                    amount: 1,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote1,
+                            },
+                            {
+                                cheerToken: {
+                                    amount: 100,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote100,
+                            },
+                        ],
+                        message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
+                        // TODO: use random library.
+                        total: Math.floor(Math.random() * 50000),
+                    };
+                    handled = true;
+                    break;
+
+                default:
+                    handled = false;
+            }
+        } else {
+            eventName = "chat-message";
+
+            customData = {
+                isSubscriber,
+                message: data.message,
+            };
+
+            handled = true;
+        }
+
+        if (handled === false) {
+            return null;
+        }
+
+        const result = {
+            customData: customData!,
+            eventName: eventName!,
+        };
+
+        return result;
     }
 }

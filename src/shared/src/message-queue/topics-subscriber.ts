@@ -18,7 +18,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -30,7 +29,7 @@ import Rx, {
 
 import zmq from "zeromq-ng";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IEventSubscriptionConnection from "../event/ievent-subscription-connection";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 import {
@@ -39,7 +38,7 @@ import {
 
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
     protected logger: PinoLogger;
-    private topics: string[];
+    protected topics: string[];
     private socket: any | null;
     private address: string;
     private zmqSubject: Subject<IZeroMqTopicMessages> | null;
@@ -47,16 +46,19 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     private zmqSubcription: Subscription | null;
 
     constructor(logger: PinoLogger, address: string, ...topics: string[]) {
-        assert.hasLength(arguments, 3);
+        // NOTE: variable arguments length.
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
         assert(address.length > 0);
         assert(address.startsWith("tcp://"));
         assert.array(topics);
 
-        this.logger = logger.child("TopicsSubscriber");
+        // TODO: configurable.
+        const topicsStringSeparator = ":";
+
         this.address = address;
         this.topics = topics;
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
 
         this.zmqSubject = null;
         this.sharedzmqObservable = null;
@@ -87,7 +89,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
                 this.logger.error(error, "error", "openedObserver");
             },
             next: (message) => {
-                this.logger.trace(message, "next", "openedObserver");
+                // this.logger.trace(message, "next", "openedObserver");
             },
         };
 
@@ -97,9 +99,10 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
             .do((val) => this.logger.trace(val, "zmqSubject"));
 
         this.sharedzmqObservable = this.zmqSubject.share()
-            .concatMap((message) => Rx.Observable.from(this.parseMessages(message)));
+            .concatFilter((data: IZeroMqTopicMessages) => Rx.Observable.from(this.filterMessages(data)))
+            .concatMap((message: IZeroMqTopicMessages) => Rx.Observable.from(this.parseMessages(message)));
 
-        this.zmqSubcription = this.sharedzmqObservable
+        this.zmqSubcription = this.sharedzmqObservable!
             .subscribe(openedObserver);
 
         // NOTE: listening outside of the async/await (promise) chain.
@@ -141,6 +144,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         return this.sharedzmqObservable!;
     }
 
+    protected abstract async filterMessages(topicMessages: IZeroMqTopicMessages): Promise<boolean>;
     protected abstract async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T>;
 
     private async listen(): Promise<void> {
@@ -170,7 +174,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         if (this.socket) {
             // TODO: reconnect if the socket should stay open?
-            this.disconnect();
+            await this.disconnect();
         }
     }
 }

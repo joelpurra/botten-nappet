@@ -18,13 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IAugmentedToken from "../twitch/authentication/iaugmented-token";
+import IUser from "./iuser";
 
-export default interface IUserCamo {
-    _id?: string;
-
+export default interface IUserCamo extends IUser {
     _schema?: object;
-
-    username: string;
-    twitchToken: IAugmentedToken;
 }

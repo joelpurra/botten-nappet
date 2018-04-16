@@ -154,6 +154,14 @@ function onFrame(event) {
     //     return;
     // }
 
+    millisecondsSinceLastRender += (event.delta * 1000);
+
+    if (millisecondsSinceLastRender < minimumMillisecondsBetweenRender) {
+        return;
+    }
+
+    millisecondsSinceLastRender = 0;
+
     for (var i = 0, l = balls.length; i < l; i++) {
         balls[i].iterate();
     }
@@ -182,5 +190,12 @@ function init() {
 }
 
 var balls = [];
+
+// NOTE: attempting to limit the frames per second.
+// If not, the CPU usage goes through the roof.
+// Assuming that it's an optimization to not change ball positions more often than N times per second.
+var targetFps = 10;
+var minimumMillisecondsBetweenRender = ((1000 / targetFps) * 0.99);
+var millisecondsSinceLastRender = Number.MAX_SAFE_INTEGER / 2;
 
 init();

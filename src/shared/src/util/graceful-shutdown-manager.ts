@@ -57,7 +57,7 @@ export default class GracefulShutdownManager {
         assert.hasLength(arguments, 1);
         assert.equal(typeof logger, "object");
 
-        this.logger = logger.child("GracefulShutdownManager");
+        this.logger = logger.child(this.constructor.name);
 
         this.handleSignalEvent = this.handleSignalEvent.bind(this);
         this.handleExitEvent = this.handleExitEvent.bind(this);

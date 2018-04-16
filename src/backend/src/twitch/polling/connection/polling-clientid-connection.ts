@@ -22,10 +22,11 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IHttpData from "../ihttp-data";
-import IHttpHeaders from "../ihttp-header";
-import PollingConnection from "../polling-connection";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IHttpData from "../interface/ihttp-data";
+import IHttpHeaders from "../interface/ihttp-header";
+import PollingConnection from "./polling-connection";
 
 export default class PollingClientIdConnection<T> extends PollingConnection<T> {
     private applicationClientId: string;
@@ -57,7 +58,7 @@ export default class PollingClientIdConnection<T> extends PollingConnection<T> {
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        this.logger = logger.child("PollingClientIdConnection");
+        this.logger = logger.child(this.constructor.name);
         this.applicationClientId = applicationClientId;
     }
 
@@ -67,6 +68,9 @@ export default class PollingClientIdConnection<T> extends PollingConnection<T> {
         const headers = {
             "Accept": "application/vnd.twitchtv.v5+json",
             "Client-ID": `${this.applicationClientId}`,
+
+            // NOTE: required to get large (chunked) responses from the twitch api.
+            "Connection": "keep-alive",
         };
 
         return headers;

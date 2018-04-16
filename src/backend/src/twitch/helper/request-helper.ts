@@ -26,7 +26,7 @@ import qs, {
     IStringifyOptions,
 } from "qs";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 export default class RequestHelper {
     private logger: PinoLogger;
@@ -35,7 +35,7 @@ export default class RequestHelper {
         assert.equal(arguments.length, 1);
         assert.equal(typeof logger, "object");
 
-        this.logger = logger.child("RequestHelper");
+        this.logger = logger.child(this.constructor.name);
     }
 
     public twitchQuerystringSerializer(params: object) {

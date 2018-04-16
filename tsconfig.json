@@ -9,17 +9,36 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "alwaysStrict": true,
+    "noEmitOnError": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "suppressExcessPropertyErrors": false,
-    "suppressImplicitAnyIndexErrors": false,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
+    "suppressExcessPropertyErrors": false,
+    "suppressImplicitAnyIndexErrors": false,
+    "baseUrl": ".",
+    "paths": {
+      "@botten-nappet/shared/*": [
+        "./src/shared/src/*",
+      ],
+      "@botten-nappet/backend-twitch/*": [
+        "./src/backend/src/twitch/*",
+      ],
+      "@botten-nappet/backend-vidy/*": [
+        "./src/backend/src/vidy/*",
+      ],
+      "@botten-nappet/interface-twitch/*": [
+        "./src/interface/src/twitch/*",
+      ],
+      "@botten-nappet/interface-vidy/*": [
+        "./src/interface/src/vidy/*",
+      ],
+    },
   },
   "include": [
     "*.js",

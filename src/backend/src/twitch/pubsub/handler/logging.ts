@@ -22,9 +22,9 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IPubSubConnection from "../ipubsub-connection";
-import PubSubManager from "../pubsub-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+import IPubSubConnection from "../connection/ipubsub-connection";
+import PubSubManager from "../connection/pubsub-manager";
 
 export default class LoggingPubSubHandler extends PubSubManager {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {
@@ -34,7 +34,7 @@ export default class LoggingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("LoggingPubSubHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: object): Promise<void> {

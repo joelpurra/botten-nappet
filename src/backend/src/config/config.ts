@@ -25,7 +25,8 @@ import {
 import {
     IConfig,
 } from "config";
-import IZmqConfig from "../../../shared/src/util/izmq-config";
+
+import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
 
 export default class Config implements IZmqConfig {
     private packageJson: any;
@@ -53,7 +54,9 @@ export default class Config implements IZmqConfig {
         assert.match(this.databaseUri, /^nedb:\/\//);
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
+        assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingWhisperEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheermotesEvent);
@@ -97,6 +100,14 @@ export default class Config implements IZmqConfig {
 
     public get topicTwitchOutgoingIrcCommand(): string {
         const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingIrcCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingPubSubEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingPubSubEvent`);
 
         assert.nonEmptyString(value);
 
@@ -153,6 +164,14 @@ export default class Config implements IZmqConfig {
 
     public get topicTwitchIncomingCheeringEvent(): string {
         const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingWhisperEvent(): string {
+        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingWhisperEvent`);
 
         assert.nonEmptyString(value);
 

@@ -28,7 +28,7 @@ import {
     NextObserver,
 } from "rxjs/internal/Observer";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
 import IReceivingConnection from "./ireceiving-connection";
 
@@ -43,7 +43,7 @@ export default abstract class MultiConnectionManager<T> implements IStartableSto
         assert.equal(typeof logger, "object");
         assert.nonEmptyArray(connections);
 
-        this.logger = logger.child("ConnectionManager");
+        this.logger = logger.child(this.constructor.name);
         this.connections = connections;
         this.dataHandlerSubscription = null;
     }

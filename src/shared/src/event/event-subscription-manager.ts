@@ -22,7 +22,7 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import ConnectionManager from "../connection/connection-manager";
 import IEventSubscriptionConnection from "./ievent-subscription-connection";
@@ -35,7 +35,7 @@ export default abstract class EventSubscriptionManager<T> extends ConnectionMana
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("EventSubscriptionManager");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected abstract async dataHandler(data: T): Promise<void>;

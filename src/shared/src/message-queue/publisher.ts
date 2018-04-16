@@ -24,7 +24,7 @@ import {
 
 import zmq from "zeromq-ng";
 
-import PinoLogger from "../../../shared/src/util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IConnectable from "../connection/iconnectable";
 import {
@@ -43,7 +43,7 @@ export default class Publisher implements IConnectable {
         assert(address.length > 0);
         assert(address.startsWith("tcp://"));
 
-        this.logger = logger.child("Publisher");
+        this.logger = logger.child(this.constructor.name);
         this.address = address;
 
         this.socket = null;

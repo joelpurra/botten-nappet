@@ -24,10 +24,13 @@ import {
 
 import axios from "axios";
 
-import ConnectionManager from "../../../../shared/src/connection/connection-manager";
-import PinoLogger from "../../../../shared/src/util/pino-logger";
-import IPollingConnection from "../polling/ipolling-connection";
-import IRawToken from "./iraw-token";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import ConnectionManager from "@botten-nappet/shared/connection/connection-manager";
+
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
+import IPollingConnection from "../polling/connection/ipolling-connection";
 
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
@@ -56,7 +59,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         assert.greater(oauthTokenRevocationUri.length, 0);
         assert(oauthTokenRevocationUri.startsWith("https://"));
 
-        this.logger = logger.child("ApplicationTokenManager");
+        this.logger = logger.child(this.constructor.name);
         this.clientId = clientId;
         this.oauthTokenRevocationUri = oauthTokenRevocationUri;
 

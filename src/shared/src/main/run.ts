@@ -22,7 +22,7 @@ import main from "./main";
 
 const run = async (): Promise<void> => {
     try {
-        main();
+        await main();
 
         process.exitCode = 0;
     } catch (error) {

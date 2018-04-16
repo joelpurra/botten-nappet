@@ -22,9 +22,11 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../shared/src/util/pino-logger";
-import IAugmentedToken from "../../twitch/authentication/iaugmented-token";
-import IRawToken from "../../twitch/authentication/iraw-token";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
+
 import IUser from "../iuser";
 import IUserCamo from "../iuser-camo";
 import UserRepositoryClass from "../repository/user-repository";
@@ -38,7 +40,7 @@ export default class UserStorageManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof UserRepository, "function");
 
-        this.logger = logger.child("UserStorageManager");
+        this.logger = logger.child(this.constructor.name);
         this.UserRepository = UserRepository;
     }
 

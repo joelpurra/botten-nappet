@@ -22,10 +22,12 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
-import IIRCConnection from "../iirc-connection";
-import IrcManager from "../irc-manager";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+import IIRCConnection from "../connection/iirc-connection";
+
+import IrcManager from "../connection/irc-manager";
 
 export default class ReconnectIrcHandler extends IrcManager {
     constructor(logger: PinoLogger, connection: IIRCConnection) {
@@ -35,7 +37,7 @@ export default class ReconnectIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("ReconnectIrcHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {

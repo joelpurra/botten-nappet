@@ -22,15 +22,16 @@ import {
     assert,
 } from "check-types";
 
-import EventSubscriptionManager from "../../../../../shared/src/event/event-subscription-manager";
-import IEventSubscriptionConnection from "../../../../../shared/src/event/ievent-subscription-connection";
-import PinoLogger from "../../../../../shared/src/util/pino-logger";
-import IIncomingIrcCommand from "../command/iincoming-irc-command";
+import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
-export default class LoggingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
+import IIRCConnection from "@botten-nappet/backend-twitch/irc/connection/iirc-connection";
+import IrcManager from "@botten-nappet/backend-twitch/irc/connection/irc-manager";
+import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
+
+export default class LoggingIrcHandler extends IrcManager {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        connection: IIRCConnection,
     ) {
         super(logger, connection);
 
@@ -38,7 +39,7 @@ export default class LoggingIrcHandler extends EventSubscriptionManager<IIncomin
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("LoggingIrcHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
