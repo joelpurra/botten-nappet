@@ -266,20 +266,6 @@ export default class FrontendManagerMain {
 
         this.logger.info("Managed.");
 
-        const shutdown = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Unmanaged.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Unmanaged.");
-
-            return undefined;
-        };
-
         this.frontendManagedMain = new FrontendManagedMain(
             this.config,
             this.logger,
@@ -287,15 +273,9 @@ export default class FrontendManagerMain {
             this.messageQueuePublisher,
         );
 
-        try {
-            this.server.listen(this.config.port);
+        this.server.listen(this.config.port);
 
-            await this.frontendManagedMain.start();
-
-            await shutdown();
-        } catch (error) {
-            await shutdown(error);
-        }
+        await this.frontendManagedMain.start();
 
         function getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
             if (data.message === null) {
@@ -429,8 +409,15 @@ export default class FrontendManagerMain {
             },
         );
 
-        await Bluebird.promisify(this.server!.close, {
-            context: this.server,
-        })();
+        if (this.server) {
+            try {
+                await Bluebird.promisify(this.server.close, {
+                    context: this.server,
+                })();
+            } catch (error) {
+                this.logger
+                    .error(error, this.server, "Swallowed error while closing server.");
+            }
+        }
     }
 }

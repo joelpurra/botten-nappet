@@ -116,20 +116,6 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
 
         this.logger.info("Connected.");
 
-        const disconnect = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Disconnected.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Disconnected.");
-
-            return undefined;
-        };
-
         this.twitchPerUserPollingApi = new TwitchPerUserPollingApi(
             this.config,
             this.logger,
@@ -141,13 +127,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
             this.twitchUserId,
         );
 
-        try {
-            await this.twitchPerUserPollingApi.start();
-
-            await disconnect();
-        } catch (error) {
-            await disconnect(error);
-        }
+        await this.twitchPerUserPollingApi.start();
     }
 
     public async stop(): Promise<void> {

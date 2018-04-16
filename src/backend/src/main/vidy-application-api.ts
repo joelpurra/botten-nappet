@@ -79,20 +79,6 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
 
         this.logger.info("Connected.");
 
-        const disconnect = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Disconnected.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Disconnected.");
-
-            return undefined;
-        };
-
         this.vidyApi = new VidyApi(
             this.config,
             this.logger,
@@ -101,13 +87,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
             vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
         );
 
-        try {
-            await this.vidyApi.start();
-
-            await disconnect();
-        } catch (error) {
-            await disconnect(error);
-        }
+        await this.vidyApi.start();
     }
 
     public async stop(): Promise<void> {

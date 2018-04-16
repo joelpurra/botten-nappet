@@ -152,8 +152,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
         this.pollingSubject = new Subject();
 
-        this.pollingSubject.asObservable()
-            .do((val) => this.logger.trace(val, "pollingSubject"));
+        this.pollingSubject.asObservable();
+        // .do((val) => this.logger.trace(val, "pollingSubject"));
 
         this.sharedpollingObservable = this.pollingSubject.share()
             // .do((val) => this.logger.trace(val, "Before merge", "sharedpollingObservable"))
@@ -379,7 +379,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         };
 
         const responseSubscription = request
-            .do((val) => this.logger.trace(val, this.uri, "response", "request"))
+            // .do((val) => this.logger.trace(val, this.uri, "response", "request"))
             .subscribe(responseObserver);
     }
 }

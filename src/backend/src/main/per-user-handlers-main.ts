@@ -309,34 +309,14 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         this.startables.push(twitchIrcVidyCommandHandler);
         this.startables.push(twitchIrcVidyResultEventHandler);
 
-        const stop = async (incomingError?: Error) => {
-            await this.stop();
+        await Bluebird.map(this.startables, async (startable) => startable.start());
 
-            if (incomingError) {
-                this.logger.error(incomingError, "Stopped.");
+        this.logger.info({
+            twitchUserId: this.twitchUserId,
+            twitchUserName: this.config.twitchUserName,
+        }, "Started listening to events");
 
-                throw incomingError;
-            }
-
-            this.logger.info("Stopped.");
-
-            return undefined;
-        };
-
-        try {
-            await Bluebird.map(this.startables, async (startable) => startable.start());
-
-            this.logger.info({
-                twitchUserId: this.twitchUserId,
-                twitchUserName: this.config.twitchUserName,
-            }, "Started listening to events");
-
-            await this.gracefulShutdownManager.waitForShutdownSignal();
-
-            await stop();
-        } catch (error) {
-            await stop(error);
-        }
+        await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     public async stop(): Promise<void> {
@@ -349,7 +329,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
                 try {
                     await startable.stop();
                 } catch (error) {
-                    await this.logger.error(error, startable, "Swallowed error while stopping.");
+                    this.logger.error(error, startable, "Swallowed error while stopping.");
                 }
             },
         );

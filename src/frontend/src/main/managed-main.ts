@@ -46,35 +46,15 @@ export default class FrontendManagedMain {
     public async start(): Promise<void> {
         this.logger.info("Managed.");
 
-        const shutdown = async (incomingError?: Error) => {
-            await this.stop();
+        await this.gracefulShutdownManager.waitForShutdownSignal();
 
-            if (incomingError) {
-                this.logger.error(incomingError, "Unmanaged.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Unmanaged.");
-
-            return undefined;
-        };
-
-        try {
-            await this.gracefulShutdownManager.waitForShutdownSignal();
-
-            // await applicationXYZ(
-            //     config,
-            //     this.logger,
-            //     this.logger,
-            //     gracefulShutdownManager,
-            //     messageQueuePublisher,
-            // );
-
-            await shutdown();
-        } catch (error) {
-            await shutdown(error);
-        }
+        // await applicationXYZ(
+        //     config,
+        //     this.logger,
+        //     this.logger,
+        //     gracefulShutdownManager,
+        //     messageQueuePublisher,
+        // );
     }
 
     public async stop(): Promise<void> {

@@ -87,20 +87,6 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
 
         this.logger.info("Connected.");
 
-        const disconnect = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Disconnected.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Disconnected.");
-
-            return undefined;
-        };
-
         this.twitchPerUserPubSubApi = new TwitchPerUserPubSubApi(
             this.config,
             this.logger,
@@ -110,13 +96,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
             this.twitchUserId,
         );
 
-        try {
-            await this.twitchPerUserPubSubApi.start();
-
-            await disconnect();
-        } catch (error) {
-            await disconnect(error);
-        }
+        await this.twitchPerUserPubSubApi.start();
     }
 
     public async stop(): Promise<void> {

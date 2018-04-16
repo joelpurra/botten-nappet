@@ -228,20 +228,6 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
 
         this.logger.info("Connected.");
 
-        const disconnect = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Disconnected.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Disconnected.");
-
-            return undefined;
-        };
-
         this.backendTwitchPubSubAuthenticatedApplicationApi = new BackendTwitchPubSubAuthenticatedApplicationApi(
             this.config,
             this.logger,
@@ -285,18 +271,12 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
             twitchUserId,
         );
 
-        try {
-            await Promise.all([
-                this.backendTwitchPubSubAuthenticatedApplicationApi.start(),
-                this.backendTwitchIrcAuthenticatedApplicationApi.start(),
-                this.backendTwitchPollingAuthenticatedApplicationApi.start(),
-                this.perUserHandlersMain.start(),
-            ]);
-
-            await disconnect();
-        } catch (error) {
-            await disconnect(error);
-        }
+        await Promise.all([
+            this.backendTwitchPubSubAuthenticatedApplicationApi.start(),
+            this.backendTwitchIrcAuthenticatedApplicationApi.start(),
+            this.backendTwitchPollingAuthenticatedApplicationApi.start(),
+            this.perUserHandlersMain.start(),
+        ]);
     }
 
     public async stop(): Promise<void> {
