@@ -46,7 +46,7 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("SubscribingIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
     }
 

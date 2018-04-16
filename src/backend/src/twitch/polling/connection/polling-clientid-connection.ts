@@ -58,7 +58,7 @@ export default class PollingClientIdConnection<T> extends PollingConnection<T> {
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
-        this.logger = logger.child("PollingClientIdConnection");
+        this.logger = logger.child(this.constructor.name);
         this.applicationClientId = applicationClientId;
     }
 

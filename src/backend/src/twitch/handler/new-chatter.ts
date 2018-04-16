@@ -46,7 +46,7 @@ export default class NewChatterIrcHandler extends EventSubscriptionManager<IInco
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
-        this.logger = logger.child("NewChatterIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
     }
 

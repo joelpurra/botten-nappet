@@ -41,7 +41,7 @@ export default class RawTopicsSubscriber extends IntersectionTopicsSubscriber<ID
         // TODO: configurable.
         const topicsStringSeparator = ":";
 
-        this.logger = logger.child(`RawTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
     }
 
     protected async parseMessages(topicMessages: IDistributedEvent): Promise<IDistributedEvent> {

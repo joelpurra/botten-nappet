@@ -95,7 +95,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         twitchTokenHelper: TwitchTokenHelper,
     ) {
         this.config = config;
-        this.logger = logger.child("BackendAuthenticatedApplicationMain");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchApplicationTokenManager = twitchApplicationTokenManager;

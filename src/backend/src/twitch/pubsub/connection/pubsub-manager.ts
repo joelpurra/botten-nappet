@@ -37,7 +37,7 @@ export default abstract class PubSubManager extends ConnectionManager<IPubSubRes
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("PubSubManager");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected abstract async dataHandler(data: IPubSubResponse): Promise<void>;

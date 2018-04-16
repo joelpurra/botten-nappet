@@ -56,7 +56,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert(uri.startsWith("wss://"));
         assert(typeof protocol === "undefined" || (typeof protocol === "string" && protocol.length > 0));
 
-        this.logger = logger.child("WebSocketConnection");
+        this.logger = logger.child(this.constructor.name);
         this.uri = uri;
         this.protocol = protocol;
 

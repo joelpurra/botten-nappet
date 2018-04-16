@@ -47,7 +47,7 @@ export default class DatabaseConnection {
         assert(uri.length > 0);
         assert(uri.startsWith("nedb://"));
 
-        this.logger = logger.child("DatabaseConnection");
+        this.logger = logger.child(this.constructor.name);
         this.uri = uri;
 
         this.database = null;

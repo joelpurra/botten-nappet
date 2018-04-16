@@ -45,7 +45,7 @@ export default class OutgoingIrcCommandEventHandler extends EventSubscriptionMan
         assert.equal(typeof connection, "object");
         assert.equal(typeof ircConnection, "object");
 
-        this.logger = logger.child("OutgoingIrcCommandEventHandler");
+        this.logger = logger.child(this.constructor.name);
         this.ircConnection = ircConnection;
     }
 

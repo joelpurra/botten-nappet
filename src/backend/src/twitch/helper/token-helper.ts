@@ -54,7 +54,7 @@ export default class TokenHelper {
         assert(oauthTokenVerificationUri.startsWith("https://"));
         assert.nonEmptyString(appClientId);
 
-        this.logger = logger.child("TokenHelper");
+        this.logger = logger.child(this.constructor.name);
         this.requestHelper = requestHelper;
         this.oauthTokenRevocationUri = oauthTokenRevocationUri;
         this.oauthTokenVerificationUri = oauthTokenVerificationUri;

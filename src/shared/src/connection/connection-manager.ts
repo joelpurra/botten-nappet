@@ -43,7 +43,7 @@ export default abstract class ConnectionManager<T> implements IStartableStoppabl
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("ConnectionManager");
+        this.logger = logger.child(this.constructor.name);
         this.connection = connection;
         this.dataHandlerSubscription = null;
     }

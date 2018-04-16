@@ -43,7 +43,7 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
 
         this.publisher = publisher;
         this.topic = topic;
-        this.logger = logger.child(`TopicPublisher (${this.topic})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topic})`);
     }
 
     public async connect(): Promise<void> {

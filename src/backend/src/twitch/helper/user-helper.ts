@@ -52,7 +52,7 @@ export default class UserHelper {
         assert(usersDataUri.startsWith("https://"));
         assert.equal(typeof applicationAccessTokenProvider, "function");
 
-        this.logger = logger.child("UserHelper");
+        this.logger = logger.child(this.constructor.name);
         this.requestHelper = requestHelper;
         this.usersDataUri = usersDataUri;
         this.applicationAccessTokenProvider = applicationAccessTokenProvider;

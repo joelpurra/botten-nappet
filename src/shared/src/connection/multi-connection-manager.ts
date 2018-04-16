@@ -43,7 +43,7 @@ export default abstract class MultiConnectionManager<T> implements IStartableSto
         assert.equal(typeof logger, "object");
         assert.nonEmptyArray(connections);
 
-        this.logger = logger.child("ConnectionManager");
+        this.logger = logger.child(this.constructor.name);
         this.connections = connections;
         this.dataHandlerSubscription = null;
     }

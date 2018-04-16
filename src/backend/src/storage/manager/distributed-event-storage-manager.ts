@@ -35,7 +35,7 @@ export default class DistributedEventStorageManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof DistributedEventRepository, "function");
 
-        this.logger = logger.child("DistributedEventStorageManager");
+        this.logger = logger.child(this.constructor.name);
         this.DistributedEventRepository = DistributedEventRepository;
     }
 

@@ -41,7 +41,7 @@ export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopic
         // TODO: configurable.
         const topicsStringSeparator = ":";
 
-        this.logger = logger.child(`SingleItemJsonTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
     }
 
     protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T> {

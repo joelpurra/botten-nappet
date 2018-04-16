@@ -56,7 +56,7 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         assert(vidyVideoLinkBaseUrl.startsWith("https://"));
         assert(vidyVideoLinkBaseUrl.endsWith("/"));
 
-        this.logger = logger.child("TextResponseCommandIrcHandler");
+        this.logger = logger.child(this.constructor.name);
         this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
         this.channelName = channelName;
         this.vidyVideoLinkBaseUrl = vidyVideoLinkBaseUrl;

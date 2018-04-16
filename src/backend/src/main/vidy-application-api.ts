@@ -53,7 +53,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         messageQueuePublisher: MessageQueuePublisher,
     ) {
         this.config = config;
-        this.logger = logger.child("BackendVidyApplicationApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
 

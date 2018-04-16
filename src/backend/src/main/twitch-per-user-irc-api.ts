@@ -67,7 +67,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("TwitchPerUserIrcApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchIrcConnection = twitchIrcConnection;

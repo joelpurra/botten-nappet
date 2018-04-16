@@ -54,7 +54,7 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingSubscriptionCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingSubscriptionEventEmitter = incomingSubscriptionEventEmitter;
         this.username = username;
         this.userid = userid;

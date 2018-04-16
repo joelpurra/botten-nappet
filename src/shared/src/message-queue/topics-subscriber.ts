@@ -58,7 +58,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
         this.address = address;
         this.topics = topics;
-        this.logger = logger.child(`TopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
 
         this.zmqSubject = null;
         this.sharedzmqObservable = null;

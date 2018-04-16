@@ -57,7 +57,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
     ) {
         // TODO: validate arguments.
         this.config = config;
-        this.logger = logger.child("BackendATwitchPubSubuthenticatedApplicationApi");
+        this.logger = logger.child(this.constructor.name);
         this.gracefulShutdownManager = gracefulShutdownManager;
         this.messageQueuePublisher = messageQueuePublisher;
         this.twitchUserAccessTokenProvider = twitchUserAccessTokenProvider;

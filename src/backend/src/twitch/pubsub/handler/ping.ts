@@ -39,7 +39,7 @@ export default class PingPubSubHandler extends PubSubManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("PingPubSubHandler");
+        this.logger = logger.child(this.constructor.name);
         this.pingIntervalId = null;
         this.pubSubConnection = this.connection as IPubSubConnection;
 

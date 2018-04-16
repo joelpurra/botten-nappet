@@ -42,7 +42,7 @@ export default class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscribe
         // TODO: configurable.
         const topicsStringSeparator = ":";
 
-        this.logger = logger.child(`JsonTopicsSubscriber (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
     }
 
     protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<ITopicMessages<T>> {

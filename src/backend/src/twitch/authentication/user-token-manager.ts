@@ -40,7 +40,7 @@ export default class UserTokenManager {
         assert.equal(typeof tokenHelper, "object");
         assert.equal(typeof userTokenHelper, "object");
 
-        this.logger = logger.child("UserTokenManager");
+        this.logger = logger.child(this.constructor.name);
         this.tokenHelper = tokenHelper;
         this.userTokenHelper = userTokenHelper;
     }

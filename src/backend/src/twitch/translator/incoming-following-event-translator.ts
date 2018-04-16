@@ -62,7 +62,7 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingFollowingCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingFollowingEventEmitter = incomingFollowingEventEmitter;
         this.username = username;
         this.userid = userid;

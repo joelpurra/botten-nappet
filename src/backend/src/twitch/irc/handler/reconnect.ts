@@ -37,7 +37,7 @@ export default class ReconnectIrcHandler extends IrcManager {
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
 
-        this.logger = logger.child("ReconnectIrcHandler");
+        this.logger = logger.child(this.constructor.name);
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {

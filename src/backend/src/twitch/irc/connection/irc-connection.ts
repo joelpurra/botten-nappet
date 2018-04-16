@@ -66,7 +66,7 @@ export default class IrcConnection
         assert.nonEmptyString(username);
         assert.equal(typeof userAccessTokenProvider, "function");
 
-        this.logger = logger.child("IrcConnection");
+        this.logger = logger.child(this.constructor.name);
 
         this.channelName = channel;
         this.username = username;

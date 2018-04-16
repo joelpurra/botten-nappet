@@ -46,7 +46,7 @@ export default class IncomingPubSubEventTranslator extends PubSubManager {
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingPubSubEventEmitter, "object");
 
-        this.logger = logger.child("IncomingPubSubEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingPubSubEventEmitter = incomingPubSubEventEmitter;
     }
 

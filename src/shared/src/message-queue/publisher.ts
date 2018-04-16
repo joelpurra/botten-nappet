@@ -43,7 +43,7 @@ export default class Publisher implements IConnectable {
         assert(address.length > 0);
         assert(address.startsWith("tcp://"));
 
-        this.logger = logger.child("Publisher");
+        this.logger = logger.child(this.constructor.name);
         this.address = address;
 
         this.socket = null;

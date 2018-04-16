@@ -44,7 +44,7 @@ export default class AuthenticatedRequest {
         assert.equal(typeof logger, "object");
         assert.equal(typeof config, "object");
 
-        this.logger = logger.child("AuthenticatedRequest");
+        this.logger = logger.child(this.constructor.name);
         this.config = config;
     }
 

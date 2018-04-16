@@ -58,7 +58,7 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         assert.integer(userid);
         assert.positive(userid);
 
-        this.logger = logger.child("IncomingStreamingCommandEventTranslator");
+        this.logger = logger.child(this.constructor.name);
         this.incomingStreamingEventEmitter = incomingStreamingEventEmitter;
         this.username = username;
         this.userid = userid;

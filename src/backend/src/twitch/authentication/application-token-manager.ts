@@ -59,7 +59,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         assert.greater(oauthTokenRevocationUri.length, 0);
         assert(oauthTokenRevocationUri.startsWith("https://"));
 
-        this.logger = logger.child("ApplicationTokenManager");
+        this.logger = logger.child(this.constructor.name);
         this.clientId = clientId;
         this.oauthTokenRevocationUri = oauthTokenRevocationUri;
 
