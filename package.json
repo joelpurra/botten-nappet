@@ -1,6 +1,6 @@
 {
   "name": "botten-nappet",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "A Twitch bot and streaming tool",
   "main": "./dist/index.js",
   "scripts": {
