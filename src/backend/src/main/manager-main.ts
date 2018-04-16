@@ -108,20 +108,6 @@ export default class BackendManagerMain implements IStartableStoppable {
 
         this.logger.info("Managed.");
 
-        const shutdown = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Unmanaged.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Unmanaged.");
-
-            return undefined;
-        };
-
         this.backendManagedMain = new BackendManagedMain(
             this.config,
             this.logger,
@@ -134,13 +120,7 @@ export default class BackendManagerMain implements IStartableStoppable {
             this.twitchApplicationTokenManager,
         );
 
-        try {
-            await this.backendManagedMain.start();
-
-            await shutdown();
-        } catch (error) {
-            await shutdown(error);
-        }
+        await this.backendManagedMain.start();
     }
 
     public async stop(): Promise<void> {

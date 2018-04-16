@@ -78,7 +78,7 @@ export default class CheeringWithCheermotesHandler
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        this.logger.trace(data, "dataHandler");
+        // this.logger.trace(data, "dataHandler");
 
         if (this.isIIncomingCheermotesEvent(data)) {
             this.currentCheermotes = data;

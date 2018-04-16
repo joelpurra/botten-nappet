@@ -86,20 +86,6 @@ export default class BackendManagedMain implements IStartableStoppable {
 
         this.logger.info("Application authenticated.");
 
-        const disconnectAuthentication = async (incomingError?: Error) => {
-            await this.stop();
-
-            if (incomingError) {
-                this.logger.error(incomingError, "Unauthenticated.");
-
-                throw incomingError;
-            }
-
-            this.logger.info("Unauthenticated.");
-
-            return undefined;
-        };
-
         this.backendVidyApplicationApi = new BackendVidyApplicationApi(
             this.config,
             this.logger,
@@ -118,17 +104,11 @@ export default class BackendManagedMain implements IStartableStoppable {
             this.twitchTokenHelper,
         );
 
-        try {
-            await Promise.all([
-                this.backendVidyApplicationApi.start(),
+        await Promise.all([
+            this.backendVidyApplicationApi.start(),
 
-                this.backendAuthenticatedApplicationMain.start(),
-            ]);
-
-            await disconnectAuthentication();
-        } catch (error) {
-            await disconnectAuthentication(error);
-        }
+            this.backendAuthenticatedApplicationMain.start(),
+        ]);
     }
 
     public async stop(): Promise<void> {

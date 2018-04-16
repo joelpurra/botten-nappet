@@ -87,33 +87,13 @@ export default class BackendVidyApi implements IStartableStoppable {
 
         this.startables.push(vidyOutgoingSearchCommandHandler);
 
-        const stop = async (incomingError?: Error) => {
-            await this.stop();
+        await Bluebird.map(this.startables, async (startable) => startable.start());
 
-            if (incomingError) {
-                this.logger.error(incomingError, "Stopped.");
+        this.logger.info({
+            vidyKeyId: this.config.vidyKeyId,
+        }, "Started listening to events");
 
-                throw incomingError;
-            }
-
-            this.logger.info("Stopped.");
-
-            return undefined;
-        };
-
-        try {
-            await Bluebird.map(this.startables, async (startable) => startable.start());
-
-            this.logger.info({
-                vidyKeyId: this.config.vidyKeyId,
-            }, "Started listening to events");
-
-            await this.gracefulShutdownManager.waitForShutdownSignal();
-
-            await stop();
-        } catch (error) {
-            await stop(error);
-        }
+        await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     public async stop(): Promise<void> {
