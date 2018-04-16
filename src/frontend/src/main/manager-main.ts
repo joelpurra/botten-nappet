@@ -62,6 +62,7 @@ interface ICustomWebSocketEventData {
 }
 
 export default class FrontendManagerMain {
+    private io: SocketIo.Server | null;
     private server: http.Server | null;
     private connectables: IConnectable[];
     private frontendManagedMain: FrontendManagedMain | null;
@@ -84,6 +85,7 @@ export default class FrontendManagerMain {
 
         this.frontendManagedMain = null;
         this.server = null;
+        this.io = null;
         this.connectables = [];
     }
 
@@ -106,7 +108,7 @@ export default class FrontendManagerMain {
         app.use(koaStatic(staticPublicRootDirectoryPath));
 
         this.server = http.createServer(app.callback());
-        const io = SocketIo(this.server);
+        this.io = SocketIo(this.server);
 
         // TODO: configurable.
         const topicsStringSeparator = ":";
@@ -154,11 +156,18 @@ export default class FrontendManagerMain {
 
         twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable
             .forEach((data) => {
+                assert.not.null(this.io);
+
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
                 let customWebSocketEventData: ICustomWebSocketEventData | null = null;
 
                 switch (data.command) {
                     case "PRIVMSG":
-                        customWebSocketEventData = getIrcPrivMsgWebsocketEventData(data);
+                        customWebSocketEventData = this.getIrcPrivMsgWebsocketEventData(data);
                         break;
                 }
 
@@ -184,23 +193,38 @@ export default class FrontendManagerMain {
                     event: customWebSocketEventData.eventName,
                 };
 
-                io.send(msg);
+                this.io.send(msg);
             });
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable.forEach((data) => {
-            const msg = {
-                data: {
-                    timestamp: data.timestamp,
-                    username: data.triggerer.name,
-                },
-                event: "following",
-            };
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
 
-            io.send(msg);
-        });
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent
-            .dataObservable.forEach((data) => {
+                const msg = {
+                    data: {
+                        timestamp: data.timestamp,
+                        username: data.triggerer.name,
+                    },
+                    event: "following",
+                };
+
+                this.io.send(msg);
+            });
+
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
+
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
                 const msg = {
                     data: {
                         // args: commandArguments,
@@ -214,40 +238,56 @@ export default class FrontendManagerMain {
                     event: "cheering-with-cheermotes",
                 };
 
-                io.send(msg);
+                this.io.send(msg);
             });
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable.forEach((data) => {
-            const msg = {
-                data: {
-                    timestamp: data.timestamp,
-                    username: data.triggerer.name,
-                },
-                event: "subscription",
-            };
+        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
 
-            io.send(msg);
-        });
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
 
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable.forEach((data) => {
-            const rnd = Math.floor(Math.random() * data.clips.results.length);
-            const randomResult = data.clips.results[rnd];
-            const randomVideoUrl = randomResult.files.landscapeVideo240.url;
+                const msg = {
+                    data: {
+                        timestamp: data.timestamp,
+                        username: data.triggerer.name,
+                    },
+                    event: "subscription",
+                };
 
-            const msg = {
-                data: {
-                    // TODO: don't assume too much.
-                    videoUrl: randomVideoUrl,
-                    // timestamp: data.timestamp,
-                    // username: data.triggerer.name,
-                },
-                event: "vidy",
-            };
+                this.io.send(msg);
+            });
 
-            io.send(msg);
-        });
+        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable
+            .forEach((data) => {
+                assert.not.null(this.io);
 
-        io.on("connection", (clientSocket) => {
+                // TODO: beter null handling.
+                if (!this.io) {
+                    throw new Error("this.io was not set.");
+                }
+
+                const rnd = Math.floor(Math.random() * data.clips.results.length);
+                const randomResult = data.clips.results[rnd];
+                const randomVideoUrl = randomResult.files.landscapeVideo240.url;
+
+                const msg = {
+                    data: {
+                        // TODO: don't assume too much.
+                        videoUrl: randomVideoUrl,
+                        // timestamp: data.timestamp,
+                        // username: data.triggerer.name,
+                    },
+                    event: "vidy",
+                };
+
+                this.io.send(msg);
+            });
+
+        this.io.on("connection", (clientSocket) => {
             // this.logger.trace(clientSocket, "incoming connection");
             this.logger.trace(clientSocket.rooms, "incoming connection");
 
@@ -273,120 +313,11 @@ export default class FrontendManagerMain {
             this.messageQueuePublisher,
         );
 
-        this.server.listen(this.config.port);
+        await Bluebird.promisify<void, number>(this.server.listen, {
+            context: this.server,
+        })(this.config.port);
 
         await this.frontendManagedMain.start();
-
-        function getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
-            if (data.message === null) {
-                throw new Error("data.message");
-            }
-
-            let handled = false;
-            let eventName: string | null = null;
-            let customData: object | null = null;
-
-            const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
-
-            const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
-            const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
-
-            const commandPrefix = "!";
-            const messageParts = data.message.trim().split(/\s+/);
-            const isCommandMessage = messageParts[0].startsWith(commandPrefix);
-
-            if (isCommandMessage) {
-                const messageCommand = messageParts[0].slice(commandPrefix.length);
-                const commandArguments = messageParts.slice(1);
-
-                eventName = messageCommand;
-
-                // TODO: remove commands after testing.
-                switch (messageCommand) {
-                    case "animate":
-                        let color = commandArguments[0];
-                        if (!isValidColor(color)) {
-                            color = "rgba(255,255,255,0.5)";
-                        }
-                        customData = {
-                            color,
-                        };
-                        handled = true;
-                        break;
-
-                    case "cowbell":
-                    case "following":
-                        customData = {};
-                        handled = true;
-                        break;
-
-                    case "say":
-                        customData = {
-                            message: commandArguments.join(" "),
-                        };
-                        handled = true;
-                        break;
-
-                    case "subscription":
-                        customData = {
-                            // TODO: use random library.
-                            months: Math.floor(Math.random() * 3),
-                        };
-                        handled = true;
-                        break;
-
-                    case "cheering-with-cheermotes":
-                        customData = {
-                            // TODO: use random library.
-                            bits: Math.floor(Math.random() * 500),
-                            cheermotes: [
-                                {
-                                    cheerToken: {
-                                        amount: 1,
-                                        prefix: "cheer",
-                                    },
-                                    url: exampleCheermote1,
-                                },
-                                {
-                                    cheerToken: {
-                                        amount: 100,
-                                        prefix: "cheer",
-                                    },
-                                    url: exampleCheermote100,
-                                },
-                            ],
-                            message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
-                            // TODO: use random library.
-                            total: Math.floor(Math.random() * 50000),
-                        };
-                        handled = true;
-                        break;
-
-                    default:
-                        handled = false;
-                }
-            } else {
-                eventName = "chat-message";
-
-                customData = {
-                    isSubscriber,
-                    message: data.message,
-                };
-
-                handled = true;
-            }
-
-            if (handled === false) {
-                return null;
-            }
-
-            const result = {
-                customData: customData!,
-                eventName: eventName!,
-            };
-
-            return result;
-        }
     }
 
     public async stop(): Promise<void> {
@@ -409,7 +340,20 @@ export default class FrontendManagerMain {
             },
         );
 
-        if (this.server) {
+        if (this.io) {
+            try {
+                await Bluebird.promisify(this.io.close, {
+                    context: this.io,
+                })();
+            } catch (error) {
+                this.logger
+                    .error(error, this.io, "Swallowed error while closing io.");
+            }
+
+            this.io = null;
+        }
+
+        if (this.server && this.server.listening) {
             try {
                 await Bluebird.promisify(this.server.close, {
                     context: this.server,
@@ -419,5 +363,118 @@ export default class FrontendManagerMain {
                     .error(error, this.server, "Swallowed error while closing server.");
             }
         }
+
+        this.server = null;
+    }
+
+    private getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
+        if (data.message === null) {
+            throw new Error("data.message");
+        }
+
+        let handled = false;
+        let eventName: string | null = null;
+        let customData: object | null = null;
+
+        const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
+
+        const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
+        const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
+
+        const commandPrefix = "!";
+        const messageParts = data.message.trim().split(/\s+/);
+        const isCommandMessage = messageParts[0].startsWith(commandPrefix);
+
+        if (isCommandMessage) {
+            const messageCommand = messageParts[0].slice(commandPrefix.length);
+            const commandArguments = messageParts.slice(1);
+
+            eventName = messageCommand;
+
+            // TODO: remove commands after testing.
+            switch (messageCommand) {
+                case "animate":
+                    let color = commandArguments[0];
+                    if (!isValidColor(color)) {
+                        color = "rgba(255,255,255,0.5)";
+                    }
+                    customData = {
+                        color,
+                    };
+                    handled = true;
+                    break;
+
+                case "cowbell":
+                case "following":
+                    customData = {};
+                    handled = true;
+                    break;
+
+                case "say":
+                    customData = {
+                        message: commandArguments.join(" "),
+                    };
+                    handled = true;
+                    break;
+
+                case "subscription":
+                    customData = {
+                        // TODO: use random library.
+                        months: Math.floor(Math.random() * 3),
+                    };
+                    handled = true;
+                    break;
+
+                case "cheering-with-cheermotes":
+                    customData = {
+                        // TODO: use random library.
+                        bits: Math.floor(Math.random() * 500),
+                        cheermotes: [
+                            {
+                                cheerToken: {
+                                    amount: 1,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote1,
+                            },
+                            {
+                                cheerToken: {
+                                    amount: 100,
+                                    prefix: "cheer",
+                                },
+                                url: exampleCheermote100,
+                            },
+                        ],
+                        message: "cheer100 cheer1 cheer1 My custom cheering message 😀 cheer100",
+                        // TODO: use random library.
+                        total: Math.floor(Math.random() * 50000),
+                    };
+                    handled = true;
+                    break;
+
+                default:
+                    handled = false;
+            }
+        } else {
+            eventName = "chat-message";
+
+            customData = {
+                isSubscriber,
+                message: data.message,
+            };
+
+            handled = true;
+        }
+
+        if (handled === false) {
+            return null;
+        }
+
+        const result = {
+            customData: customData!,
+            eventName: eventName!,
+        };
+
+        return result;
     }
 }
