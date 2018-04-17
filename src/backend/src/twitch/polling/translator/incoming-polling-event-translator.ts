@@ -30,16 +30,12 @@ import PollingManager from "../connection/polling-manager";
 import IIncomingPollingEvent from "../interface/iincoming-polling-event";
 
 export default class IncomingPollingEventTranslator extends PollingManager<any> {
-    public userid: number;
-    public username: string;
-    private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<any>,
-        incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
-        username: string,
-        userid: number,
+        private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
+        private username: string,
+        private userid: number,
     ) {
         super(logger, connection);
 
@@ -52,9 +48,6 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         assert.positive(userid);
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingPollingEventEmitter = incomingPollingEventEmitter;
-        this.username = username;
-        this.userid = userid;
     }
 
     protected async dataHandler(data: any): Promise<void> {

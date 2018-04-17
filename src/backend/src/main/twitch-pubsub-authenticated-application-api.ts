@@ -40,28 +40,18 @@ import TwitchPerUserPubSubApi from "./twitch-per-user-pubsub-api";
 export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {
     private twitchPerUserPubSubApi: TwitchPerUserPubSubApi | null;
     private connectables: IConnectable[];
-    private twitchUserId: number;
-    private twitchUserAccessTokenProvider: UserAccessTokenProviderType;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchUserAccessTokenProvider: UserAccessTokenProviderType,
-        twitchUserId: number,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchUserAccessTokenProvider: UserAccessTokenProviderType,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchUserAccessTokenProvider = twitchUserAccessTokenProvider;
-        this.twitchUserId = twitchUserId;
 
         this.twitchPerUserPubSubApi = null;
         this.connectables = [];

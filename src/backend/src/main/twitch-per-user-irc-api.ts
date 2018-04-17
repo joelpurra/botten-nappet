@@ -46,34 +46,20 @@ import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/
 
 export default class TwitchPerUserIrcApi implements IStartableStoppable {
     private startables: IStartableStoppable[];
-    private twitchUserId: number;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>;
-    private twitchIrcConnection: TwitchIrcConnection;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchIrcConnection: TwitchIrcConnection,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchIrcConnection: TwitchIrcConnection,
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
-        twitchUserId: number,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchIrcConnection = twitchIrcConnection;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand;
-        this.twitchUserId = twitchUserId;
 
         this.startables = [];
     }

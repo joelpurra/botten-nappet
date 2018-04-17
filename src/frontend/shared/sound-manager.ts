@@ -23,17 +23,15 @@ import ConsoleLog from "./console-log";
 type SoundGroup = Array<{ id: string; name: string; }>;
 
 export default class SoundManager {
-    public logger: ConsoleLog;
-    private soundRootPath: string;
     private groups: {
         [key: string]: SoundGroup;
     };
     private cowbellRootPath: string;
 
-    constructor(logger: ConsoleLog, soundRootPath: string) {
-        this.logger = logger;
-        this.soundRootPath = soundRootPath;
-
+    constructor(
+        private logger: ConsoleLog,
+        private soundRootPath: string,
+    ) {
         // TODO: path.join();
         this.cowbellRootPath = `${this.soundRootPath}/cowbell`;
 

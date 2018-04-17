@@ -34,12 +34,10 @@ import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface
 import IPubSubResponse from "@botten-nappet/backend-twitch/pubsub/interface/ipubsub-response";
 
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
-    private incomingCheeringEventEmitter: IEventEmitter<IIncomingCheeringEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingPubSubEvent>,
-        incomingCheeringEventEmitter: IEventEmitter<IIncomingCheeringEvent>,
+        private incomingCheeringEventEmitter: IEventEmitter<IIncomingCheeringEvent>,
     ) {
         super(logger, connection);
 
@@ -49,7 +47,6 @@ export default class IncomingCheeringCommandEventTranslator extends EventSubscri
         assert.equal(typeof incomingCheeringEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingCheeringEventEmitter = incomingCheeringEventEmitter;
     }
 
     protected async dataHandler(data: IPubSubResponse): Promise<void> {

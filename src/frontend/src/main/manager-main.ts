@@ -66,22 +66,16 @@ export default class FrontendManagerMain {
     private server: http.Server | null;
     private connectables: IConnectable[];
     private frontendManagedMain: FrontendManagedMain | null;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
 
         this.frontendManagedMain = null;
         this.server = null;

@@ -33,12 +33,10 @@ import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/event/iincom
 import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
 export default class CheeringIrcReplyHandler extends EventSubscriptionManager<IIncomingCheeringEvent> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingCheeringEvent>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
 
@@ -46,8 +44,6 @@ export default class CheeringIrcReplyHandler extends EventSubscriptionManager<II
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
-
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
         this.logger = logger.child(this.constructor.name);
     }

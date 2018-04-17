@@ -33,14 +33,11 @@ import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/event/iincomi
 import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
 export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIncomingWhisperEvent> {
-    public channelName: string;
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingWhisperEvent>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        channelName: string,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private channelName: string,
     ) {
         super(logger, connection);
 
@@ -52,8 +49,6 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
         assert(channelName.startsWith("#"));
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
-        this.channelName = channelName;
     }
 
     protected async dataHandler(data: IIncomingWhisperEvent): Promise<void> {

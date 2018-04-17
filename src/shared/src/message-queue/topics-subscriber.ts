@@ -40,12 +40,15 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     protected logger: PinoLogger;
     protected topics: string[];
     private socket: any | null;
-    private address: string;
     private zmqSubject: Subject<IZeroMqTopicMessages> | null;
     private sharedzmqObservable: Rx.Observable<T> | null;
     private zmqSubcription: Subscription | null;
 
-    constructor(logger: PinoLogger, address: string, ...topics: string[]) {
+    constructor(
+        logger: PinoLogger,
+        private address: string,
+        ...topics: string[],
+    ) {
         // NOTE: variable arguments length.
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
@@ -56,7 +59,6 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         // TODO: configurable.
         const topicsStringSeparator = ":";
 
-        this.address = address;
         this.topics = topics;
         this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
 

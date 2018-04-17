@@ -40,26 +40,18 @@ import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 
 export default class UserTokenHelper {
-    private appClientSecret: string;
-    private appClientId: string;
-    private oauthTokenUri: string;
-    private appOAuthRedirectUrl: string;
-    private oauthAuthorizationUri: string;
-    private requestHelper: RequestHelper;
-    private userStorageHelper: UserStorageManager;
-    private csrfHelper: CSRFHelper;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        csrfHelper: CSRFHelper,
-        userStorageManager: UserStorageManager,
-        requestHelper: RequestHelper,
-        oauthAuthorizationUri: string,
-        appOAuthRedirectUrl: string,
-        oauthTokenUri: string,
-        appClientId: string,
-        appClientSecret: string,
+        private csrfHelper: CSRFHelper,
+        private userStorageManager: UserStorageManager,
+        private requestHelper: RequestHelper,
+        private oauthAuthorizationUri: string,
+        private appOAuthRedirectUrl: string,
+        private oauthTokenUri: string,
+        private appClientId: string,
+        private appClientSecret: string,
     ) {
         assert.hasLength(arguments, 9);
         assert.equal(typeof logger, "object");
@@ -76,14 +68,6 @@ export default class UserTokenHelper {
         assert.nonEmptyString(appClientSecret);
 
         this.logger = logger.child(this.constructor.name);
-        this.csrfHelper = csrfHelper;
-        this.userStorageHelper = userStorageManager;
-        this.requestHelper = requestHelper;
-        this.oauthAuthorizationUri = oauthAuthorizationUri;
-        this.appOAuthRedirectUrl = appOAuthRedirectUrl;
-        this.oauthTokenUri = oauthTokenUri;
-        this.appClientId = appClientId;
-        this.appClientSecret = appClientSecret;
     }
 
     public async getUserTokenFromUserTerminalPrompt(): Promise<IRawToken> {
@@ -128,7 +112,7 @@ export default class UserTokenHelper {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(username);
 
-        const user = await this.userStorageHelper.getByUsername(username);
+        const user = await this.userStorageManager.getByUsername(username);
 
         const isValidUserToken = (
             user
@@ -157,7 +141,7 @@ export default class UserTokenHelper {
         assert.equal(typeof rawToken, "object");
         assert.equal(typeof rawToken.access_token, "string");
 
-        const userAfterStoring = await this.userStorageHelper.storeToken(username, rawToken);
+        const userAfterStoring = await this.userStorageManager.storeToken(username, rawToken);
 
         const augmentedToken: IAugmentedToken = userAfterStoring.twitchToken;
 
@@ -170,7 +154,7 @@ export default class UserTokenHelper {
         assert.hasLength(arguments, 1);
         assert.nonEmptyString(username);
 
-        const userAfterStoring = await this.userStorageHelper.storeToken(username, null);
+        const userAfterStoring = await this.userStorageManager.storeToken(username, null);
 
         this.logger.trace(userAfterStoring, "forgetUserToken");
 

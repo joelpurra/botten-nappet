@@ -22,12 +22,12 @@ import anime from "animejs";
 import ConsoleLog from "./console-log";
 
 export default class NotificationManager {
-    private logger: ConsoleLog;
     private containerElement: HTMLDivElement;
 
-    constructor(logger: ConsoleLog, elementId: string) {
-        this.logger = logger;
-
+    constructor(
+        private logger: ConsoleLog,
+        private elementId: string,
+    ) {
         const containerElement = document.getElementById(elementId);
 
         if (containerElement === null) {

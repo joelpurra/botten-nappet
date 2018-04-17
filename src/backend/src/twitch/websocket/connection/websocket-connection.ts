@@ -45,10 +45,12 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
     private sharedWebSocketObservable: Rx.Observable<any> | null;
     private websocketSubcription: Rx.Subscription | null;
     private websocketSubject: WebSocketSubject<any> | null;
-    private protocol?: string;
-    private uri: string;
 
-    constructor(logger: PinoLogger, uri: string, protocol?: string) {
+    constructor(
+        logger: PinoLogger,
+        private uri: string,
+        private protocol?: string,
+    ) {
         assert(arguments.length === 2 || arguments.length === 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof uri, "string");
@@ -57,8 +59,6 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         assert(typeof protocol === "undefined" || (typeof protocol === "string" && protocol.length > 0));
 
         this.logger = logger.child(this.constructor.name);
-        this.uri = uri;
-        this.protocol = protocol;
 
         this.websocketSubject = null;
         this.websocketSubcription = null;

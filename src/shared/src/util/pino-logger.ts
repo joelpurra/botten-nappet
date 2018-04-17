@@ -27,13 +27,11 @@ import {
 } from "check-types";
 
 export default class PinoLogger {
-    private parentPinoLogger: Logger;
-
-    constructor(parentPinoLogger: Logger) {
+    constructor(
+        private parentPinoLogger: Logger,
+    ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof parentPinoLogger, "object");
-
-        this.parentPinoLogger = parentPinoLogger;
     }
 
     public fatal(...args: any[]): void {

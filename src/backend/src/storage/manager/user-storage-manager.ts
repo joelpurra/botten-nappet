@@ -32,16 +32,17 @@ import IUserCamo from "../iuser-camo";
 import UserRepositoryClass from "../repository/user-repository";
 
 export default class UserStorageManager {
-    private UserRepository: typeof UserRepositoryClass;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, UserRepository: typeof UserRepositoryClass) {
+    constructor(
+        logger: PinoLogger,
+        private UserRepository: typeof UserRepositoryClass,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof UserRepository, "function");
 
         this.logger = logger.child(this.constructor.name);
-        this.UserRepository = UserRepository;
     }
 
     public async getByUsername(username: string): Promise<IUser> {

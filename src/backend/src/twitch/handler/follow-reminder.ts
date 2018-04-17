@@ -32,17 +32,15 @@ import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iin
 import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
 export default class FollowReminderIrcHandler extends ConnectionManager<IIncomingIrcCommand> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private reminderMessages: string[];
     private reminderIntervalMilliseconds: number;
     private reminderIntervalId: (number | NodeJS.Timer | null);
-    private channelName: string;
 
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        channelName: string,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private channelName: string,
     ) {
         super(logger, connection);
 
@@ -54,8 +52,6 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         assert(channelName.startsWith("#"));
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
-        this.channelName = channelName;
 
         this.reminderIntervalId = null;
 

@@ -34,16 +34,12 @@ import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/ioutgo
 import AuthenticatedRequest from "../request/authenticated-request";
 
 export default class OutgoingSearchCommandHandler extends EventSubscriptionManager<IOutgoingSearchCommand> {
-    private vidyRootUrl: string;
-    private authenticatedRequest: AuthenticatedRequest;
-    private incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IOutgoingSearchCommand>,
-        incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>,
-        authenticatedRequest: AuthenticatedRequest,
-        vidyRootUrl: string,
+        private incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>,
+        private authenticatedRequest: AuthenticatedRequest,
+        private vidyRootUrl: string,
     ) {
         super(logger, connection);
 
@@ -57,9 +53,6 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
         assert(vidyRootUrl.endsWith("/"));
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingSearchResultEventEmitter = incomingSearchResultEventEmitter;
-        this.authenticatedRequest = authenticatedRequest;
-        this.vidyRootUrl = vidyRootUrl;
     }
 
     protected async dataHandler(data: IOutgoingSearchCommand): Promise<void> {

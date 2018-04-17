@@ -32,15 +32,13 @@ import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iin
 import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
 export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private greetings: RegExp[];
-    private username: string;
 
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        username: string,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private username: string,
     ) {
         super(logger, connection);
 
@@ -52,8 +50,6 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         assert.greater(username.length, 0);
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
-        this.username = username;
 
         this.greetings = [
             /\bh(e+|a+)llo\b/,

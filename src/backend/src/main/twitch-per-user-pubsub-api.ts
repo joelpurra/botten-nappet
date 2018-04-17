@@ -41,28 +41,18 @@ import PubSubReconnectHandler from "@botten-nappet/backend-twitch/pubsub/handler
 
 export default class TwitchPerUserPubSubApi {
     private startables: IStartableStoppable[];
-    private twitchUserId: number;
-    private twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
-        twitchUserId: number,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchAllPubSubTopicsForTwitchUserIdConnection = twitchAllPubSubTopicsForTwitchUserIdConnection;
-        this.twitchUserId = twitchUserId;
 
         this.startables = [];
     }

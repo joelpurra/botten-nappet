@@ -25,7 +25,6 @@ import io from "socket.io-client";
 import ConsoleLog from "./console-log";
 
 export default class BotSocket {
-    public url: string;
     private socket: SocketIOClient.Socket | null;
     private sharedSocketObservable: Rx.Observable<any> | null;
     private socketObservable: Rx.Observable<any> | null;
@@ -33,10 +32,9 @@ export default class BotSocket {
 
     constructor(
         logger: ConsoleLog,
-        url: string,
+        private url: string,
     ) {
         this.logger = logger;
-        this.url = url;
 
         this.socket = null;
         this.sharedSocketObservable = null;

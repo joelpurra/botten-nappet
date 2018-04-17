@@ -30,13 +30,12 @@ import IZmqConfig from "../util/izmq-config";
 
 export default class Config implements ILoggingConfig, IZmqConfig {
     public prefix: string;
-    private config: IConfig;
 
-    constructor(config: IConfig) {
+    constructor(
+        private config: IConfig,
+    ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof config, "object");
-
-        this.config = config;
 
         this.prefix = "shared";
     }

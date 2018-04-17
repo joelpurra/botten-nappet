@@ -41,28 +41,18 @@ import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/io
 
 export default class BackendVidyApi implements IStartableStoppable {
     private startables: IStartableStoppable[];
-    private messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand
-            = messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand;
 
         this.startables = [];
     }

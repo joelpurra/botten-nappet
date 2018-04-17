@@ -40,17 +40,14 @@ import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
 export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {
-    public userid: number;
-    public username: string;
     private lastFollowingMessageTimestamp: number;
-    private incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>;
 
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IPollingFollowingResponse>,
-        incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>,
-        username: string,
-        userid: number,
+        private incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>,
+        private username: string,
+        private userid: number,
     ) {
         super(logger, connection);
 
@@ -63,9 +60,6 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         assert.positive(userid);
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingFollowingEventEmitter = incomingFollowingEventEmitter;
-        this.username = username;
-        this.userid = userid;
 
         this.lastFollowingMessageTimestamp = Date.now();
     }

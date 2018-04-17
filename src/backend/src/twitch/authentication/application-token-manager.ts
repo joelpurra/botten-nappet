@@ -39,14 +39,12 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     private rawOAuthToken: IRawToken | null;
     private oauthTokenRevocationHeaders: {};
     private oauthTokenRevocationMethod: string;
-    private oauthTokenRevocationUri: string;
-    private clientId: string;
 
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IRawToken>,
-        clientId: string,
-        oauthTokenRevocationUri: string,
+        private clientId: string,
+        private oauthTokenRevocationUri: string,
     ) {
         super(logger, connection);
 
@@ -60,8 +58,6 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         assert(oauthTokenRevocationUri.startsWith("https://"));
 
         this.logger = logger.child(this.constructor.name);
-        this.clientId = clientId;
-        this.oauthTokenRevocationUri = oauthTokenRevocationUri;
 
         this.oauthTokenRevocationMethod = "post";
         this.oauthTokenRevocationHeaders = {};

@@ -37,20 +37,13 @@ export default class BrowserEventManager {
     private handlers: {
         [key: string]: (data: any) => void;
     };
-    private speechManager: SpeechManager;
-    private botSocket: BotSocket;
-    private logger: ConsoleLog;
 
     constructor(
-        logger: ConsoleLog,
-        botSocket: BotSocket,
-        speechManager: SpeechManager,
+        private logger: ConsoleLog,
+        private botSocket: BotSocket,
+        private speechManager: SpeechManager,
     ) {
         // TODO: share this code.
-        this.logger = logger;
-        this.botSocket = botSocket;
-        this.speechManager = speechManager;
-
         this.dataHandlerSubscription = null;
         this.handlerObservable = null;
 

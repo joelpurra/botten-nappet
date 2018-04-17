@@ -37,12 +37,10 @@ import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/pubsub/interface
 import IPubSubResponse from "@botten-nappet/backend-twitch/pubsub/interface/ipubsub-response";
 
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
-    private incomingWhisperEventEmitter: IEventEmitter<IIncomingWhisperEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingPubSubEvent>,
-        incomingWhisperEventEmitter: IEventEmitter<IIncomingWhisperEvent>,
+        private incomingWhisperEventEmitter: IEventEmitter<IIncomingWhisperEvent>,
     ) {
         super(logger, connection);
 
@@ -52,7 +50,6 @@ export default class IncomingWhisperCommandEventTranslator extends EventSubscrip
         assert.equal(typeof incomingWhisperEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingWhisperEventEmitter = incomingWhisperEventEmitter;
     }
 
     protected async dataHandler(data: IPubSubResponse): Promise<void> {

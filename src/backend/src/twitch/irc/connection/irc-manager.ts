@@ -30,9 +30,10 @@ import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iin
 import IIRCConnection from "./iirc-connection";
 
 export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {
-    protected connection: IIRCConnection;
-
-    constructor(logger: PinoLogger, connection: IIRCConnection) {
+    constructor(
+        logger: PinoLogger,
+        protected connection: IIRCConnection,
+    ) {
         super(logger, connection);
 
         assert.hasLength(arguments, 2);
@@ -40,7 +41,6 @@ export default abstract class IrcManager extends ConnectionManager<IIncomingIrcC
         assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.connection = connection;
     }
 
     protected abstract async dataHandler(data: IIncomingIrcCommand): Promise<void>;

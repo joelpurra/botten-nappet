@@ -31,12 +31,10 @@ import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iou
 import IIRCConnection from "../connection/iirc-connection";
 
 export default class OutgoingIrcCommandEventHandler extends EventSubscriptionManager<IOutgoingIrcCommand> {
-    private ircConnection: IIRCConnection;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IOutgoingIrcCommand>,
-        ircConnection: IIRCConnection,
+        private ircConnection: IIRCConnection,
     ) {
         super(logger, connection);
 
@@ -46,7 +44,6 @@ export default class OutgoingIrcCommandEventHandler extends EventSubscriptionMan
         assert.equal(typeof ircConnection, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.ircConnection = ircConnection;
     }
 
     public async dataHandler(data: IOutgoingIrcCommand): Promise<void> {

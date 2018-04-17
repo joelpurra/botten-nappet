@@ -29,11 +29,9 @@ import IHttpHeaders from "../interface/ihttp-header";
 import PollingConnection from "./polling-connection";
 
 export default class PollingClientIdConnection<T> extends PollingConnection<T> {
-    private applicationClientId: string;
-
     constructor(
         logger: PinoLogger,
-        applicationClientId: string,
+        private applicationClientId: string,
         interval: number,
         atBegin: boolean,
         uri: string,
@@ -59,7 +57,6 @@ export default class PollingClientIdConnection<T> extends PollingConnection<T> {
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.applicationClientId = applicationClientId;
     }
 
     protected async getHeaders(): Promise<IHttpHeaders> {

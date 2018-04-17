@@ -29,19 +29,17 @@ import {
 import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
 
 export default class Config implements IZmqConfig {
-    private packageJson: any;
     private sharedPrefix: string;
     private prefix: string;
-    private config: IConfig;
 
-    constructor(config: IConfig, packageJson: any) {
+    constructor(
+        private config: IConfig,
+        private packageJson: any,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof config, "object");
         // TODO: import type for package.json.
         assert.equal(typeof packageJson, "object");
-
-        this.config = config;
-        this.packageJson = packageJson;
 
         this.sharedPrefix = "shared";
         this.prefix = "backend";

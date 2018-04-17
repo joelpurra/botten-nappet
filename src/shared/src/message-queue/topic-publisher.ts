@@ -30,19 +30,19 @@ import IEventEmitter from "../event/ievent-emitter";
 import Publisher from "./publisher";
 
 export default class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {
-    public publisher: Publisher;
-    private topic: string;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, publisher: Publisher, topic: string) {
+    constructor(
+        logger: PinoLogger,
+        private publisher: Publisher,
+        private topic: string,
+    ) {
         assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof publisher, "object");
         assert.equal(typeof topic, "string");
         assert(topic.length > 0);
 
-        this.publisher = publisher;
-        this.topic = topic;
         this.logger = logger.child(`${this.constructor.name} (${this.topic})`);
     }
 

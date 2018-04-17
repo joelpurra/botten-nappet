@@ -70,79 +70,35 @@ import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/command/io
 
 export default class PerUserHandlersMain implements IStartableStoppable {
     private startables: IStartableStoppable[];
-    private twitchUserId: number;
-    private vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
-        MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>;
-    private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
-        MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
             MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>,
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
+        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
+        private vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
-        twitchUserId: number,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent;
-        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent
-            = twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent;
-        this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent
-            = vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent;
-        this.twitchUserId = twitchUserId;
 
         this.startables = [];
     }

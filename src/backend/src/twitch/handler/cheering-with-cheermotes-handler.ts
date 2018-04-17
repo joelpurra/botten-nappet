@@ -49,12 +49,11 @@ export default class CheeringWithCheermotesHandler
     extends MultiEventSubscriptionManager<IIncomingCheeringEvent | IIncomingCheermotesEvent> {
     public cheerTokenPrefixAmountRx: RegExp;
     public currentCheermotes: IIncomingCheermotesEvent | null;
-    private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>;
 
     constructor(
         logger: PinoLogger,
         connections: Array<IEventSubscriptionConnection<IIncomingCheeringEvent | IIncomingCheermotesEvent>>,
-        incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>,
+        private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>,
     ) {
         super(logger, connections);
 
@@ -62,8 +61,6 @@ export default class CheeringWithCheermotesHandler
         assert.equal(typeof logger, "object");
         assert.equal(typeof connections, "object");
         assert.equal(typeof incomingCheeringWithCheermotesEvent, "object");
-
-        this.incomingCheeringWithCheermotesEvent = incomingCheeringWithCheermotesEvent;
 
         this.logger = logger.child(this.constructor.name);
 

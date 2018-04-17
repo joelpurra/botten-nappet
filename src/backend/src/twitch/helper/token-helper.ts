@@ -32,18 +32,14 @@ import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token
 import RequestHelper from "./request-helper";
 
 export default class TokenHelper {
-    private appClientId: string;
-    private oauthTokenVerificationUri: string;
-    private oauthTokenRevocationUri: string;
-    private requestHelper: RequestHelper;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        requestHelper: RequestHelper,
-        oauthTokenRevocationUri: string,
-        oauthTokenVerificationUri: string,
-        appClientId: string,
+        private requestHelper: RequestHelper,
+        private oauthTokenRevocationUri: string,
+        private oauthTokenVerificationUri: string,
+        private appClientId: string,
     ) {
         assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
@@ -55,10 +51,6 @@ export default class TokenHelper {
         assert.nonEmptyString(appClientId);
 
         this.logger = logger.child(this.constructor.name);
-        this.requestHelper = requestHelper;
-        this.oauthTokenRevocationUri = oauthTokenRevocationUri;
-        this.oauthTokenVerificationUri = oauthTokenVerificationUri;
-        this.appClientId = appClientId;
     }
 
     public async revoke(rawToken: IRawToken): Promise<void> {

@@ -34,16 +34,13 @@ import RequestHelper from "./request-helper";
 type UserNameOrId = string | number;
 
 export default class UserHelper {
-    private applicationAccessTokenProvider: ApplicationAccessTokenProviderType;
-    private usersDataUri: string;
-    private requestHelper: RequestHelper;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        requestHelper: RequestHelper,
-        usersDataUri: string,
-        applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
+        private requestHelper: RequestHelper,
+        private usersDataUri: string,
+        private applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
     ) {
         assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");
@@ -53,9 +50,6 @@ export default class UserHelper {
         assert.equal(typeof applicationAccessTokenProvider, "function");
 
         this.logger = logger.child(this.constructor.name);
-        this.requestHelper = requestHelper;
-        this.usersDataUri = usersDataUri;
-        this.applicationAccessTokenProvider = applicationAccessTokenProvider;
     }
 
     public async getUsersData(...usernamesAndIds: UserNameOrId[]) {

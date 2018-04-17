@@ -41,37 +41,21 @@ import BackendVidyApplicationApi from "./vidy-application-api";
 export default class BackendManagedMain implements IStartableStoppable {
     private backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain | null;
     private backendVidyApplicationApi: BackendVidyApplicationApi | null;
-    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
-    private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection;
-    private twitchTokenHelper: TwitchTokenHelper;
-    private twitchCSRFHelper: TwitchCSRFHelper;
-    private twitchRequestHelper: TwitchRequestHelper;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchRequestHelper: TwitchRequestHelper,
-        twitchCSRFHelper: TwitchCSRFHelper ,
-        twitchTokenHelper: TwitchTokenHelper ,
-        twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-        twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchRequestHelper: TwitchRequestHelper,
+        private twitchCSRFHelper: TwitchCSRFHelper ,
+        private twitchTokenHelper: TwitchTokenHelper ,
+        private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        private twitchApplicationTokenManager: TwitchApplicationTokenManager,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchRequestHelper = twitchRequestHelper;
-        this.twitchCSRFHelper = twitchCSRFHelper;
-        this.twitchTokenHelper = twitchTokenHelper;
-        this.twitchPollingApplicationTokenConnection = twitchPollingApplicationTokenConnection;
-        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
 
         this.backendVidyApplicationApi = null;
         this.backendAuthenticatedApplicationMain = null;

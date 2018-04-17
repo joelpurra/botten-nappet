@@ -24,24 +24,13 @@ import ScreenLog from "./screen-log";
 import SoundManager from "./sound-manager";
 
 export default abstract class SimpleNotificationHandler {
-    public screenLog: ScreenLog;
-    protected logger: ConsoleLog;
-    private randomSoundGroup: string;
-    private soundManager: SoundManager;
-    private notificationManager: NotificationManager;
-
     constructor(
-        logger: ConsoleLog,
-        screenLog: ScreenLog,
-        notificationManager: NotificationManager,
-        soundManager: SoundManager,
-        randomSoundGroup: string,
+        protected logger: ConsoleLog,
+        private screenLog: ScreenLog,
+        private notificationManager: NotificationManager,
+        private soundManager: SoundManager,
+        private randomSoundGroup: string,
     ) {
-        this.logger = logger;
-        this.screenLog = screenLog;
-        this.notificationManager = notificationManager;
-        this.soundManager = soundManager;
-        this.randomSoundGroup = randomSoundGroup;
     }
 
     protected handleNotification(

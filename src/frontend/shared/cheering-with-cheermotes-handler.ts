@@ -27,7 +27,6 @@ import SoundManager from "./sound-manager";
 
 export default class CheeringWithCheermotesHandler extends SimpleNotificationHandler {
     private maxNumberOfBallsToAdd: number;
-    private ballzManager: BallzManager;
     private intervalMilliseconds: number;
 
     constructor(
@@ -36,11 +35,9 @@ export default class CheeringWithCheermotesHandler extends SimpleNotificationHan
         notificationManager: NotificationManager,
         soundManager: SoundManager,
         randomSoundGroup: string,
-        ballzManager: BallzManager,
+        private ballzManager: BallzManager,
     ) {
         super(logger, screenLog, notificationManager, soundManager, randomSoundGroup);
-
-        this.ballzManager = ballzManager;
 
         this.maxNumberOfBallsToAdd = 20;
         this.intervalMilliseconds = 100;

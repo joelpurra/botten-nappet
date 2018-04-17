@@ -27,16 +27,17 @@ import IDistributedEvent from "../idistributed-event";
 import DistributedEventRepositoryClass from "../repository/distributed-event-repository";
 
 export default class DistributedEventStorageManager {
-    private DistributedEventRepository: typeof DistributedEventRepositoryClass;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, DistributedEventRepository: typeof DistributedEventRepositoryClass) {
+    constructor(
+        logger: PinoLogger,
+        private DistributedEventRepository: typeof DistributedEventRepositoryClass,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof DistributedEventRepository, "function");
 
         this.logger = logger.child(this.constructor.name);
-        this.DistributedEventRepository = DistributedEventRepository;
     }
 
     public async getByDistributedEventTopic(topic: string): Promise<IDistributedEvent[]> {

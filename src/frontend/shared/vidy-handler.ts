@@ -21,12 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import ConsoleLog from "./console-log";
 
 export default class VidyHandler {
-    public videoElementId: string;
-    public logger: ConsoleLog;
-
-    constructor(logger: ConsoleLog, videoElementId: string) {
-        this.logger = logger;
-        this.videoElementId = videoElementId;
+    constructor(
+        private logger: ConsoleLog,
+        private videoElementId: string,
+    ) {
     }
 
     public handle(videoUrl: string) {

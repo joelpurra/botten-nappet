@@ -32,12 +32,10 @@ import IIncomingPubSubEvent from "../../pubsub/interface/iincoming-pubsub-event"
 import IPubSubResponse from "../../pubsub/interface/ipubsub-response";
 
 export default class IncomingPubSubEventTranslator extends PubSubManager {
-    private incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: PubSubConnection,
-        incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>,
+        private incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>,
     ) {
         super(logger, connection);
 
@@ -47,7 +45,6 @@ export default class IncomingPubSubEventTranslator extends PubSubManager {
         assert.equal(typeof incomingPubSubEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingPubSubEventEmitter = incomingPubSubEventEmitter;
     }
 
     protected async dataHandler(data: IPubSubResponse): Promise<void> {

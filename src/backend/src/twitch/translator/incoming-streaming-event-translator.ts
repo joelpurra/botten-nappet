@@ -37,16 +37,12 @@ import PollingManager from "../polling/connection/polling-manager";
 /* tslint:enable:max-line-length */
 
 export default class IncomingStreamingCommandEventTranslator extends PollingManager<IPollingStreamingResponse> {
-    public userid: number;
-    public username: string;
-    private incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IPollingStreamingResponse>,
-        incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>,
-        username: string,
-        userid: number,
+        private incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>,
+        private username: string,
+        private userid: number,
     ) {
         super(logger, connection);
 
@@ -59,9 +55,6 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         assert.positive(userid);
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingStreamingEventEmitter = incomingStreamingEventEmitter;
-        this.username = username;
-        this.userid = userid;
     }
 
     protected async dataHandler(data: IPollingStreamingResponse): Promise<void> {

@@ -35,14 +35,11 @@ import IPubSubResponse from "../interface/ipubsub-response";
 import IPubSubConnection from "./ipubsub-connection";
 
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {
-    private userAccessTokenProvider: UserAccessTokenProviderType;
-    private topics: string[];
-
     constructor(
         logger: PinoLogger,
         uri: string,
-        topics: string[],
-        userAccessTokenProvider: UserAccessTokenProviderType,
+        private topics: string[],
+        private userAccessTokenProvider: UserAccessTokenProviderType,
     ) {
         super(logger, uri);
 
@@ -56,9 +53,6 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         assert.equal(typeof userAccessTokenProvider, "function");
 
         this.logger = logger.child(this.constructor.name);
-
-        this.topics = topics;
-        this.userAccessTokenProvider = userAccessTokenProvider;
     }
 
     protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse>>> {

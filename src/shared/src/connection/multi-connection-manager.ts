@@ -33,18 +33,20 @@ import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
 import IReceivingConnection from "./ireceiving-connection";
 
 export default abstract class MultiConnectionManager<T> implements IStartableStoppable {
-    // TODO: make connection private.
-    protected connections: Array<IReceivingConnection<T>>;
     protected logger: PinoLogger;
     private dataHandlerSubscription: Subscription | null;
 
-    constructor(logger: PinoLogger, connections: Array<IReceivingConnection<T>>) {
+    constructor(
+        logger: PinoLogger,
+        // TODO: make connection private.
+        protected connections: Array<IReceivingConnection<T>>,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.nonEmptyArray(connections);
 
         this.logger = logger.child(this.constructor.name);
-        this.connections = connections;
+
         this.dataHandlerSubscription = null;
     }
 

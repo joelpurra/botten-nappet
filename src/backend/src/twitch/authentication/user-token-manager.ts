@@ -30,19 +30,19 @@ import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
 
 export default class UserTokenManager {
-    private userTokenHelper: UserTokenHelper;
-    private tokenHelper: TokenHelper;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, tokenHelper: TokenHelper, userTokenHelper: UserTokenHelper) {
+    constructor(
+        logger: PinoLogger,
+        private tokenHelper: TokenHelper,
+        private userTokenHelper: UserTokenHelper,
+    ) {
         assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof tokenHelper, "object");
         assert.equal(typeof userTokenHelper, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.tokenHelper = tokenHelper;
-        this.userTokenHelper = userTokenHelper;
     }
 
     public async get(username: string): Promise<IAugmentedToken> {

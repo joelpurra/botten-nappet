@@ -29,12 +29,10 @@ import IDistributedEvent from "../storage/idistributed-event";
 import DistributedEventStorageManager from "../storage/manager/distributed-event-storage-manager";
 
 export default class DistributedEventManager extends EventSubscriptionManager<IDistributedEvent> {
-    public distributedEventStorageManager: DistributedEventStorageManager;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IDistributedEvent>,
-        distributedEventStorageManager: DistributedEventStorageManager,
+        private distributedEventStorageManager: DistributedEventStorageManager,
     ) {
         super(logger, connection);
 
@@ -44,7 +42,6 @@ export default class DistributedEventManager extends EventSubscriptionManager<ID
         assert.equal(typeof distributedEventStorageManager, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.distributedEventStorageManager = distributedEventStorageManager;
     }
 
     protected async dataHandler(data: IDistributedEvent): Promise<void> {

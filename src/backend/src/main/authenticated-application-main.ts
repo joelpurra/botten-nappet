@@ -75,33 +75,19 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
     private backendTwitchIrcAuthenticatedApplicationApi: BackendTwitchIrcAuthenticatedApplicationApi | null;
     private backendTwitchPubSubAuthenticatedApplicationApi: BackendTwitchPubSubAuthenticatedApplicationApi | null;
     private connectables: IConnectable[];
-    private twitchTokenHelper: TwitchTokenHelper;
-    private twitchCSRFHelper: TwitchCSRFHelper;
-    private twitchRequestHelper: TwitchRequestHelper;
-    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchApplicationTokenManager: TwitchApplicationTokenManager,
-        twitchRequestHelper: TwitchRequestHelper,
-        twitchCSRFHelper: TwitchCSRFHelper,
-        twitchTokenHelper: TwitchTokenHelper,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private twitchRequestHelper: TwitchRequestHelper,
+        private twitchCSRFHelper: TwitchCSRFHelper,
+        private twitchTokenHelper: TwitchTokenHelper,
     ) {
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
-        this.twitchRequestHelper = twitchRequestHelper;
-        this.twitchCSRFHelper = twitchCSRFHelper;
-        this.twitchTokenHelper = twitchTokenHelper;
 
         this.backendTwitchPubSubAuthenticatedApplicationApi = null;
         this.backendTwitchIrcAuthenticatedApplicationApi = null;

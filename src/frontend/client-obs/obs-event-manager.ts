@@ -41,40 +41,23 @@ import VidyHandler from "../shared/vidy-handler";
 
 export default class ObsEventManager {
     private animateBallTimeout: number;
-    private vidyHandler: VidyHandler;
     private dataHandlerSubscription: Rx.Subscription | null;
     private handlerObservable: Rx.Observable<any> | null;
     private handlers: {
         [key: string]: (data: any) => void;
     };
-    private ballzManager: BallzManager;
-    private subscriptionHandler: SubscriptionHandler;
-    private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler;
-    private followingHandler: FollowingHandler;
-    private soundManager: SoundManager;
-    private botSocket: BotSocket;
-    private logger: ConsoleLog;
 
     constructor(
-        logger: ConsoleLog,
-        botSocket: BotSocket,
-        soundManager: SoundManager,
-        followingHandler: FollowingHandler,
-        cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
-        subscriptionHandler: SubscriptionHandler,
-        ballzManager: BallzManager,
-        vidyHandler: VidyHandler,
+        private logger: ConsoleLog,
+        private botSocket: BotSocket,
+        private soundManager: SoundManager,
+        private followingHandler: FollowingHandler,
+        private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
+        private subscriptionHandler: SubscriptionHandler,
+        private ballzManager: BallzManager,
+        private vidyHandler: VidyHandler,
     ) {
         // TODO: share this code.
-        this.logger = logger;
-        this.botSocket = botSocket;
-        this.soundManager = soundManager;
-        this.followingHandler = followingHandler;
-        this.cheeringWithCheermotesHandler = cheeringWithCheermotesHandler;
-        this.subscriptionHandler = subscriptionHandler;
-        this.ballzManager = ballzManager;
-        this.vidyHandler = vidyHandler;
-
         this.dataHandlerSubscription = null;
         this.handlerObservable = null;
         this.animateBallTimeout = 60 * 1000;

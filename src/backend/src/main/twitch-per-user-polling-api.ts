@@ -48,34 +48,20 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/event/iinco
 
 export default class TwitchPerUserPollingApi {
     private startables: IStartableStoppable[];
-    private twitchUserId: number;
-    private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>;
-    private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>;
-    private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
-        twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
-        twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
-        twitchUserId: number,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
+        private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
+        private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchPollingFollowingConnection = twitchPollingFollowingConnection;
-        this.twitchPollingStreamingConnection = twitchPollingStreamingConnection;
-        this.twitchPollingCheermotesConnection = twitchPollingCheermotesConnection;
-        this.twitchUserId = twitchUserId;
 
         this.startables = [];
     }

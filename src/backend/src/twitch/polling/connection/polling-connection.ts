@@ -67,21 +67,15 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         "put",
         "patch",
     ];
-    private defaultData: IHttpData | undefined;
-    private defaultHeaders: IHttpHeaders | undefined;
-    private method: string;
-    private uri: string;
-    private atBegin: boolean;
-    private intervalMilliseconds: number;
 
     constructor(
         logger: PinoLogger,
-        intervalInMilliseconds: number,
-        atBegin: boolean,
-        uri: string,
-        method: string,
-        defaultHeaders?: IHttpHeaders,
-        defaultData?: IHttpData,
+        private intervalInMilliseconds: number,
+        private atBegin: boolean,
+        private uri: string,
+        private method: string,
+        private defaultHeaders?: IHttpHeaders,
+        private defaultData?: IHttpData,
     ) {
         assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
         assert.equal(typeof logger, "object");
@@ -97,18 +91,12 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         assert(typeof defaultData === "undefined" || typeof defaultData === "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.intervalMilliseconds = intervalInMilliseconds;
-        this.atBegin = atBegin;
-        this.uri = uri;
-        this.method = method;
-        this.defaultHeaders = defaultHeaders;
-        this.defaultData = defaultData;
 
         assert(this.methods.includes(this.method));
 
         this.intervalMinimumMilliseconds = 10 * 1000;
 
-        assert(this.intervalMilliseconds >= this.intervalMinimumMilliseconds);
+        assert(this.intervalInMilliseconds >= this.intervalMinimumMilliseconds);
 
         this.intervalSubscription = null;
         this.pollingSubject = null;
@@ -162,7 +150,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         this.pollingSubcription = this.sharedpollingObservable
             .subscribe(openedObserver);
 
-        const intervalObservable = Rx.Observable.interval(this.intervalMilliseconds);
+        const intervalObservable = Rx.Observable.interval(this.intervalInMilliseconds);
 
         const intervalObserver: Observer<number> = {
             complete: () => {

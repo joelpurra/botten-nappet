@@ -33,16 +33,12 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/event/ievent-sub
 import IOutgoingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/ioutgoing-irc-command";
 
 export default class VidyResultEventHandler extends EventSubscriptionManager<IIncomingSearchResultEvent> {
-    public vidyVideoLinkBaseUrl: string;
-    private channelName: string;
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingSearchResultEvent>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        channelName: string,
-        vidyVideoLinkBaseUrl: string,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private channelName: string,
+        private vidyVideoLinkBaseUrl: string,
     ) {
         super(logger, connection);
 
@@ -57,9 +53,6 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         assert(vidyVideoLinkBaseUrl.endsWith("/"));
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
-        this.channelName = channelName;
-        this.vidyVideoLinkBaseUrl = vidyVideoLinkBaseUrl;
     }
 
     public async dataHandler(data: IIncomingSearchResultEvent): Promise<void> {

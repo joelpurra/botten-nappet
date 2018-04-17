@@ -36,14 +36,13 @@ interface ICommandAndResponse {
 }
 
 export default class TextResponseCommandIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
     private commandsAndResponses: ICommandAndResponse;
     private commandPrefix: string;
 
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
 
@@ -53,7 +52,6 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
         this.commandPrefix = "!";
         this.commandsAndResponses = {

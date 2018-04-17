@@ -35,13 +35,12 @@ import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iin
 export default class VidyCommandIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
     public resultLimit: number;
     private commandName: string;
-    private outgoingSearchCommandEventEmitter: IEventEmitter<IOutgoingSearchCommand>;
     private commandPrefix: string;
 
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        outgoingSearchCommandEventEmitter: IEventEmitter<IOutgoingSearchCommand>,
+        private outgoingSearchCommandEventEmitter: IEventEmitter<IOutgoingSearchCommand>,
     ) {
         super(logger, connection);
 
@@ -51,7 +50,6 @@ export default class VidyCommandIrcHandler extends EventSubscriptionManager<IInc
         assert.equal(typeof outgoingSearchCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.outgoingSearchCommandEventEmitter = outgoingSearchCommandEventEmitter;
 
         this.commandPrefix = "!";
         this.commandName = "vidy";

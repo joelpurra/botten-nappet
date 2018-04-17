@@ -44,25 +44,17 @@ import TwitchPerUserPollingApi from "./twitch-per-user-polling-api";
 export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
     private twitchPerUserPollingApi: TwitchPerUserPollingApi | null;
     private connectables: IConnectable[];
-    private twitchUserId: number;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
-    private config: Config;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchUserId: number,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchUserId: number,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchUserId = twitchUserId;
 
         this.twitchPerUserPollingApi = null;
         this.connectables = [];

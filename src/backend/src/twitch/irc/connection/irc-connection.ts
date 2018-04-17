@@ -41,16 +41,13 @@ import IIRCConnection from "./iirc-connection";
 export default class IrcConnection
     extends WebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand>
     implements IIRCConnection {
-    private userAccessTokenProvider: UserAccessTokenProviderType;
-    private username: string;
-    private channelName: string;
 
     constructor(
         logger: PinoLogger,
         uri: string,
-        channel: string,
-        username: string,
-        userAccessTokenProvider: UserAccessTokenProviderType,
+        private channelName: string,
+        private username: string,
+        private userAccessTokenProvider: UserAccessTokenProviderType,
     ) {
         super(logger, uri, "irc");
 
@@ -59,18 +56,14 @@ export default class IrcConnection
         assert.equal(typeof uri, "string");
         assert.nonEmptyString(uri);
         assert(uri.startsWith("wss://"));
-        assert.equal(typeof channel, "string");
-        assert.nonEmptyString(channel);
-        assert(channel.startsWith("#"));
+        assert.equal(typeof channelName, "string");
+        assert.nonEmptyString(channelName);
+        assert(channelName.startsWith("#"));
         assert.equal(typeof username, "string");
         assert.nonEmptyString(username);
         assert.equal(typeof userAccessTokenProvider, "function");
 
         this.logger = logger.child(this.constructor.name);
-
-        this.channelName = channel;
-        this.username = username;
-        this.userAccessTokenProvider = userAccessTokenProvider;
     }
 
     public get channel(): string {

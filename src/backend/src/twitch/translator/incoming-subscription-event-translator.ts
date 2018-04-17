@@ -33,16 +33,12 @@ import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/event//i
 import IIncomingIrcCommand from "@botten-nappet/backend-twitch/irc/interface/iincoming-irc-command";
 
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
-    public userid: number;
-    public username: string;
-    private incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>,
-        username: string,
-        userid: number,
+        private incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>,
+        private username: string,
+        private userid: number,
     ) {
         super(logger, connection);
 
@@ -55,9 +51,6 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         assert.positive(userid);
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingSubscriptionEventEmitter = incomingSubscriptionEventEmitter;
-        this.username = username;
-        this.userid = userid;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {

@@ -40,22 +40,16 @@ import VidyApi from "./vidy-api";
 
 export default class BackendVidyApplicationApi implements IStartableStoppable {
     private vidyApi: VidyApi | null;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: any;
-    private config: Config;
     private connectables: IConnectable[];
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
     ) {
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
 
         this.vidyApi = null;
         this.connectables = [];

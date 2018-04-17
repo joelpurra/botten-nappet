@@ -31,15 +31,11 @@ import IHttpData from "../polling/interface/ihttp-data";
 import IHttpHeaders from "../polling/interface/ihttp-header";
 
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
-    private scopes: string[];
-    private applicationClientSecret: string;
-    private applicationClientId: string;
-
     constructor(
         logger: PinoLogger,
-        applicationClientId: string,
-        applicationClientSecret: string,
-        scopes: string[],
+        private applicationClientId: string,
+        private applicationClientSecret: string,
+        private scopes: string[],
         interval: number,
         atBegin: boolean,
         uri: string,
@@ -68,9 +64,6 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         assert(Array.isArray(scopes));
 
         this.logger = logger.child(this.constructor.name);
-        this.applicationClientId = applicationClientId;
-        this.applicationClientSecret = applicationClientSecret;
-        this.scopes = scopes;
     }
 
     protected async getHeaders() {

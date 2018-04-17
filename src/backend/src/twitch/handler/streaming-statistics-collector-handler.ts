@@ -45,12 +45,11 @@ export default class StreamingStatisticsCollectorHandler
     private previousData: IIncomingStreamingEvent[];
     private outputInterval: number;
     private collectionCount: number;
-    private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>;
 
     constructor(
         logger: PinoLogger,
         connections: Array<IEventSubscriptionConnection<IIncomingStreamingEvent | IIncomingIrcCommand>>,
-        outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connections);
 
@@ -58,8 +57,6 @@ export default class StreamingStatisticsCollectorHandler
         assert.equal(typeof logger, "object");
         assert.equal(typeof connections, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
-
-        this.outgoingIrcCommandEventEmitter = outgoingIrcCommandEventEmitter;
 
         this.logger = logger.child(this.constructor.name);
 

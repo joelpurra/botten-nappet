@@ -24,13 +24,11 @@ export default class SpeechManager {
     public volume: number;
     public rate: number;
     public pitch: number;
-    public defaultVoiceName: string;
-    public logger: ConsoleLog;
 
-    constructor(logger: ConsoleLog, defaultVoiceName: string) {
-        this.logger = logger;
-        this.defaultVoiceName = defaultVoiceName;
-
+    constructor(
+        private logger: ConsoleLog,
+        private defaultVoiceName: string,
+    ) {
         // HACK: warm up the system by "preloading" voices on Chromium.
         window.speechSynthesis.getVoices();
 

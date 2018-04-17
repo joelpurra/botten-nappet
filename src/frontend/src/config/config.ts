@@ -31,13 +31,12 @@ import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
 export default class Config implements IZmqConfig {
     private sharedPrefix: string;
     private prefix: string;
-    private config: IConfig;
 
-    constructor(config: IConfig) {
+    constructor(
+        private config: IConfig,
+    ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof config, "object");
-
-        this.config = config;
 
         this.sharedPrefix = "shared";
         this.prefix = "frontend";

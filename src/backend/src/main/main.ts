@@ -58,19 +58,15 @@ import BackendManagerMain from "./manager-main";
 
 export default class BackendMain implements IStartableStoppable {
     private backendManagerMain: BackendManagerMain | null;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private gracefulShutdownManager: GracefulShutdownManager;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        messageQueuePublisher: MessageQueuePublisher,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private messageQueuePublisher: MessageQueuePublisher,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.messageQueuePublisher = messageQueuePublisher;
 
         this.backendManagerMain = null;
     }

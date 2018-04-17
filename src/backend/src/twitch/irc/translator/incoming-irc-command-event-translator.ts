@@ -31,12 +31,10 @@ import IIRCConnection from "../connection/iirc-connection";
 import IrcManager from "../connection/irc-manager";
 
 export default class IncomingIrcCommandEventTranslator extends IrcManager {
-    private incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>;
-
     constructor(
         logger: PinoLogger,
         connection: IIRCConnection,
-        incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>,
+        private incomingIrcCommandEventEmitter: IEventEmitter<IIncomingIrcCommand>,
     ) {
         super(logger, connection);
 
@@ -46,7 +44,6 @@ export default class IncomingIrcCommandEventTranslator extends IrcManager {
         assert.equal(typeof incomingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingIrcCommandEventEmitter = incomingIrcCommandEventEmitter;
     }
 
     protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {

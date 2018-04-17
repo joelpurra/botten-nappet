@@ -37,10 +37,12 @@ interface ICamoDatabaseConnection {
 export default class DatabaseConnection {
     public autocompactionInterval: number;
     private database: ICamoDatabaseConnection | null;
-    private uri: string;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, uri: string) {
+    constructor(
+        logger: PinoLogger,
+        private uri: string,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof uri, "string");
@@ -48,7 +50,6 @@ export default class DatabaseConnection {
         assert(uri.startsWith("nedb://"));
 
         this.logger = logger.child(this.constructor.name);
-        this.uri = uri;
 
         this.database = null;
 

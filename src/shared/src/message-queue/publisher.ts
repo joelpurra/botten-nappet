@@ -33,10 +33,12 @@ import {
 
 export default class Publisher implements IConnectable {
     private socket: any | null;
-    private address: string;
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger, address: string) {
+    constructor(
+        logger: PinoLogger,
+        private address: string,
+    ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
@@ -44,7 +46,6 @@ export default class Publisher implements IConnectable {
         assert(address.startsWith("tcp://"));
 
         this.logger = logger.child(this.constructor.name);
-        this.address = address;
 
         this.socket = null;
     }

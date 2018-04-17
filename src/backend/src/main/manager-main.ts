@@ -47,43 +47,23 @@ import BackendManagedMain from "./managed-main";
 export default class BackendManagerMain implements IStartableStoppable {
     private backendManagedMain: backendManagedMain | null;
     private distributedEventManager: DistributedEventManager | null;
-    private twitchApplicationTokenManager: TwitchApplicationTokenManager;
-    private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection;
-    private twitchTokenHelper: TwitchTokenHelper;
-    private twitchCSRFHelper: TwitchCSRFHelper;
-    private twitchRequestHelper: TwitchRequestHelper;
-    private messageQueuePublisher: MessageQueuePublisher;
-    private messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber;
-    private databaseConnection: DatabaseConnection;
-    private gracefulShutdownManager: GracefulShutdownManager;
-    private config: Config;
     private logger: PinoLogger;
 
     constructor(
-        config: Config,
+        private config: Config,
         logger: PinoLogger,
-        gracefulShutdownManager: GracefulShutdownManager,
-        databaseConnection: DatabaseConnection,
-        messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
-        messageQueuePublisher: MessageQueuePublisher,
-        twitchRequestHelper: TwitchRequestHelper,
-        twitchCSRFHelper: TwitchCSRFHelper,
-        twitchTokenHelper: TwitchTokenHelper,
-        twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-        twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private gracefulShutdownManager: GracefulShutdownManager,
+        private databaseConnection: DatabaseConnection,
+        private messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
+        private messageQueuePublisher: MessageQueuePublisher,
+        private twitchRequestHelper: TwitchRequestHelper,
+        private twitchCSRFHelper: TwitchCSRFHelper,
+        private twitchTokenHelper: TwitchTokenHelper,
+        private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        private twitchApplicationTokenManager: TwitchApplicationTokenManager,
     ) {
         // TODO: validate arguments.
-        this.config = config;
         this.logger = logger.child(this.constructor.name);
-        this.gracefulShutdownManager = gracefulShutdownManager;
-        this.databaseConnection = databaseConnection;
-        this.messageQueueAllRawTopicsSubscriber = messageQueueAllRawTopicsSubscriber;
-        this.messageQueuePublisher = messageQueuePublisher;
-        this.twitchRequestHelper = twitchRequestHelper;
-        this.twitchCSRFHelper = twitchCSRFHelper;
-        this.twitchTokenHelper = twitchTokenHelper;
-        this.twitchPollingApplicationTokenConnection = twitchPollingApplicationTokenConnection;
-        this.twitchApplicationTokenManager = twitchApplicationTokenManager;
 
         this.distributedEventManager = null;
         this.backendManagedMain = null;

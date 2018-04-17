@@ -37,16 +37,12 @@ import PollingManager from "../polling/connection/polling-manager";
 /* tslint:enable:max-line-length */
 
 export default class IncomingCheermotesCommandEventTranslator extends PollingManager<IPollingCheermotesResponse> {
-    public userid: number;
-    public username: string;
-    private incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>;
-
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IPollingCheermotesResponse>,
-        incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>,
-        username: string,
-        userid: number,
+        private incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>,
+        private username: string,
+        private userid: number,
     ) {
         super(logger, connection);
 
@@ -59,9 +55,6 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         assert.positive(userid);
 
         this.logger = logger.child(this.constructor.name);
-        this.incomingCheermotesEventEmitter = incomingCheermotesEventEmitter;
-        this.username = username;
-        this.userid = userid;
     }
 
     protected async dataHandler(data: IPollingCheermotesResponse): Promise<void> {

@@ -33,19 +33,17 @@ import Config from "../../../src/config/config";
 import IClientContext from "./iclient-context";
 
 export default class AuthenticatedRequest {
-    public config: Config;
-    public logger: PinoLogger;
+    private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        config: Config,
+        private config: Config,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
         assert.equal(typeof config, "object");
 
         this.logger = logger.child(this.constructor.name);
-        this.config = config;
     }
 
     public async request<T>(method: string, url: string, params: object): Promise<T> {
