@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -29,26 +32,28 @@ import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 import IAugmentedToken from "@botten-nappet/interface-twitch/authentication/iaugmented-token";
 import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
 
+import TokenHelperConfig from "../../config/token-helper-config";
 import RequestHelper from "./request-helper";
 
+@autoinject
 export default class TokenHelper {
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
         private readonly requestHelper: RequestHelper,
-        private readonly oauthTokenRevocationUri: string,
-        private readonly oauthTokenVerificationUri: string,
-        private readonly appClientId: string,
+        private readonly twitchTokenHelperConfig: TokenHelperConfig,
     ) {
-        assert.hasLength(arguments, 5);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof requestHelper, "object");
-        assert.nonEmptyString(oauthTokenRevocationUri);
-        assert(oauthTokenRevocationUri.startsWith("https://"));
-        assert.nonEmptyString(oauthTokenVerificationUri);
-        assert(oauthTokenVerificationUri.startsWith("https://"));
-        assert.nonEmptyString(appClientId);
+        assert.equal(typeof twitchTokenHelperConfig, "object");
+
+        assert.nonEmptyString(twitchTokenHelperConfig.oauthTokenRevocationUri);
+        assert(twitchTokenHelperConfig.oauthTokenRevocationUri.startsWith("https://"));
+        assert.nonEmptyString(twitchTokenHelperConfig.oauthTokenVerificationUri);
+        assert(twitchTokenHelperConfig.oauthTokenVerificationUri.startsWith("https://"));
+        assert.nonEmptyString(twitchTokenHelperConfig.appClientId);
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -62,13 +67,13 @@ export default class TokenHelper {
         const accessToken = rawToken.access_token;
 
         const params = {
-            client_id: this.appClientId,
+            client_id: this.twitchTokenHelperConfig.appClientId,
             token: accessToken,
         };
 
         // TODO: use an https class.
         const response = await axios.post(
-            this.oauthTokenRevocationUri,
+            this.twitchTokenHelperConfig.oauthTokenRevocationUri,
             params,
             {
                 paramsSerializer: this.requestHelper.twitchQuerystringSerializer,
@@ -174,12 +179,12 @@ export default class TokenHelper {
 
         // TODO: use an https class.
         const response = await axios.get(
-            this.oauthTokenVerificationUri,
+            this.twitchTokenHelperConfig.oauthTokenVerificationUri,
             {
                 headers: {
                     "Accept": "application/vnd.twitchtv.v5+json",
                     "Authorization": `OAuth ${accessToken}`,
-                    "Client-ID": this.appClientId,
+                    "Client-ID": this.twitchTokenHelperConfig.appClientId,
                 },
             },
         );

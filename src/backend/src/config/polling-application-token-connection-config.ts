@@ -20,35 +20,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     autoinject,
-} from "aurelia-framework";
+} from "aurelia-dependency-injection";
 import {
     assert,
 } from "check-types";
 
-import qs, {
-    IStringifyOptions,
-} from "qs";
-
-import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+import Config from "./config";
 
 @autoinject
-export default class RequestHelper {
-    private logger: PinoLogger;
-
-    constructor(logger: PinoLogger) {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
+export default class PollingApplicationTokenConnectionConfig {
+    constructor(
+        private readonly config: Config,
+    ) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof config, "object");
     }
 
-    public twitchQuerystringSerializer(params: object) {
-        // TODO: move to utility class.
-        const qsConfig: IStringifyOptions = {
-            // NOTE: "repeat" for the "new" Twitch api (v6?).
-            arrayFormat: "repeat",
-        };
+    public get appClientId(): string {
+        return this.config.twitchAppClientId;
+    }
 
-        return qs.stringify(params, qsConfig);
+    public get appClientSecret(): string {
+        return this.config.twitchAppClientSecret;
+    }
+
+    public get appScopes(): string[] {
+        return this.config.twitchAppScopes;
+    }
+
+    public get appTokenRefreshInterval(): number {
+        return this.config.twitchAppTokenRefreshInterval;
+    }
+
+    public get oauthTokenUri(): string {
+        return this.config.twitchOAuthTokenUri;
     }
 }

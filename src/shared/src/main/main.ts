@@ -18,47 +18,46 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// NOTE: single-import adding reflection metadata globally.
+import "reflect-metadata";
+
+import {
+    Container,
+} from "aurelia-dependency-injection";
+
 import configLibrary from "config";
 
-import Config from "../config/config";
-import GracefulShutdownManager from "../util/graceful-shutdown-manager";
-
-import MessageQueuePublisher from "../message-queue/publisher";
+import SharedConfig from "../config/config";
+import PinoLogger from "../util/pino-logger";
 
 import createRootLogger from "../util/create-root-logger";
+import loadPackageJson from "../util/load-package-json";
 
-import BackendMain from "../../../backend/src/main/main";
-import FrontendMain from "../../../frontend/src/main/main";
+import MessageQueuePublisher from "../message-queue/publisher";
+import MessageQueuePublisherResolver from "./resolver/message-queue-publisher-resolver";
+
+import RootLoggerResolver from "@botten-nappet/shared/util/root-logger-resolver";
+import DatabaseConnection from "../../../backend/src/storage/database-connection";
+import SharedContainerRoot from "./shared-container-root";
 
 export default async function main(): Promise<void> {
-    const config = new Config(configLibrary);
+    const rootContainer = new Container();
 
-    config.validate();
+    rootContainer.registerInstance("IConfig", configLibrary);
 
-    const rootLogger = await createRootLogger(config);
+    const packageJson = await loadPackageJson();
+    rootContainer.registerInstance("IPackageJson", packageJson);
 
-    const sharedLogger = rootLogger.child("shared");
+    const sharedConfig = new SharedConfig(configLibrary);
+    sharedConfig.validate();
+    rootContainer.registerInstance(SharedConfig, sharedConfig);
 
-    const gracefulShutdownManager = new GracefulShutdownManager(rootLogger);
+    const rootLoggerResolver = rootContainer.get(RootLoggerResolver);
+    const rootLogger = rootLoggerResolver.get();
+    rootContainer.registerInstance(PinoLogger, rootLogger);
 
-    const messageQueuePublisher = new MessageQueuePublisher(rootLogger, config.zmqAddress);
+    const sharedContainerRoot = rootContainer.get(SharedContainerRoot) as SharedContainerRoot;
 
-    await gracefulShutdownManager.start();
-    await messageQueuePublisher.connect();
-
-    const backendMain = new BackendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher);
-    const frontendMain = new FrontendMain(sharedLogger, gracefulShutdownManager, messageQueuePublisher);
-
-    await Promise.all([
-        backendMain.start(),
-        frontendMain.start(),
-    ]);
-
-    await Promise.all([
-        backendMain.stop(),
-        frontendMain.stop(),
-    ]);
-
-    await messageQueuePublisher.disconnect();
-    await gracefulShutdownManager.stop();
+    await sharedContainerRoot.start();
+    await sharedContainerRoot.stop();
 }

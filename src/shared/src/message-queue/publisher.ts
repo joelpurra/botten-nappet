@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -26,24 +29,29 @@ import zmq from "zeromq-ng";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
+import ZmqConfig from "../config/zmq-config";
+
 import IConnectable from "../connection/iconnectable";
 import {
     ZeroMqMessage,
 } from "./zeromq-types";
 
+@autoinject
 export default class Publisher implements IConnectable {
     private socket: any | null;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        private readonly address: string,
+        private readonly zmqConfig: ZmqConfig,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof address, "string");
-        assert(address.length > 0);
-        assert(address.startsWith("tcp://"));
+        assert.equal(typeof zmqConfig, "object");
+
+        assert.equal(typeof zmqConfig.zmqAddress, "string");
+        assert(zmqConfig.zmqAddress.length > 0);
+        assert(zmqConfig.zmqAddress.startsWith("tcp://"));
 
         this.logger = logger.child(this.constructor.name);
 
@@ -59,7 +67,7 @@ export default class Publisher implements IConnectable {
         };
 
         this.socket = new zmq.Publisher(zmqPublisherOptions);
-        await this.socket.bind(this.address);
+        await this.socket.bind(this.zmqConfig.zmqAddress);
 
         this.logger.debug("connected");
     }
@@ -68,7 +76,7 @@ export default class Publisher implements IConnectable {
         assert.hasLength(arguments, 0);
         assert.not.null(this.socket);
 
-        await this.socket.unbind(this.address);
+        await this.socket.unbind(this.zmqConfig.zmqAddress);
         await this.socket.close();
 
         this.socket = null;

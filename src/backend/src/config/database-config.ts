@@ -18,8 +18,25 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default interface ILoggingConfig {
-    loggingFile: string;
-    loggingLevel: string;
-    applicationName: string;
+import {
+    autoinject,
+} from "aurelia-dependency-injection";
+import {
+    assert,
+} from "check-types";
+
+import Config from "./config";
+
+@autoinject
+export default class DatabaseConfig {
+    constructor(
+        private readonly config: Config,
+    ) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof config, "object");
+    }
+
+    public get databaseUri(): string {
+        return this.config.databaseUri;
+    }
 }

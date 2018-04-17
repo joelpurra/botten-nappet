@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    inject,
+} from "aurelia-dependency-injection";
+import {
     assert,
 } from "check-types";
 
@@ -26,9 +29,8 @@ import {
     IConfig,
 } from "config";
 
-import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
-
-export default class Config implements IZmqConfig {
+@inject("IConfig")
+export default class Config {
     private sharedPrefix: string;
     private prefix: string;
 

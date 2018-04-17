@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -26,42 +29,37 @@ import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
 import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
 
+import PollingApplicationTokenConnectionConfig from "../../config/polling-application-token-connection-config";
 import PollingConnection from "../polling/connection/polling-connection";
-import IHttpData from "../polling/interface/ihttp-data";
-import IHttpHeaders from "../polling/interface/ihttp-header";
 
+@autoinject
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     constructor(
         logger: PinoLogger,
-        private readonly applicationClientId: string,
-        private readonly applicationClientSecret: string,
-        private scopes: string[],
-        interval: number,
-        atBegin: boolean,
-        uri: string,
-        method: string,
-        defaultHeaders?: IHttpHeaders,
-        defaultData?: IHttpData,
+        private readonly pollingApplicationTokenConnectionConfig: PollingApplicationTokenConnectionConfig,
     ) {
-        super(logger, interval, atBegin, uri, method, defaultHeaders, defaultData);
+        super(
+            logger,
+            pollingApplicationTokenConnectionConfig.appTokenRefreshInterval,
+            false,
+            pollingApplicationTokenConnectionConfig.oauthTokenUri,
+            "post",
+        );
 
-        assert(arguments.length === 7 || arguments.length === 8 || arguments.length === 9);
+        assert(arguments.length === 2);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof applicationClientId, "string");
-        assert.greater(applicationClientId.length, 0);
-        assert.equal(typeof applicationClientSecret, "string");
-        assert.greater(applicationClientSecret.length, 0);
-        assert(!isNaN(interval));
-        assert.greater(interval, 0);
-        assert.equal(typeof atBegin, "boolean");
-        assert.equal(typeof uri, "string");
-        assert.greater(uri.length, 0);
-        assert(uri.startsWith("https://"));
-        assert.equal(typeof method, "string");
-        assert.greater(method.length, 0);
-        assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
-        assert(typeof defaultData === "undefined" || typeof defaultData === "object");
-        assert(Array.isArray(scopes));
+        assert.equal(typeof pollingApplicationTokenConnectionConfig, "object");
+
+        assert.equal(typeof pollingApplicationTokenConnectionConfig.appClientId, "string");
+        assert.greater(pollingApplicationTokenConnectionConfig.appClientId.length, 0);
+        assert.equal(typeof pollingApplicationTokenConnectionConfig.appClientSecret, "string");
+        assert.greater(pollingApplicationTokenConnectionConfig.appClientSecret.length, 0);
+        assert(!isNaN(pollingApplicationTokenConnectionConfig.appTokenRefreshInterval));
+        assert.greater(pollingApplicationTokenConnectionConfig.appTokenRefreshInterval, 0);
+        assert.equal(typeof pollingApplicationTokenConnectionConfig.oauthTokenUri, "string");
+        assert.greater(pollingApplicationTokenConnectionConfig.oauthTokenUri.length, 0);
+        assert(pollingApplicationTokenConnectionConfig.oauthTokenUri.startsWith("https://"));
+        assert(Array.isArray(pollingApplicationTokenConnectionConfig.appScopes));
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -78,10 +76,10 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         assert.hasLength(arguments, 0);
 
         const data = {
-            client_id: this.applicationClientId,
-            client_secret: this.applicationClientSecret,
+            client_id: this.pollingApplicationTokenConnectionConfig.appClientId,
+            client_secret: this.pollingApplicationTokenConnectionConfig.appClientSecret,
             grant_type: "client_credentials",
-            scope: this.scopes.join(" "),
+            scope: this.pollingApplicationTokenConnectionConfig.appScopes.join(" "),
         };
 
         return data;

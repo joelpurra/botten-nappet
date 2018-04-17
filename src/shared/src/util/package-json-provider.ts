@@ -19,36 +19,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-framework";
+    inject,
+} from "aurelia-dependency-injection";
 import {
     assert,
 } from "check-types";
 
-import qs, {
-    IStringifyOptions,
-} from "qs";
+// TODO DEBUG: for some reason it won't compile referencing IPackageJson.
+// import IPackageJson from "./ipackage-json";
 
-import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-
-@autoinject
-export default class RequestHelper {
-    private logger: PinoLogger;
-
-    constructor(logger: PinoLogger) {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
+@inject("IPackageJson")
+export default class PackageJsonProvider {
+    constructor(
+        // TODO DEBUG: for some reason it won't compile referencing IPackageJson.
+        // private readonly packageJson: IPackageJson,
+        private readonly packageJson: any,
+    ) {
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof packageJson, "object");
     }
 
-    public twitchQuerystringSerializer(params: object) {
-        // TODO: move to utility class.
-        const qsConfig: IStringifyOptions = {
-            // NOTE: "repeat" for the "new" Twitch api (v6?).
-            arrayFormat: "repeat",
-        };
+    public get name(): string {
+        const value = this.packageJson.name;
 
-        return qs.stringify(params, qsConfig);
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get version(): string {
+        const value = this.packageJson.version;
+
+        assert.nonEmptyString(value);
+
+        return value;
     }
 }

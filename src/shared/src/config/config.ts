@@ -19,16 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    inject,
+} from "aurelia-dependency-injection";
+import {
     assert,
 } from "check-types";
 
 import {
     IConfig,
 } from "config";
-import ILoggingConfig from "../util/izmq-config";
-import IZmqConfig from "../util/izmq-config";
 
-export default class Config implements ILoggingConfig, IZmqConfig {
+@inject("IConfig")
+export default class Config {
     public prefix: string;
 
     constructor(

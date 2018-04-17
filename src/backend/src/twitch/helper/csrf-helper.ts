@@ -19,11 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
+@autoinject
 export default class CSRFHelper {
     private logger: PinoLogger;
 

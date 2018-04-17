@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 import Rx, {
@@ -35,8 +38,8 @@ import {
 import PinoLogger from "./pino-logger";
 
 type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
-type ShutdownHandler = () => void;
 
+@autoinject
 export default class GracefulShutdownManager {
     private shutdownObservableInternal: Rx.Observable<void> | null;
     private shutdownSubject: Subject<void> | null;

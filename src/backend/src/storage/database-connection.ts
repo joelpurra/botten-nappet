@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -28,12 +31,14 @@ import {
 } from "camo";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
+import DatabaseConfig from "../config/database-config";
 
 interface ICamoDatabaseConnection {
     // TODO: update and/or patch @types/camo.
     close: () => void;
 }
 
+@autoinject
 export default class DatabaseConnection {
     public autocompactionInterval: number;
     private database: ICamoDatabaseConnection | null;
@@ -41,13 +46,15 @@ export default class DatabaseConnection {
 
     constructor(
         logger: PinoLogger,
-        private readonly uri: string,
+        private readonly databaseConfig: DatabaseConfig,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof uri, "string");
-        assert(uri.length > 0);
-        assert(uri.startsWith("nedb://"));
+        assert.equal(typeof databaseConfig, "object");
+
+        assert.equal(typeof databaseConfig.databaseUri, "string");
+        assert(databaseConfig.databaseUri.length > 0);
+        assert(databaseConfig.databaseUri.startsWith("nedb://"));
 
         this.logger = logger.child(this.constructor.name);
 
@@ -61,7 +68,7 @@ export default class DatabaseConnection {
         assert.hasLength(arguments, 0);
         assert.equal(this.database, null);
 
-        const db = await connect(this.uri);
+        const db = await connect(this.databaseConfig.databaseUri);
         this.database = db as ICamoDatabaseConnection;
 
         return undefined;

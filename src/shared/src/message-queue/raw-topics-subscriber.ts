@@ -19,23 +19,34 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
 
+import ZmqConfig from "@botten-nappet/shared/config/zmq-config";
 import IDistributedEvent from "../../../backend/src/storage/idistributed-event";
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 
+@autoinject
 export default class RawTopicsSubscriber extends IntersectionTopicsSubscriber<IDistributedEvent> {
-    constructor(logger: PinoLogger, address: string, ...topics: string[]) {
-        super(logger, address, ...topics);
+    constructor(
+        logger: PinoLogger,
+        zmqConfig: ZmqConfig,
+        ...topics: string[],
+    ) {
+        super(logger, zmqConfig.zmqAddress, ...topics);
 
         // NOTE: variable arguments length.
         assert.equal(typeof logger, "object");
-        assert.equal(typeof address, "string");
-        assert(address.length > 0);
-        assert(address.startsWith("tcp://"));
+        assert.equal(typeof zmqConfig, "object");
+
+        assert.equal(typeof zmqConfig.zmqAddress, "string");
+        assert(zmqConfig.zmqAddress.length > 0);
+        assert(zmqConfig.zmqAddress.startsWith("tcp://"));
         assert.array(topics);
 
         // TODO: configurable.

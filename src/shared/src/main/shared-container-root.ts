@@ -22,55 +22,53 @@ import {
     autoinject,
 } from "aurelia-framework";
 
-import configLibrary from "config";
-
 import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import Config from "../config/config";
+import SharedConfig from "../config/config";
 
-import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
+import GracefulShutdownManager from "../util/graceful-shutdown-manager";
 
-import FrontendManagerMain from "./manager-main";
+import MessageQueuePublisher from "../message-queue/publisher";
+
+import BackendMain from "../../../backend/src/main/main";
+import FrontendMain from "../../../frontend/src/main/main";
 
 @autoinject
-export default class FrontendMain implements IStartableStoppable {
-    private frontendManagerMain: FrontendManagerMain | null;
+export default class SharedContainerRoot implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
+        private readonly config: SharedConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly backendMain: BackendMain,
+        private readonly frontendMain: FrontendMain,
     ) {
-        // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
-
-        this.frontendManagerMain = null;
     }
 
     public async start(): Promise<void> {
-        const config = new Config(configLibrary);
+        await this.gracefulShutdownManager.start();
+        await this.messageQueuePublisher.connect();
 
-        config.validate();
-
-        this.frontendManagerMain = new FrontendManagerMain(
-            config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-        );
-
-        await this.frontendManagerMain.start();
+        await Promise.all([
+            this.backendMain.start(),
+            this.frontendMain.start(),
+        ]);
     }
 
     public async stop(): Promise<void> {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        if (this.frontendManagerMain) {
-            await this.frontendManagerMain.stop();
-        }
+        await Promise.all([
+            this.backendMain.stop(),
+            this.frontendMain.stop(),
+        ]);
+
+        await this.messageQueuePublisher.disconnect();
+        await this.gracefulShutdownManager.stop();
     }
 }

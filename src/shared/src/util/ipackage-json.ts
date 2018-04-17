@@ -18,37 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    autoinject,
-} from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
-
-import qs, {
-    IStringifyOptions,
-} from "qs";
-
-import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-
-@autoinject
-export default class RequestHelper {
-    private logger: PinoLogger;
-
-    constructor(logger: PinoLogger) {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
-    }
-
-    public twitchQuerystringSerializer(params: object) {
-        // TODO: move to utility class.
-        const qsConfig: IStringifyOptions = {
-            // NOTE: "repeat" for the "new" Twitch api (v6?).
-            arrayFormat: "repeat",
-        };
-
-        return qs.stringify(params, qsConfig);
-    }
+export default interface IPackageJson {
+    name: string;
+    version: string;
 }

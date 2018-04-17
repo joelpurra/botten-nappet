@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    inject,
+} from "aurelia-dependency-injection";
+import {
     assert,
 } from "check-types";
 
@@ -26,20 +29,20 @@ import {
     IConfig,
 } from "config";
 
-import IZmqConfig from "@botten-nappet/shared/util/izmq-config";
+import PackageJsonProvider from "@botten-nappet/shared/util/package-json-provider";
 
-export default class Config implements IZmqConfig {
+@inject("IConfig", PackageJsonProvider)
+export default class Config {
     private sharedPrefix: string;
     private prefix: string;
 
     constructor(
         private readonly config: IConfig,
-        private readonly packageJson: any,
+        private readonly packageJsonProvider: PackageJsonProvider,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof config, "object");
-        // TODO: import type for package.json.
-        assert.equal(typeof packageJson, "object");
+        assert.equal(typeof packageJsonProvider, "object");
 
         this.sharedPrefix = "shared";
         this.prefix = "backend";
@@ -352,7 +355,7 @@ export default class Config implements IZmqConfig {
     }
 
     public get version(): string {
-        const value = this.packageJson.version;
+        const value = this.packageJsonProvider.version;
 
         assert.nonEmptyString(value);
 

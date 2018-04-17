@@ -18,6 +18,28 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default interface IZmqConfig {
-    zmqAddress: string;
+import {
+    assert,
+} from "check-types";
+
+import path from "path";
+import pkgDir from "pkg-dir";
+
+/* tslint:disable no-var-requires */
+// TODO: fix typings.
+const thenReadJson = require("then-read-json");
+/* tslint:enable no-var-requires */
+
+import IPackageJson from "./ipackage-json";
+
+export default async function loadPackageJson(): Promise<IPackageJson> {
+    const projectRootDirectoryPath = await pkgDir(__dirname);
+
+    // TODO: better null handling.
+    assert.nonEmptyString(projectRootDirectoryPath!);
+
+    const packageJsonPath = path.join(projectRootDirectoryPath!, "package.json");
+    const packageJson = await thenReadJson(packageJsonPath) as IPackageJson;
+
+    return packageJson;
 }

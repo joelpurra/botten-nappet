@@ -19,27 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
-
-import path from "path";
+    autoinject,
+    factory,
+} from "aurelia-framework";
 
 // NOTE: this is a hack, modifying the global Rx.Observable.prototype.
 import "../../lib/rxjs-extensions/async-filter";
-
-import configLibrary from "config";
-import pkgDir from "pkg-dir";
-
-/* tslint:disable no-var-requires */
-// TODO: fix typings.
-const thenReadJson = require("then-read-json");
-/* tslint:enable no-var-requires */
 
 import IStartableStoppable from "@botten-nappet/shared/startable-stoppable/istartable-stoppable";
 
 import GracefulShutdownManager from "@botten-nappet/shared/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/util/pino-logger";
-import Config from "../config/config";
+import BackendConfig from "../config/config";
 import DatabaseConnection from "../storage/database-connection";
 
 import MessageQueuePublisher from "@botten-nappet/shared/message-queue/publisher";
@@ -56,14 +47,25 @@ import TwitchTokenHelper from "@botten-nappet/backend-twitch/helper/token-helper
 
 import BackendManagerMain from "./manager-main";
 
+@autoinject
 export default class BackendMain implements IStartableStoppable {
     private backendManagerMain: BackendManagerMain | null;
     private logger: PinoLogger;
 
     constructor(
+        private readonly config: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly databaseConnection: DatabaseConnection,
+        @factory(MessageQueueRawTopicsSubscriber)
+        private readonly messageQueueRawTopicsSubscriberFactory:
+            (...topics: string[]) => MessageQueueRawTopicsSubscriber,
+        private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private readonly twitchCSRFHelper: TwitchCSRFHelper,
+        private readonly twitchRequestHelper: TwitchRequestHelper,
+        private readonly twitchTokenHelper: TwitchTokenHelper,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -72,64 +74,25 @@ export default class BackendMain implements IStartableStoppable {
     }
 
     public async start(): Promise<void> {
-        // TODO: import type for package.json.
-        const projectRootDirectoryPath = await pkgDir(__dirname);
-
-        // TODO: better null handling.
-        assert.nonEmptyString(projectRootDirectoryPath!);
-
-        const packageJsonPath = path.join(projectRootDirectoryPath!, "package.json");
-        const packageJson = await thenReadJson(packageJsonPath);
-        const config = new Config(configLibrary, packageJson);
-        config.validate();
-
-        const databaseConnection = new DatabaseConnection(this.logger, config.databaseUri);
+        this.config.validate();
 
         const messageQueueAllRawTopicsSubscriber =
-            new MessageQueueRawTopicsSubscriber(
-                this.logger,
-                config.zmqAddress,
+            this.messageQueueRawTopicsSubscriberFactory(
                 "external",
             );
 
-        const twitchPollingApplicationTokenConnection = new TwitchPollingApplicationTokenConnection(
-            this.logger,
-            config.twitchAppClientId,
-            config.twitchAppClientSecret,
-            config.twitchAppScopes,
-            config.twitchAppTokenRefreshInterval,
-            false,
-            config.twitchOAuthTokenUri,
-            "post",
-        );
-        const twitchApplicationTokenManager = new TwitchApplicationTokenManager(
-            this.logger,
-            twitchPollingApplicationTokenConnection,
-            config.twitchAppClientId,
-            config.twitchOAuthTokenRevocationUri,
-        );
-        const twitchCSRFHelper = new TwitchCSRFHelper(this.logger);
-        const twitchRequestHelper = new TwitchRequestHelper(this.logger);
-        const twitchTokenHelper = new TwitchTokenHelper(
-            this.logger,
-            twitchRequestHelper,
-            config.twitchOAuthTokenRevocationUri,
-            config.twitchOAuthTokenVerificationUri,
-            config.twitchAppClientId,
-        );
-
         this.backendManagerMain = new BackendManagerMain(
-            config,
+            this.config,
             this.logger,
             this.gracefulShutdownManager,
-            databaseConnection,
+            this.databaseConnection,
             messageQueueAllRawTopicsSubscriber,
             this.messageQueuePublisher,
-            twitchRequestHelper,
-            twitchCSRFHelper,
-            twitchTokenHelper,
-            twitchPollingApplicationTokenConnection,
-            twitchApplicationTokenManager,
+            this.twitchRequestHelper,
+            this.twitchCSRFHelper,
+            this.twitchTokenHelper,
+            this.twitchPollingApplicationTokenConnection,
+            this.twitchApplicationTokenManager,
         );
 
         await this.backendManagerMain.start();

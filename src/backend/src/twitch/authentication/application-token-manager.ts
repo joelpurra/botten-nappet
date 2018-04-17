@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -30,8 +33,10 @@ import ConnectionManager from "@botten-nappet/shared/connection/connection-manag
 
 import IRawToken from "@botten-nappet/interface-twitch/authentication/iraw-token";
 
+import ApplicationTokenManagerConfig from "../../config/application-token-manager-config";
 import IPollingConnection from "../polling/connection/ipolling-connection";
 
+@autoinject
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
     private tokenHasBeenSet: (() => void) | null;
@@ -43,19 +48,20 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IRawToken>,
-        private readonly clientId: string,
-        private readonly oauthTokenRevocationUri: string,
+        private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 4);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
-        assert.equal(typeof clientId, "string");
-        assert.greater(clientId.length, 0);
-        assert.equal(typeof oauthTokenRevocationUri, "string");
-        assert.greater(oauthTokenRevocationUri.length, 0);
-        assert(oauthTokenRevocationUri.startsWith("https://"));
+        assert.equal(typeof applicationTokenManagerConfig, "object");
+
+        assert.equal(typeof applicationTokenManagerConfig.appClientId, "string");
+        assert.greater(applicationTokenManagerConfig.appClientId.length, 0);
+        assert.equal(typeof applicationTokenManagerConfig.oauthTokenRevocationUri, "string");
+        assert.greater(applicationTokenManagerConfig.oauthTokenRevocationUri.length, 0);
+        assert(applicationTokenManagerConfig.oauthTokenRevocationUri.startsWith("https://"));
 
         this.logger = logger.child(this.constructor.name);
 
@@ -105,7 +111,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         assert.greater(token.length, 0);
 
         const data = {
-            client_id: this.clientId,
+            client_id: this.applicationTokenManagerConfig.appClientId,
             token,
         };
 
@@ -175,7 +181,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
         // TODO: use TokenHelper.revoke().
         const axiosInstanceConfig = {
-            baseURL: this.oauthTokenRevocationUri,
+            baseURL: this.applicationTokenManagerConfig.oauthTokenRevocationUri,
             headers: this.oauthTokenRevocationHeaders,
             // NOTE: per-instance method has no effect due to bug in axios, must use per request.
             // TODO: remove per-call overrides once axios has been fixed.

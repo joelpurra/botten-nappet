@@ -19,13 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+
+import {
     Logger,
-} from "../../node_modules/@types/pino/index";
+} from "pino";
 
 import {
     assert,
 } from "check-types";
 
+@autoinject
 export default class PinoLogger {
     constructor(
         private readonly parentPinoLogger: Logger,

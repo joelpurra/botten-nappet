@@ -42,12 +42,6 @@
       ],
     },
   },
-  "files": [
-    {
-      "pattern": "node_modules/reflect-metadata/Reflect.js",
-      "include": true
-    },
-  ],
   "include": [
     "*.js",
     "src/**/*.ts",
