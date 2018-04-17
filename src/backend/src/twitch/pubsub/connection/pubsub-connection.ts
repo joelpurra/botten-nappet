@@ -55,13 +55,13 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse>>> {
+    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse, any>>> {
         const userAccessToken = await this.userAccessTokenProvider();
 
         const listenNonce = Math.random()
             .toString(10);
 
-        const setupConnectionCommands: Array<IWebSocketCommand<IPubSubResponse>> = [
+        const setupConnectionCommands: Array<IWebSocketCommand<IPubSubResponse, any>> = [
             {
                 commands: [
                     // TODO: typing for the PING request.

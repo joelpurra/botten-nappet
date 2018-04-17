@@ -70,7 +70,9 @@ export default class IrcConnection
         return this.channelName;
     }
 
-    protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IIncomingIrcCommand>>> {
+    protected async getSetupConnectionCommands(): Promise<Array<
+        IWebSocketCommand<IIncomingIrcCommand, IOutgoingIrcCommand>
+        >> {
         const userAccessToken = await this.userAccessTokenProvider();
 
         // TODO: make capabilities configurable/subclassable?
@@ -82,56 +84,58 @@ export default class IrcConnection
 
         const capabilitiesString = capabilities.join(" ");
 
-        const setupConnectionCommands: Array<IWebSocketCommand<IIncomingIrcCommand>> = [
-            {
-                commands: [
-                    {
-                        channel: null,
-                        command: "CAP REQ",
-                        message: `:${capabilitiesString}`,
-                        tags: {},
-                        timestamp: new Date(),
-                    },
-                ],
-                verifier: (message) => message.original.includes("CAP * ACK"),
-            },
+        const setupConnectionCommands: Array<
+            IWebSocketCommand<IIncomingIrcCommand, IOutgoingIrcCommand>
+            > = [
+                {
+                    commands: [
+                        {
+                            channel: null,
+                            command: "CAP REQ",
+                            message: `:${capabilitiesString}`,
+                            tags: {},
+                            timestamp: new Date(),
+                        },
+                    ],
+                    verifier: (message) => message.original.includes("CAP * ACK"),
+                },
 
-            {
-                commands: [
-                    {
-                        channel: null,
-                        command: "PASS",
-                        // NOTE: the user access token needs to have an "oauth:" prefix.
-                        message: `oauth:${userAccessToken}`,
-                        tags: {},
-                        timestamp: new Date(),
-                    },
-                    {
-                        channel: null,
-                        command: "NICK",
-                        message: this.username,
-                        tags: {},
-                        timestamp: new Date(),
-                    },
-                ],
-                // NOTE: the "001" message might change, but for now it's a hardcoded return value.
-                // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
-                verifier: (message) => message.original.includes("001"),
-            },
+                {
+                    commands: [
+                        {
+                            channel: null,
+                            command: "PASS",
+                            // NOTE: the user access token needs to have an "oauth:" prefix.
+                            message: `oauth:${userAccessToken}`,
+                            tags: {},
+                            timestamp: new Date(),
+                        },
+                        {
+                            channel: null,
+                            command: "NICK",
+                            message: this.username,
+                            tags: {},
+                            timestamp: new Date(),
+                        },
+                    ],
+                    // NOTE: the "001" message might change, but for now it's a hardcoded return value.
+                    // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
+                    verifier: (message) => message.original.includes("001"),
+                },
 
-            {
-                commands: [
-                    {
-                        channel: null,
-                        command: "JOIN",
-                        message: this.channelName,
-                        tags: {},
-                        timestamp: new Date(),
-                    },
-                ],
-                verifier: (message) => message.original.includes(`JOIN ${this.channelName}`),
-            },
-        ];
+                {
+                    commands: [
+                        {
+                            channel: null,
+                            command: "JOIN",
+                            message: this.channelName,
+                            tags: {},
+                            timestamp: new Date(),
+                        },
+                    ],
+                    verifier: (message) => message.original.includes(`JOIN ${this.channelName}`),
+                },
+            ];
 
         return setupConnectionCommands;
     }
