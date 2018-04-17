@@ -31,7 +31,7 @@ import PollingConnection from "./polling-connection";
 export default class PollingClientIdConnection<T> extends PollingConnection<T> {
     constructor(
         logger: PinoLogger,
-        private applicationClientId: string,
+        private readonly applicationClientId: string,
         interval: number,
         atBegin: boolean,
         uri: string,

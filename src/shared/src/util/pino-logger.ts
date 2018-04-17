@@ -28,7 +28,7 @@ import {
 
 export default class PinoLogger {
     constructor(
-        private parentPinoLogger: Logger,
+        private readonly parentPinoLogger: Logger,
     ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof parentPinoLogger, "object");

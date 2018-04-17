@@ -29,8 +29,8 @@ export default class SoundManager {
     private cowbellRootPath: string;
 
     constructor(
-        private logger: ConsoleLog,
-        private soundRootPath: string,
+        private readonly logger: ConsoleLog,
+        private readonly soundRootPath: string,
     ) {
         // TODO: path.join();
         this.cowbellRootPath = `${this.soundRootPath}/cowbell`;

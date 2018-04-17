@@ -25,11 +25,11 @@ import SoundManager from "./sound-manager";
 
 export default abstract class SimpleNotificationHandler {
     constructor(
-        protected logger: ConsoleLog,
-        private screenLog: ScreenLog,
-        private notificationManager: NotificationManager,
-        private soundManager: SoundManager,
-        private randomSoundGroup: string,
+        protected readonly logger: ConsoleLog,
+        private readonly screenLog: ScreenLog,
+        private readonly notificationManager: NotificationManager,
+        private readonly soundManager: SoundManager,
+        private readonly randomSoundGroup: string,
     ) {
     }
 

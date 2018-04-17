@@ -38,8 +38,8 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IOutgoingSearchCommand>,
         private incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>,
-        private authenticatedRequest: AuthenticatedRequest,
-        private vidyRootUrl: string,
+        private readonly authenticatedRequest: AuthenticatedRequest,
+        private readonly vidyRootUrl: string,
     ) {
         super(logger, connection);
 

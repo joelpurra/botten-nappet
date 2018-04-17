@@ -34,8 +34,8 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
 
     constructor(
         logger: PinoLogger,
-        private publisher: Publisher,
-        private topic: string,
+        private readonly publisher: Publisher,
+        private readonly topic: string,
     ) {
         assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");

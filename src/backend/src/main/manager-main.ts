@@ -50,17 +50,17 @@ export default class BackendManagerMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private databaseConnection: DatabaseConnection,
-        private messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
-        private messageQueuePublisher: MessageQueuePublisher,
-        private twitchRequestHelper: TwitchRequestHelper,
-        private twitchCSRFHelper: TwitchCSRFHelper,
-        private twitchTokenHelper: TwitchTokenHelper,
-        private twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-        private twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly databaseConnection: DatabaseConnection,
+        private readonly messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly twitchRequestHelper: TwitchRequestHelper,
+        private readonly twitchCSRFHelper: TwitchCSRFHelper,
+        private readonly twitchTokenHelper: TwitchTokenHelper,
+        private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);

@@ -41,8 +41,8 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         logger: PinoLogger,
         connection: IPollingConnection<IPollingCheermotesResponse>,
         private incomingCheermotesEventEmitter: IEventEmitter<IIncomingCheermotesEvent>,
-        private username: string,
-        private userid: number,
+        private readonly username: string,
+        private readonly userid: number,
     ) {
         super(logger, connection);
 

@@ -34,8 +34,8 @@ export default class UserTokenManager {
 
     constructor(
         logger: PinoLogger,
-        private tokenHelper: TokenHelper,
-        private userTokenHelper: UserTokenHelper,
+        private readonly tokenHelper: TokenHelper,
+        private readonly userTokenHelper: UserTokenHelper,
     ) {
         assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");

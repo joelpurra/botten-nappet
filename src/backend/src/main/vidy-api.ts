@@ -44,10 +44,10 @@ export default class BackendVidyApi implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
         private messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
     ) {

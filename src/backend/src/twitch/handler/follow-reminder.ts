@@ -40,7 +40,7 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
         private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private channelName: string,
+        private readonly channelName: string,
     ) {
         super(logger, connection);
 

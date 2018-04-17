@@ -38,7 +38,7 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
         private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private username: string,
+        private readonly username: string,
     ) {
         super(logger, connection);
 

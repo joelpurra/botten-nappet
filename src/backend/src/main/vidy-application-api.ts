@@ -44,10 +44,10 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
     ) {
         this.logger = logger.child(this.constructor.name);
 

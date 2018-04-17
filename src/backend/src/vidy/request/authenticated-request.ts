@@ -37,7 +37,7 @@ export default class AuthenticatedRequest {
 
     constructor(
         logger: PinoLogger,
-        private config: Config,
+        private readonly config: Config,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");

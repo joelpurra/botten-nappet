@@ -37,8 +37,8 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
         private incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>,
-        private username: string,
-        private userid: number,
+        private readonly username: string,
+        private readonly userid: number,
     ) {
         super(logger, connection);
 

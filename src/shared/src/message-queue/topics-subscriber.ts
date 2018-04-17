@@ -46,7 +46,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
     constructor(
         logger: PinoLogger,
-        private address: string,
+        private readonly address: string,
         ...topics: string[],
     ) {
         // NOTE: variable arguments length.

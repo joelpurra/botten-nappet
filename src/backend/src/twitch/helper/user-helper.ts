@@ -38,9 +38,9 @@ export default class UserHelper {
 
     constructor(
         logger: PinoLogger,
-        private requestHelper: RequestHelper,
-        private usersDataUri: string,
-        private applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
+        private readonly requestHelper: RequestHelper,
+        private readonly usersDataUri: string,
+        private readonly applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
     ) {
         assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");

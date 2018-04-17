@@ -22,8 +22,8 @@ import ConsoleLog from "./console-log";
 
 export default class VidyHandler {
     constructor(
-        private logger: ConsoleLog,
-        private videoElementId: string,
+        private readonly logger: ConsoleLog,
+        private readonly videoElementId: string,
     ) {
     }
 

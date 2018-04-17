@@ -32,7 +32,7 @@ import IIRCConnection from "./iirc-connection";
 export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {
     constructor(
         logger: PinoLogger,
-        protected connection: IIRCConnection,
+        protected readonly connection: IIRCConnection,
     ) {
         super(logger, connection);
 

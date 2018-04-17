@@ -34,8 +34,8 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         logger: PinoLogger,
         connection: IPollingConnection<any>,
         private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
-        private username: string,
-        private userid: number,
+        private readonly username: string,
+        private readonly userid: number,
     ) {
         super(logger, connection);
 

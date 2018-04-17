@@ -39,7 +39,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         logger: PinoLogger,
         uri: string,
         private topics: string[],
-        private userAccessTokenProvider: UserAccessTokenProviderType,
+        private readonly userAccessTokenProvider: UserAccessTokenProviderType,
     ) {
         super(logger, uri);
 

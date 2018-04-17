@@ -37,8 +37,8 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingSearchResultEvent>,
         private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private channelName: string,
-        private vidyVideoLinkBaseUrl: string,
+        private readonly channelName: string,
+        private readonly vidyVideoLinkBaseUrl: string,
     ) {
         super(logger, connection);
 

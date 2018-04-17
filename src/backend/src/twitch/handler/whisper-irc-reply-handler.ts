@@ -37,7 +37,7 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingWhisperEvent>,
         private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private channelName: string,
+        private readonly channelName: string,
     ) {
         super(logger, connection);
 

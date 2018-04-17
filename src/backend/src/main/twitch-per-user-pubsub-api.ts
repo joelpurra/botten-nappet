@@ -44,12 +44,12 @@ export default class TwitchPerUserPubSubApi {
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
-        private twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
-        private twitchUserId: number,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);

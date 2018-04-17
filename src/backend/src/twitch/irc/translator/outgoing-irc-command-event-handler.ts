@@ -34,7 +34,7 @@ export default class OutgoingIrcCommandEventHandler extends EventSubscriptionMan
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IOutgoingIrcCommand>,
-        private ircConnection: IIRCConnection,
+        private readonly ircConnection: IIRCConnection,
     ) {
         super(logger, connection);
 

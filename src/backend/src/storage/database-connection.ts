@@ -41,7 +41,7 @@ export default class DatabaseConnection {
 
     constructor(
         logger: PinoLogger,
-        private uri: string,
+        private readonly uri: string,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");

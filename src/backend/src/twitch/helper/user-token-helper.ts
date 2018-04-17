@@ -44,14 +44,14 @@ export default class UserTokenHelper {
 
     constructor(
         logger: PinoLogger,
-        private csrfHelper: CSRFHelper,
-        private userStorageManager: UserStorageManager,
-        private requestHelper: RequestHelper,
-        private oauthAuthorizationUri: string,
-        private appOAuthRedirectUrl: string,
-        private oauthTokenUri: string,
-        private appClientId: string,
-        private appClientSecret: string,
+        private readonly csrfHelper: CSRFHelper,
+        private readonly userStorageManager: UserStorageManager,
+        private readonly requestHelper: RequestHelper,
+        private readonly oauthAuthorizationUri: string,
+        private readonly appOAuthRedirectUrl: string,
+        private readonly oauthTokenUri: string,
+        private readonly appClientId: string,
+        private readonly appClientSecret: string,
     ) {
         assert.hasLength(arguments, 9);
         assert.equal(typeof logger, "object");

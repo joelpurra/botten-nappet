@@ -45,9 +45,9 @@ export default class IrcConnection
     constructor(
         logger: PinoLogger,
         uri: string,
-        private channelName: string,
-        private username: string,
-        private userAccessTokenProvider: UserAccessTokenProviderType,
+        private readonly channelName: string,
+        private readonly username: string,
+        private readonly userAccessTokenProvider: UserAccessTokenProviderType,
     ) {
         super(logger, uri, "irc");
 

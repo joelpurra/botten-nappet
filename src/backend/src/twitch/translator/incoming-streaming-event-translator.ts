@@ -41,8 +41,8 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         logger: PinoLogger,
         connection: IPollingConnection<IPollingStreamingResponse>,
         private incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>,
-        private username: string,
-        private userid: number,
+        private readonly username: string,
+        private readonly userid: number,
     ) {
         super(logger, connection);
 

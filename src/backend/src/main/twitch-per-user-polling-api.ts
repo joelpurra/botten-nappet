@@ -51,14 +51,14 @@ export default class TwitchPerUserPollingApi {
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
         private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
         private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
         private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
-        private twitchUserId: number,
+        private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);

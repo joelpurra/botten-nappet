@@ -32,7 +32,7 @@ export default class DistributedEventManager extends EventSubscriptionManager<ID
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IDistributedEvent>,
-        private distributedEventStorageManager: DistributedEventStorageManager,
+        private readonly distributedEventStorageManager: DistributedEventStorageManager,
     ) {
         super(logger, connection);
 

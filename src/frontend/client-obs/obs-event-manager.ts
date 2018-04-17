@@ -48,14 +48,14 @@ export default class ObsEventManager {
     };
 
     constructor(
-        private logger: ConsoleLog,
-        private botSocket: BotSocket,
-        private soundManager: SoundManager,
-        private followingHandler: FollowingHandler,
-        private cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
-        private subscriptionHandler: SubscriptionHandler,
-        private ballzManager: BallzManager,
-        private vidyHandler: VidyHandler,
+        private readonly logger: ConsoleLog,
+        private readonly botSocket: BotSocket,
+        private readonly soundManager: SoundManager,
+        private readonly followingHandler: FollowingHandler,
+        private readonly cheeringWithCheermotesHandler: CheeringWithCheermotesHandler,
+        private readonly subscriptionHandler: SubscriptionHandler,
+        private readonly ballzManager: BallzManager,
+        private readonly vidyHandler: VidyHandler,
     ) {
         // TODO: share this code.
         this.dataHandlerSubscription = null;

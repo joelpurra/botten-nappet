@@ -39,9 +39,9 @@ export default class BrowserEventManager {
     };
 
     constructor(
-        private logger: ConsoleLog,
-        private botSocket: BotSocket,
-        private speechManager: SpeechManager,
+        private readonly logger: ConsoleLog,
+        private readonly botSocket: BotSocket,
+        private readonly speechManager: SpeechManager,
     ) {
         // TODO: share this code.
         this.dataHandlerSubscription = null;

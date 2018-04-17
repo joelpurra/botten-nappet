@@ -32,7 +32,7 @@ export default class BotSocket {
 
     constructor(
         logger: ConsoleLog,
-        private url: string,
+        private readonly url: string,
     ) {
         this.logger = logger;
 

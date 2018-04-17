@@ -43,8 +43,8 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     constructor(
         logger: PinoLogger,
         connection: IPollingConnection<IRawToken>,
-        private clientId: string,
-        private oauthTokenRevocationUri: string,
+        private readonly clientId: string,
+        private readonly oauthTokenRevocationUri: string,
     ) {
         super(logger, connection);
 

@@ -46,8 +46,8 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         logger: PinoLogger,
         connection: IPollingConnection<IPollingFollowingResponse>,
         private incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>,
-        private username: string,
-        private userid: number,
+        private readonly username: string,
+        private readonly userid: number,
     ) {
         super(logger, connection);
 

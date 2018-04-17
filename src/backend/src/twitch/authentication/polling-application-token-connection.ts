@@ -33,8 +33,8 @@ import IHttpHeaders from "../polling/interface/ihttp-header";
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     constructor(
         logger: PinoLogger,
-        private applicationClientId: string,
-        private applicationClientSecret: string,
+        private readonly applicationClientId: string,
+        private readonly applicationClientSecret: string,
         private scopes: string[],
         interval: number,
         atBegin: boolean,

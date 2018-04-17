@@ -35,7 +35,7 @@ export default class CheeringWithCheermotesHandler extends SimpleNotificationHan
         notificationManager: NotificationManager,
         soundManager: SoundManager,
         randomSoundGroup: string,
-        private ballzManager: BallzManager,
+        private readonly ballzManager: BallzManager,
     ) {
         super(logger, screenLog, notificationManager, soundManager, randomSoundGroup);
 

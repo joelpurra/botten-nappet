@@ -70,10 +70,10 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
     constructor(
         logger: PinoLogger,
-        private intervalInMilliseconds: number,
-        private atBegin: boolean,
-        private uri: string,
-        private method: string,
+        private readonly intervalInMilliseconds: number,
+        private readonly atBegin: boolean,
+        private readonly uri: string,
+        private readonly method: string,
         private defaultHeaders?: IHttpHeaders,
         private defaultData?: IHttpData,
     ) {

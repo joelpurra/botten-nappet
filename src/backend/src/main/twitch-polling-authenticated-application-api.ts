@@ -47,11 +47,11 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
-        private twitchUserId: number,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);

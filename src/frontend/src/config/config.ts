@@ -33,7 +33,7 @@ export default class Config implements IZmqConfig {
     private prefix: string;
 
     constructor(
-        private config: IConfig,
+        private readonly config: IConfig,
     ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof config, "object");

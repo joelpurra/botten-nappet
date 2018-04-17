@@ -62,8 +62,8 @@ export default class BackendMain implements IStartableStoppable {
 
     constructor(
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);

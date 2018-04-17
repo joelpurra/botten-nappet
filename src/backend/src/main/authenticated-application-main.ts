@@ -78,14 +78,14 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
     private logger: PinoLogger;
 
     constructor(
-        private config: Config,
+        private readonly config: Config,
         logger: PinoLogger,
-        private gracefulShutdownManager: GracefulShutdownManager,
-        private messageQueuePublisher: MessageQueuePublisher,
-        private twitchApplicationTokenManager: TwitchApplicationTokenManager,
-        private twitchRequestHelper: TwitchRequestHelper,
-        private twitchCSRFHelper: TwitchCSRFHelper,
-        private twitchTokenHelper: TwitchTokenHelper,
+        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private readonly twitchRequestHelper: TwitchRequestHelper,
+        private readonly twitchCSRFHelper: TwitchCSRFHelper,
+        private readonly twitchTokenHelper: TwitchTokenHelper,
     ) {
         this.logger = logger.child(this.constructor.name);
 

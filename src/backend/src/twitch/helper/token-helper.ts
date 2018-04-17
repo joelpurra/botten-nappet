@@ -36,10 +36,10 @@ export default class TokenHelper {
 
     constructor(
         logger: PinoLogger,
-        private requestHelper: RequestHelper,
-        private oauthTokenRevocationUri: string,
-        private oauthTokenVerificationUri: string,
-        private appClientId: string,
+        private readonly requestHelper: RequestHelper,
+        private readonly oauthTokenRevocationUri: string,
+        private readonly oauthTokenVerificationUri: string,
+        private readonly appClientId: string,
     ) {
         assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");

@@ -48,7 +48,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
 
     constructor(
         logger: PinoLogger,
-        private uri: string,
+        private readonly uri: string,
         private protocol?: string,
     ) {
         assert(arguments.length === 2 || arguments.length === 3);
