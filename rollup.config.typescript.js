@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import rollupTypescript from "rollup-plugin-typescript";
-const typescript = require("typescript");
+import typescript from "typescript";
 
 export default () =>
     rollupTypescript({

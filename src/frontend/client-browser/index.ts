@@ -18,29 +18,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import BotSocket from "../shared/bot-socket";
-import ConsoleLog from "../shared/console-log";
-import SpeechManager from "../shared/speech-manager";
-import BrowserEventManager from "./browser-event-manager";
+import run from "./run";
 
-export default async function client() {
-    const logger = new ConsoleLog();
-
-    const botSocketUrl = "http://localhost:3000/";
-    const botSocket = new BotSocket(logger, botSocketUrl);
-    await botSocket.connect();
-
-    const defaultVoiceName = "Fiona";
-    const speechManager = new SpeechManager(logger, defaultVoiceName);
-
-    const browserEventManager = new BrowserEventManager(
-        logger,
-        botSocket,
-        speechManager,
-    );
-
-    await browserEventManager.start();
-
-    // NOTE: debugging tool.
-    window.triggerBotEvent = (botEvent: any) => browserEventManager.trigger(botEvent);
-}
+run();

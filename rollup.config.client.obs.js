@@ -20,14 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json from "rollup-plugin-json";
 
-import typescript from "./rollup.config.typescript.js";
+// import typescript from "./rollup.config.typescript.js";
 // TODO: enable for production builds?
 // import uglify from "./rollup.config.uglify.js";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "client.obs.ts";
-const outputName = "./src/frontend/public/dist/client.obs.js";
+const inputName = "./dist/client/obs/es-modules/index.js";
+const outputName = "./src/frontend/public/dist/client/obs/index.js";
 
 export default {
     external: [
@@ -49,7 +49,7 @@ export default {
     },
     plugins: [
         json(),
-        typescript(),
+        // typescript(),
         // TODO: enable for production builds?
         // uglify(),
         license(inputName),
