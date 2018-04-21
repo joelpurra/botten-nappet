@@ -37,7 +37,7 @@ backend:
 frontend:
     port: 3000
     static:
-        publicRootDirectory: "./src/frontend/public"
+        publicRootDirectory: "./package/server-frontend/public"
 shared:
     applicationName: botten-nappet
     logging:

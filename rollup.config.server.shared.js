@@ -26,8 +26,8 @@ import json from "rollup-plugin-json";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "./dist/server/shared/es-modules/index.js";
-const outputName = "./dist/server/shared/index.js";
+const inputName = "./package/server-shared/index.js";
+const outputName = "./package/server-shared/dist/cjs/index.js";
 
 export default {
     external: [

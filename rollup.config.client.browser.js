@@ -26,8 +26,8 @@ import json from "rollup-plugin-json";
 import filesize from "./rollup.config.filesize.js";
 import license from "./rollup.config.license.js";
 
-const inputName = "./dist/client/browser/es-modules/index.js";
-const outputName = "./src/frontend/public/dist/client/browser/index.js";
+const inputName = "./package/client-browser/index.js";
+const outputName = "./package/server-frontend/public/dist/client/browser/index.js";
 
 export default {
     external: [
