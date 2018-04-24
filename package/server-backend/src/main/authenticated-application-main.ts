@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
@@ -31,6 +34,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
+import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
 import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/src/authentication/application-token-manager";
 import {
@@ -70,6 +74,7 @@ import PerUserHandlersMain from "./per-user-handlers-main";
 
 /* tslint:enable:max-line-length */
 
+@autoinject
 export default class BackendAuthenticatedApplicationMain implements IStartableStoppable {
     private perUserHandlersMain: PerUserHandlersMain | null;
     private backendTwitchPollingAuthenticatedApplicationApi: BackendTwitchPollingAuthenticatedApplicationApi | null;
@@ -83,6 +88,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
         private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
         private readonly twitchRequestHelper: TwitchRequestHelper,
         private readonly twitchCSRFHelper: TwitchCSRFHelper,
@@ -140,65 +146,61 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         // TODO: better null handling.
         const twitchUserId = await this.twitchTokenHelper.getUserIdByRawAccessToken(twitchUserRawToken!);
 
-        // TODO: configurable.
-        const topicsStringSeparator = ":";
-        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
-
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingPubSubEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingPubSubEvent),
             );
 
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingIrcCommand),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingIrcCommand),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingFollowingEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingFollowingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingStreamingEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingStreamingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingCheermotesEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheermotesEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingCheeringEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheeringEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingWhisperEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingWhisperEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingSubscriptionEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingSubscriptionEvent),
             );
 
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicVidyIncomingSearchResultEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicVidyIncomingSearchResultEvent),
             );
 
         this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
@@ -229,6 +231,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,
+            this.messageQueueTopicHelper,
             twitchUserAccessTokenProvider,
             twitchUserId,
         );

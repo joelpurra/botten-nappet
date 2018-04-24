@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -33,14 +36,13 @@ import SocketIo from "socket.io";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import Config from "../config/config";
 
 /* tslint:disable max-line-length */
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
+import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
 import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/iincoming-irc-command";
 import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheering-with-cheermotes-event";
@@ -61,23 +63,22 @@ interface ICustomWebSocketEventData {
     customData: object;
 }
 
+@autoinject
 export default class FrontendManagerMain {
     private io: SocketIo.Server | null;
     private server: http.Server | null;
     private connectables: IConnectable[];
-    private frontendManagedMain: FrontendManagedMain | null;
     private logger: PinoLogger;
 
     constructor(
         private readonly config: Config,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
+        private readonly frontendManagedMain: FrontendManagedMain,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 
-        this.frontendManagedMain = null;
         this.server = null;
         this.io = null;
         this.connectables = [];
@@ -101,42 +102,41 @@ export default class FrontendManagerMain {
         );
         app.use(koaStatic(staticPublicRootDirectoryPath));
 
+        this.logger.info(staticPublicRootDirectoryPath, "Serving static files from directory path.");
+
         this.server = http.createServer(app.callback());
         this.io = SocketIo(this.server);
 
-        // TODO: configurable.
-        const topicsStringSeparator = ":";
-        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
                 this.config.zmqAddress,
                 // TODO: no backend events.
-                ...splitTopics("external:backend:twitch:incoming:irc:command"),
+                await this.messageQueueTopicHelper.split("external:backend:twitch:incoming:irc:command"),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingFollowingEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingFollowingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingCheeringWithCheermotesEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheeringWithCheermotesEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingSubscriptionEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingSubscriptionEvent),
             );
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicVidyIncomingSearchResultEvent),
+                await this.messageQueueTopicHelper.split(this.config.topicVidyIncomingSearchResultEvent),
             );
 
         this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
@@ -299,13 +299,6 @@ export default class FrontendManagerMain {
         });
 
         this.logger.info("Managed.");
-
-        this.frontendManagedMain = new FrontendManagedMain(
-            this.config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-        );
 
         await Bluebird.promisify<void, number>(this.server.listen, {
             context: this.server,

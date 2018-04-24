@@ -18,9 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
+
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -31,35 +34,25 @@ import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/src/aut
 import TwitchPollingApplicationTokenConnection from "@botten-nappet/backend-twitch/src/authentication/polling-application-token-connection";
 /* tslint:enable max-line-length */
 
-import TwitchCSRFHelper from "@botten-nappet/backend-twitch/src/helper/csrf-helper";
-import TwitchRequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
-import TwitchTokenHelper from "@botten-nappet/backend-twitch/src/helper/token-helper";
-
 import BackendVidyApplicationApi from "@botten-nappet/server-vidy/src/application-api";
 
 import BackendAuthenticatedApplicationMain from "./authenticated-application-main";
 
+@autoinject
 export default class BackendManagedMain implements IStartableStoppable {
-    private backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain | null;
-    private backendVidyApplicationApi: BackendVidyApplicationApi | null;
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly twitchRequestHelper: TwitchRequestHelper,
-        private twitchCSRFHelper: TwitchCSRFHelper ,
-        private twitchTokenHelper: TwitchTokenHelper ,
         private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
         private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private readonly backendVidyApplicationApi: BackendVidyApplicationApi,
+        private readonly backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
-
-        this.backendVidyApplicationApi = null;
-        this.backendAuthenticatedApplicationMain = null;
     }
 
     public async start(): Promise<void> {
@@ -70,24 +63,6 @@ export default class BackendManagedMain implements IStartableStoppable {
         await this.twitchApplicationTokenManager.getOrWait();
 
         this.logger.info("Application authenticated.");
-
-        this.backendVidyApplicationApi = new BackendVidyApplicationApi(
-            this.config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-        );
-
-        this.backendAuthenticatedApplicationMain = new BackendAuthenticatedApplicationMain(
-            this.config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            this.twitchApplicationTokenManager,
-            this.twitchRequestHelper,
-            this.twitchCSRFHelper,
-            this.twitchTokenHelper,
-        );
 
         await Promise.all([
             this.backendVidyApplicationApi.start(),

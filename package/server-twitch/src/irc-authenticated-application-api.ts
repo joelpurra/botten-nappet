@@ -31,6 +31,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
+import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/iincoming-irc-command";
@@ -54,6 +55,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
         private readonly twitchUserAccessTokenProvider: UserAccessTokenProviderType,
         private readonly twitchUserId: number,
     ) {
@@ -73,21 +75,17 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
             this.twitchUserAccessTokenProvider,
         );
 
-        // TODO: configurable.
-        const topicsStringSeparator = ":";
-        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
-
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchIncomingIrcCommand),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingIrcCommand),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicTwitchOutgoingIrcCommand),
+                await this.messageQueueTopicHelper.split(this.config.topicTwitchOutgoingIrcCommand),
             );
 
         this.connectables.push(twitchIrcConnection);

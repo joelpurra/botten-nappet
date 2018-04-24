@@ -20,87 +20,50 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /* tslint:disable max-line-length */
 
+import {
+    autoinject,
+} from "aurelia-framework";
+
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
 import DatabaseConnection from "@botten-nappet/backend-shared/src/storage/database-connection";
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import DistributedEventStorageManager from "@botten-nappet/backend-shared/src/storage/manager/distributed-event-storage-manager";
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueRawTopicsSubscriber from "@botten-nappet/shared/src/message-queue/raw-topics-subscriber";
-
-import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/src/authentication/application-token-manager";
-import TwitchPollingApplicationTokenConnection from "@botten-nappet/backend-twitch/src/authentication/polling-application-token-connection";
-
-import TwitchCSRFHelper from "@botten-nappet/backend-twitch/src/helper/csrf-helper";
-import TwitchRequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
-import TwitchTokenHelper from "@botten-nappet/backend-twitch/src/helper/token-helper";
+import MessageQueueExternalRawTopicsSubscriber from "../message-queue/external-raw-topics-subscriber";
 
 import DistributedEventManager from "@botten-nappet/backend-shared/src/distributed-events/distributed-event-manager";
 import DistributedEventRepository from "@botten-nappet/backend-shared/src/storage/repository/distributed-event-repository";
 
-import backendManagedMain from "./managed-main";
+import ExternalDistributedEventManager from "../distributed-events/external-distributed-event-manager";
+
 import BackendManagedMain from "./managed-main";
 
 /* tslint:enable max-line-length */
 
+@autoinject
 export default class BackendManagerMain implements IStartableStoppable {
-    private backendManagedMain: backendManagedMain | null;
-    private distributedEventManager: DistributedEventManager | null;
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly databaseConnection: DatabaseConnection,
-        private readonly messageQueueAllRawTopicsSubscriber: MessageQueueRawTopicsSubscriber,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly twitchRequestHelper: TwitchRequestHelper,
-        private readonly twitchCSRFHelper: TwitchCSRFHelper,
-        private readonly twitchTokenHelper: TwitchTokenHelper,
-        private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
-        private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        private readonly messageQueueExternalRawTopicsSubscriber: MessageQueueExternalRawTopicsSubscriber,
+        private readonly externalDistributedEventManager: ExternalDistributedEventManager,
+        private readonly backendManagedMain: BackendManagedMain,
+
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
-
-        this.distributedEventManager = null;
-        this.backendManagedMain = null;
     }
 
     public async start(): Promise<void> {
         await this.databaseConnection.connect();
-        await this.messageQueueAllRawTopicsSubscriber.connect();
+        await this.messageQueueExternalRawTopicsSubscriber.connect();
 
         // TODO: ensure event distributed event manager starts sooner?
-        const distributedEventStorageManager = new DistributedEventStorageManager(
-            this.logger,
-            DistributedEventRepository,
-        );
-        this.distributedEventManager = new DistributedEventManager(
-            this.logger,
-            this.messageQueueAllRawTopicsSubscriber,
-            distributedEventStorageManager,
-        );
-
-        await this.distributedEventManager.start();
+        await this.externalDistributedEventManager.start();
 
         this.logger.info("Managed.");
-
-        this.backendManagedMain = new BackendManagedMain(
-            this.config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            this.twitchRequestHelper,
-            this.twitchCSRFHelper,
-            this.twitchTokenHelper,
-            this.twitchPollingApplicationTokenConnection,
-            this.twitchApplicationTokenManager,
-        );
 
         await this.backendManagedMain.start();
     }
@@ -113,11 +76,11 @@ export default class BackendManagerMain implements IStartableStoppable {
             await this.backendManagedMain.stop();
         }
 
-        if (this.distributedEventManager) {
-            await this.distributedEventManager.stop();
+        if (this.externalDistributedEventManager) {
+            await this.externalDistributedEventManager.stop();
         }
 
-        await this.messageQueueAllRawTopicsSubscriber.disconnect();
+        await this.messageQueueExternalRawTopicsSubscriber.disconnect();
         await this.databaseConnection.disconnect();
     }
 }

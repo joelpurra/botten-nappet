@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    inject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -26,15 +29,18 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IDistributedEvent from "@botten-nappet/backend-shared/src/storage/idistributed-event";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
+import RawTopicsSubscriber from "@botten-nappet/shared/src/message-queue/raw-topics-subscriber";
 
-export default abstract class RawTopicsSubscriber extends IntersectionTopicsSubscriber<IDistributedEvent> {
+@inject(PinoLogger, ZmqConfig)
+export default class ExternalRawTopicsSubscriber extends RawTopicsSubscriber {
     constructor(
         logger: PinoLogger,
         zmqConfig: ZmqConfig,
-        topics: string[],
     ) {
-        super(logger, zmqConfig.zmqAddress, topics);
+        super(logger, zmqConfig, [
+            // NOTE: single-purpose class: supply the "configuration" value.
+            "external",
+        ]);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
@@ -43,18 +49,7 @@ export default abstract class RawTopicsSubscriber extends IntersectionTopicsSubs
         assert.equal(typeof zmqConfig.zmqAddress, "string");
         assert(zmqConfig.zmqAddress.length > 0);
         assert(zmqConfig.zmqAddress.startsWith("tcp://"));
-        assert.array(topics);
 
         this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
-    }
-
-    protected async parseMessages(topicMessages: IDistributedEvent): Promise<IDistributedEvent> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof topicMessages, "object");
-        assert.nonEmptyArray(topicMessages.messages);
-        assert.equal(typeof topicMessages.topic, "string");
-        assert.nonEmptyString(topicMessages.topic);
-
-        return topicMessages;
     }
 }

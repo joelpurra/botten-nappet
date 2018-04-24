@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import nodeResolve from "rollup-plugin-node-resolve";
+import commonjs from "rollup-plugin-commonjs";
 import json from "rollup-plugin-json";
 
 // import typescript from "./rollup.config.typescript.js";
@@ -49,6 +51,14 @@ export default {
     },
     plugins: [
         json(),
+        nodeResolve({
+            jsnext: true,
+            main: true,
+        }),
+        commonjs({
+            // exclude: ["node_modules/foo/**", "node_modules/bar/**"],
+            include: "node_modules/@botten-nappet/**",
+        }),
         // typescript(),
         // TODO: enable for production builds?
         // uglify(),

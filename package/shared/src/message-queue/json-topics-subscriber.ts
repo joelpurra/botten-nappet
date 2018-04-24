@@ -29,20 +29,17 @@ import ITopicMessages from "./itopic-messages";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 
 export default class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<ITopicMessages<T>> {
-    constructor(logger: PinoLogger, address: string, ...topics: string[]) {
-        super(logger, address, ...topics);
+    constructor(logger: PinoLogger, address: string, topics: string[]) {
+        super(logger, address, topics);
 
-        // NOTE: variable arguments length.
+        // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
         assert(address.length > 0);
         assert(address.startsWith("tcp://"));
         assert.array(topics);
 
-        // TODO: configurable.
-        const topicsStringSeparator = ":";
-
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
     }
 
     protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<ITopicMessages<T>> {

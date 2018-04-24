@@ -35,6 +35,7 @@ import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-t
 
 import ApplicationTokenManagerConfig from "../config/application-token-manager-config";
 import IPollingConnection from "../polling/connection/ipolling-connection";
+import PollingApplicationTokenConnection from "./polling-application-token-connection";
 
 @autoinject
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
@@ -47,7 +48,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<IRawToken>,
+        connection: PollingApplicationTokenConnection,
         private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);

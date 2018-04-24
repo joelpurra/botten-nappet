@@ -19,22 +19,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+
+/* tslint:disable max-line-length */
+
+import DistributedEventManager from "@botten-nappet/backend-shared/src/distributed-events/distributed-event-manager";
+import DistributedEventStorageManager from "@botten-nappet/backend-shared/src/storage/manager/distributed-event-storage-manager";
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import IDistributedEvent from "../storage/idistributed-event";
-import DistributedEventStorageManager from "../storage/manager/distributed-event-storage-manager";
 
-export default abstract class DistributedEventManager extends EventSubscriptionManager<IDistributedEvent> {
+/* tslint:enable max-line-length */
+
+import ExternalRawTopicsSubscriber from "../message-queue/external-raw-topics-subscriber";
+
+@autoinject
+export default class ExternalDistributedEventManager extends DistributedEventManager {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IDistributedEvent>,
-        private readonly distributedEventStorageManager: DistributedEventStorageManager,
+        connection: ExternalRawTopicsSubscriber,
+        distributedEventStorageManager: DistributedEventStorageManager,
     ) {
-        super(logger, connection);
+        super(logger, connection, distributedEventStorageManager);
 
         assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
@@ -42,21 +53,5 @@ export default abstract class DistributedEventManager extends EventSubscriptionM
         assert.equal(typeof distributedEventStorageManager, "object");
 
         this.logger = logger.child(this.constructor.name);
-    }
-
-    protected async dataHandler(data: IDistributedEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // this.logger.trace(data, "dataHandler");
-
-        this.distributedEventStorageManager.store(data);
-    }
-
-    protected async filter(data: IDistributedEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        return true;
     }
 }

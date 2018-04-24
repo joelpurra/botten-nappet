@@ -26,41 +26,26 @@ import configLibrary from "config";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import Config from "../config/config";
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
+import FrontendConfig from "../config/config";
 
 import FrontendManagerMain from "./manager-main";
 
 @autoinject
 export default class FrontendMain implements IStartableStoppable {
-    private frontendManagerMain: FrontendManagerMain | null;
     private logger: PinoLogger;
 
     constructor(
+        private readonly config: FrontendConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly frontendManagerMain: FrontendManagerMain,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
-
-        this.frontendManagerMain = null;
     }
 
     public async start(): Promise<void> {
-        const config = new Config(configLibrary);
-
-        config.validate();
-
-        this.frontendManagerMain = new FrontendManagerMain(
-            config,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-        );
+        this.config.validate();
 
         await this.frontendManagerMain.start();
     }

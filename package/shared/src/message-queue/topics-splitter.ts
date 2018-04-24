@@ -21,31 +21,37 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     autoinject,
 } from "aurelia-framework";
+import {
+    assert,
+} from "check-types";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import IZeroMqTopicMessages from "./izeromq-topic-message";
+import TopicsSubscriber from "./topics-subscriber";
+
 @autoinject
-export default class FrontendManagedMain {
-    private logger: PinoLogger;
+export default class TopicHelper {
+    private readonly topicsStringSeparator: string;
 
     constructor(
-        logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        private readonly logger: PinoLogger,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 1);
+        assert.equal(typeof logger, "object");
+
         this.logger = logger.child(this.constructor.name);
+
+        // TODO: configurable.
+        this.topicsStringSeparator = ":";
     }
 
-    public async start(): Promise<void> {
-        this.logger.info("Managed.");
+    public async split(topicsString: string): Promise<string[]> {
+        assert.hasLength(arguments, 1);
+        assert.nonEmptyString(topicsString);
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
-    }
+        const splitTopics = topicsString.split(this.topicsStringSeparator);
 
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
+        return splitTopics;
     }
 }

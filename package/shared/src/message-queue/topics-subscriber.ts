@@ -37,6 +37,7 @@ import {
 } from "./zeromq-types";
 
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
+    protected topicsStringSeparator: string;
     protected logger: PinoLogger;
     protected topics: string[];
     private socket: any | null;
@@ -47,9 +48,9 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     constructor(
         logger: PinoLogger,
         private readonly address: string,
-        ...topics: string[],
+        topics: string[],
     ) {
-        // NOTE: variable arguments length.
+        // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
         assert.equal(typeof address, "string");
         assert(address.length > 0);
@@ -57,10 +58,10 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         assert.array(topics);
 
         // TODO: configurable.
-        const topicsStringSeparator = ":";
+        this.topicsStringSeparator = ":";
 
         this.topics = topics;
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
 
         this.zmqSubject = null;
         this.sharedzmqObservable = null;

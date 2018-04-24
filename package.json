@@ -2,7 +2,7 @@
   "name": "botten-nappet",
   "version": "7.0.0",
   "description": "A Twitch bot and streaming tool",
-  "main": "./dist/server/shared/index.js",
+  "main": "./package/server-shared/dist/cjs/index.js",
   "scripts": {
     "start": "node $npm_package_main",
     "debug": "node --inspect $npm_package_main",

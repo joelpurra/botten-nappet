@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
@@ -31,6 +34,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
+import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
 import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
 
@@ -38,6 +42,7 @@ import VidyApi from "./api";
 
 /* tslint:enable:max-line-length */
 
+@autoinject
 export default class BackendVidyApplicationApi implements IStartableStoppable {
     private vidyApi: VidyApi | null;
     private logger: any;
@@ -48,6 +53,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
     ) {
         this.logger = logger.child(this.constructor.name);
 
@@ -56,15 +62,11 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
     }
 
     public async start(): Promise<void> {
-        // TODO: configurable.
-        const topicsStringSeparator = ":";
-        const splitTopics = (topicsString: string): string[] => topicsString.split(topicsStringSeparator);
-
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
                 this.logger,
                 this.config.zmqAddress,
-                ...splitTopics(this.config.topicVidyOutgoingSearchCommand),
+                await this.messageQueueTopicHelper.split(this.config.topicVidyOutgoingSearchCommand),
             );
 
         this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);

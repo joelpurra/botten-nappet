@@ -18,6 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import nodeResolve from "rollup-plugin-node-resolve";
+import commonjs from "rollup-plugin-commonjs";
 import json from "rollup-plugin-json";
 
 // import typescript from "./rollup.config.typescript.js";
@@ -59,6 +61,25 @@ export default {
         "zeromq-ng",
     ],
     input: inputName,
+    onwarn: (warning) => {
+        if (!warning) {
+            /* tslint:disable no-console */
+            // NOTE: lulz.
+            console.warn("WARN", "No warning.");
+            /* tslint:enable no-console */
+
+            return;
+        }
+
+        // https://stackoverflow.com/questions/43556940/rollup-js-and-this-keyword-is-equivalent-to-undefined
+        if (warning.code === "THIS_IS_UNDEFINED") {
+            return;
+        }
+
+        /* tslint:disable no-console */
+        console.warn("WARN", warning.message, JSON.stringify(warning));
+        /* tslint:enable no-console */
+    },
     output: {
         file: outputName,
         format: "cjs",
@@ -67,6 +88,14 @@ export default {
     },
     plugins: [
         json(),
+        nodeResolve({
+            jsnext: true,
+            main: true,
+        }),
+        commonjs({
+            // exclude: ["node_modules/foo/**", "node_modules/bar/**"],
+            include: "node_modules/@botten-nappet/**",
+        }),
         // typescript(),
         // TODO: enable for production builds?
         // uglify(),

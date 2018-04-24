@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -27,18 +30,21 @@ import IDistributedEvent from "../idistributed-event";
 import DistributedEventRepositoryClass from "../repository/distributed-event-repository";
 import IDistributedEventSchema from "../repository/idistributed-event-schema";
 
+@autoinject
 export default class DistributedEventStorageManager {
+    private readonly DistributedEventRepository: typeof DistributedEventRepositoryClass;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        private DistributedEventRepository: typeof DistributedEventRepositoryClass,
     ) {
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 1);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof DistributedEventRepository, "function");
 
         this.logger = logger.child(this.constructor.name);
+
+        // TODO: use injectable type?
+        this.DistributedEventRepository = DistributedEventRepositoryClass;
     }
 
     public async getByDistributedEventTopic(topic: string): Promise<IDistributedEvent[]> {
@@ -58,7 +64,7 @@ export default class DistributedEventStorageManager {
         return distributedEvents as IDistributedEvent[];
     }
 
-    public async store(distributedEvent: IDistributedEvent) {
+    public async store(distributedEvent: IDistributedEvent): Promise<void> {
         assert.hasLength(arguments, 1);
         assert.equal(typeof distributedEvent, "object");
         assert.nonEmptyString(distributedEvent.topic);
@@ -67,6 +73,6 @@ export default class DistributedEventStorageManager {
 
         // this.logger.trace(distributedEventAfterStoring, "store");
 
-        return distributedEventAfterStoring.save();
+        await distributedEventAfterStoring.save();
     }
 }
