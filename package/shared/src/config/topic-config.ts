@@ -25,26 +25,15 @@ import {
     assert,
 } from "check-types";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-
-@autoinject
-export default class TokenHelperConfig {
+export default abstract class TopicConfig {
     constructor(
-        private readonly backendConfig: BackendConfig,
+        private readonly topicWithSeparators: string,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof backendConfig, "object");
+        assert.nonEmptyString(typeof topicWithSeparators);
     }
 
-    public get appClientId(): string {
-        return this.backendConfig.twitchAppClientId;
-    }
-
-    public get oauthTokenRevocationUri(): string {
-        return this.backendConfig.twitchOAuthTokenRevocationUri;
-    }
-
-    public get oauthTokenVerificationUri(): string {
-        return this.backendConfig.twitchOAuthTokenVerificationUri;
+    public get topic(): string {
+        return this.topicWithSeparators;
     }
 }

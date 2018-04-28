@@ -30,8 +30,8 @@ import {
 } from "config";
 
 @inject("IConfig")
-export default class Config {
-    public prefix: string;
+export default class FrontendConfig {
+    private prefix: string;
 
     constructor(
         private readonly config: IConfig,
@@ -39,47 +39,30 @@ export default class Config {
         assert.hasLength(arguments, 1);
         assert.equal(typeof config, "object");
 
-        this.prefix = "shared";
+        this.prefix = "frontend";
     }
 
     public validate(): any {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.
-        assert.nonEmptyString(this.applicationName);
-        assert.nonEmptyString(this.loggingLevel);
-        assert.nonEmptyString(this.loggingFile);
-        assert.nonEmptyString(this.zmqAddress);
+        assert.nonEmptyString(this.staticPublicRootDirectory);
+        assert.integer(this.port);
+        assert.positive(this.port);
     }
 
-    public get applicationName(): string {
-        const value = this.config.get<string>(`${this.prefix}.applicationName`);
+    public get staticPublicRootDirectory(): string {
+        const value = this.config.get<string>(`${this.prefix}.static.publicRootDirectory`);
 
         assert.nonEmptyString(value);
 
         return value;
     }
 
-    public get loggingLevel(): string {
-        const value = this.config.get<string>(`${this.prefix}.logging.level`);
+    public get port(): number {
+        const value = this.config.get<number>(`${this.prefix}.port`);
 
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get loggingFile(): string {
-        const value = this.config.get<string>(`${this.prefix}.logging.file`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get zmqAddress(): string {
-        const value = this.config.get<string>(`${this.prefix}.zmqAddress`);
-
-        assert.nonEmptyString(value);
-        assert(value.startsWith("tcp://"));
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }

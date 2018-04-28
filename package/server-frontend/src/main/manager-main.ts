@@ -36,8 +36,9 @@ import SocketIo from "socket.io";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import Config from "../config/config";
+import FrontendConfig from "../config/frontend-config";
 
 /* tslint:disable max-line-length */
 
@@ -71,7 +72,8 @@ export default class FrontendManagerMain {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly frontendConfig: FrontendConfig,
+        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
         private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
         private readonly frontendManagedMain: FrontendManagedMain,
@@ -98,7 +100,7 @@ export default class FrontendManagerMain {
 
         const staticPublicRootDirectoryPath = path.join(
             projectRootDirectoryPath!,
-            this.config.staticPublicRootDirectory,
+            this.frontendConfig.staticPublicRootDirectory,
         );
         app.use(koaStatic(staticPublicRootDirectoryPath));
 
@@ -110,33 +112,33 @@ export default class FrontendManagerMain {
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
-                this.config.zmqAddress,
+                this.zmqConfig.zmqAddress,
                 // TODO: no backend events.
                 await this.messageQueueTopicHelper.split("external:backend:twitch:incoming:irc:command"),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingFollowingEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingFollowingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheeringWithCheermotesEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingCheeringWithCheermotesEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingSubscriptionEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingSubscriptionEvent),
             );
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicVidyIncomingSearchResultEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.frontendConfig.topicVidyIncomingSearchResultEvent),
             );
 
         this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
@@ -302,7 +304,7 @@ export default class FrontendManagerMain {
 
         await Bluebird.promisify<void, number>(this.server.listen, {
             context: this.server,
-        })(this.config.port);
+        })(this.frontendConfig.port);
 
         await this.frontendManagedMain.start();
     }

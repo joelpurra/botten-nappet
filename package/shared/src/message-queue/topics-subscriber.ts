@@ -30,6 +30,10 @@ import Rx, {
 import zmq from "zeromq-ng";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 import IEventSubscriptionConnection from "../event/ievent-subscription-connection";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 import {
@@ -37,9 +41,8 @@ import {
 } from "./zeromq-types";
 
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
-    protected topicsStringSeparator: string;
     protected logger: PinoLogger;
-    protected topics: string[];
+    protected topics: string[] | null;
     private socket: any | null;
     private zmqSubject: Subject<IZeroMqTopicMessages> | null;
     private sharedzmqObservable: Rx.Observable<T> | null;
@@ -47,22 +50,19 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
     constructor(
         logger: PinoLogger,
-        private readonly address: string,
-        topics: string[],
+        protected readonly topicHelper: TopicHelper,
+        private readonly zmqConfig: ZmqConfig,
+        protected readonly topicConfig: TopicConfig,
     ) {
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
-        assert.equal(typeof address, "string");
-        assert(address.length > 0);
-        assert(address.startsWith("tcp://"));
-        assert.array(topics);
+        assert.equal(typeof topicHelper, "object");
+        assert.equal(typeof zmqConfig, "object");
+        assert.equal(typeof topicConfig, "object");
 
-        // TODO: configurable.
-        this.topicsStringSeparator = ":";
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
 
-        this.topics = topics;
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
-
+        this.topics = null;
         this.zmqSubject = null;
         this.sharedzmqObservable = null;
         this.zmqSubcription = null;
@@ -75,12 +75,14 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         assert.null(this.zmqSubject);
         assert.null(this.zmqSubcription);
 
+        this.topics = await this.topicHelper.split(this.topicConfig.topic);
+
         const zmqSubcriberOptions = {
             linger: 0,
         };
 
         this.socket = new zmq.Subscriber(zmqSubcriberOptions);
-        await this.socket.connect(this.address);
+        await this.socket.connect(this.zmqConfig.zmqAddress);
         await this.socket.subscribe(...this.topics);
 
         const openedObserver: Observer<T> = {
@@ -116,16 +118,18 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
 
     public async disconnect(): Promise<void> {
         assert.hasLength(arguments, 0);
+        assert.not.equal(this.topics, null);
         assert.not.equal(this.socket, null);
         assert.not.null(this.zmqSubject);
         assert.not.null(this.zmqSubcription);
 
-        await this.socket.unsubscribe(...this.topics);
+        // TODO: better null handling.
+        await this.socket.unsubscribe(...this.topics!);
 
         this.zmqSubcription!.unsubscribe();
         this.zmqSubject!.complete();
 
-        await this.socket.disconnect(this.address);
+        await this.socket.disconnect(this.zmqConfig.zmqAddress);
         await this.socket.close();
         this.socket = null;
 

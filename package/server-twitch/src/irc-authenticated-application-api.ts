@@ -23,7 +23,9 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -51,7 +53,8 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: BackendConfig,
+        private readonly backendConfig: BackendConfig,
+        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -69,23 +72,23 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
     public async start(): Promise<void> {
         const twitchIrcConnection = new TwitchIrcConnection(
             this.logger,
-            this.config.twitchIrcWebSocketUri,
-            this.config.twitchChannelName,
-            this.config.twitchUserName,
+            this.backendConfig.twitchIrcWebSocketUri,
+            this.backendConfig.twitchChannelName,
+            this.backendConfig.twitchUserName,
             this.twitchUserAccessTokenProvider,
         );
 
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingIrcCommand),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchIncomingIrcCommand),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchOutgoingIrcCommand),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchOutgoingIrcCommand),
             );
 
         this.connectables.push(twitchIrcConnection);
@@ -97,7 +100,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         this.logger.info("Connected.");
 
         this.twitchPerUserIrcApi = new TwitchPerUserIrcApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,

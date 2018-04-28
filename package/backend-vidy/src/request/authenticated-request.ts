@@ -28,7 +28,7 @@ import os from "os";
 import axios from "axios";
 import moment from "moment";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IClientContext from "./iclient-context";
 
@@ -37,11 +37,11 @@ export default class AuthenticatedRequest {
 
     constructor(
         logger: PinoLogger,
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
     ) {
         assert.hasLength(arguments, 2);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof config, "object");
+        assert.equal(typeof backendConfig, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -51,7 +51,7 @@ export default class AuthenticatedRequest {
         assert.nonEmptyString(method);
         assert.nonEmptyString(url);
         assert(url.startsWith("https://"));
-        assert(url.startsWith(this.config.vidyRootUrl));
+        assert(url.startsWith(this.backendConfig.vidyRootUrl));
         assert.not.null(params);
         assert.equal(typeof params, "object");
 
@@ -90,10 +90,10 @@ export default class AuthenticatedRequest {
         assert.nonEmptyString(method);
         assert.nonEmptyString(url);
         assert(url.startsWith("https://"));
-        assert(url.startsWith(this.config.vidyRootUrl));
+        assert(url.startsWith(this.backendConfig.vidyRootUrl));
 
-        const hmac = crypto.createHmac("sha256", this.config.vidyKeySecret);
-        const relativeUrl = "/" + url.replace(this.config.vidyRootUrl, "");
+        const hmac = crypto.createHmac("sha256", this.backendConfig.vidyKeySecret);
+        const relativeUrl = "/" + url.replace(this.backendConfig.vidyRootUrl, "");
 
         const contentType = "application/json;charset=utf-8";
         const dateHeader = new Date().toUTCString();
@@ -117,7 +117,7 @@ export default class AuthenticatedRequest {
         const signingStringHash = hmac.digest("base64");
         const clientAuthorizationHeader =
             `Signature keyId="${
-            this.config.vidyKeyId
+            this.backendConfig.vidyKeyId
             }",algorithm="hmac-sha256",headers="${
             signingHeaderKeysString
             }",signature="${
@@ -139,11 +139,11 @@ export default class AuthenticatedRequest {
         const clientContext: IClientContext = {
             app: {
                 build: 0,
-                name: this.config.applicationName,
-                version: this.config.version,
+                name: this.backendConfig.applicationName,
+                version: this.backendConfig.version,
             },
             device: {
-                id: this.config.vidySystemUuid,
+                id: this.backendConfig.vidySystemUuid,
                 manufacturer: os.platform(),
                 model: os.release(),
                 name: os.platform(),

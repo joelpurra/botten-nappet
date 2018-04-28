@@ -23,7 +23,7 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -43,7 +43,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -67,7 +67,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
 
         const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
             this.logger,
-            this.config.twitchPubSubWebSocketUri,
+            this.backendConfig.twitchPubSubWebSocketUri,
             allPubSubTopicsForTwitchUserId,
             this.twitchUserAccessTokenProvider,
         );
@@ -78,7 +78,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
         this.logger.info("Connected.");
 
         this.twitchPerUserPubSubApi = new TwitchPerUserPubSubApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,

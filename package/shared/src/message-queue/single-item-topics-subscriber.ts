@@ -22,23 +22,30 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+import PinoLogger from "../util/pino-logger";
 
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
+import ZmqConfig from "../config/zmq-config";
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 
-export default class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {
-    constructor(logger: PinoLogger, address: string, topics: string[]) {
-        super(logger, address, topics);
+export default abstract class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {
+    constructor(
+        logger: PinoLogger,
+        topicHelper: TopicHelper,
+        zmqConfig: ZmqConfig,
+        topicConfig: TopicConfig,
+    ) {
+        super(logger, topicHelper, zmqConfig, topicConfig);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
-        assert.equal(typeof address, "string");
-        assert(address.length > 0);
-        assert(address.startsWith("tcp://"));
-        assert.array(topics);
+        assert.equal(typeof topicHelper, "object");
+        assert.equal(typeof zmqConfig, "object");
+        assert.equal(typeof topicConfig, "object");
 
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${(this.topicConfig.topic)})`);
     }
 
     protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T> {

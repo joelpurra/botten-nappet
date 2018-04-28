@@ -25,26 +25,26 @@ import {
     assert,
 } from "check-types";
 
-import Config from "./config";
+import SharedConfig from "./shared-config";
 
 @autoinject
 export default class LoggingConfig {
     constructor(
-        private readonly config: Config,
+        private readonly sharedConfig: SharedConfig,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
+        assert.equal(typeof sharedConfig, "object");
     }
 
     public get file(): string {
-        return this.config.loggingFile;
+        return this.sharedConfig.loggingFile;
     }
 
     public get level(): string {
-        return this.config.loggingLevel;
+        return this.sharedConfig.loggingLevel;
     }
 
     public get applicationName(): string {
-        return this.config.applicationName;
+        return this.sharedConfig.applicationName;
     }
 }

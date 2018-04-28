@@ -27,7 +27,7 @@ import "@botten-nappet/backend-shared/lib/rxjs-extensions/async-filter";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import BackendManagerMain from "./manager-main";
@@ -37,7 +37,7 @@ export default class BackendMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: BackendConfig,
+        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly backendManagerMain: BackendManagerMain,
     ) {
@@ -46,7 +46,7 @@ export default class BackendMain implements IStartableStoppable {
     }
 
     public async start(): Promise<void> {
-        this.config.validate();
+        this.backendConfig.validate();
 
         await this.backendManagerMain.start();
     }

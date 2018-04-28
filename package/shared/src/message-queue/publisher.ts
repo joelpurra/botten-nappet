@@ -49,10 +49,6 @@ export default class Publisher implements IConnectable {
         assert.equal(typeof logger, "object");
         assert.equal(typeof zmqConfig, "object");
 
-        assert.equal(typeof zmqConfig.zmqAddress, "string");
-        assert(zmqConfig.zmqAddress.length > 0);
-        assert(zmqConfig.zmqAddress.startsWith("tcp://"));
-
         this.logger = logger.child(this.constructor.name);
 
         this.socket = null;

@@ -25,34 +25,34 @@ import {
     assert,
 } from "check-types";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 
 @autoinject
 export default class PollingApplicationTokenConnectionConfig {
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
+        assert.equal(typeof backendConfig, "object");
     }
 
     public get appClientId(): string {
-        return this.config.twitchAppClientId;
+        return this.backendConfig.twitchAppClientId;
     }
 
     public get appClientSecret(): string {
-        return this.config.twitchAppClientSecret;
+        return this.backendConfig.twitchAppClientSecret;
     }
 
     public get appScopes(): string[] {
-        return this.config.twitchAppScopes;
+        return this.backendConfig.twitchAppScopes;
     }
 
     public get appTokenRefreshInterval(): number {
-        return this.config.twitchAppTokenRefreshInterval;
+        return this.backendConfig.twitchAppTokenRefreshInterval;
     }
 
     public get oauthTokenUri(): string {
-        return this.config.twitchOAuthTokenUri;
+        return this.backendConfig.twitchOAuthTokenUri;
     }
 }

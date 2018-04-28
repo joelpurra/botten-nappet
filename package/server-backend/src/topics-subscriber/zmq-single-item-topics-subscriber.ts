@@ -19,48 +19,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    inject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
-import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
-import ITopicMessages from "./itopic-messages";
-import IZeroMqTopicMessages from "./izeromq-topic-message";
 
-export default class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<ITopicMessages<T>> {
+import SingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
+
+import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
+
+@inject(PinoLogger, ZmqConfig)
+export default class ZmqSingleItemJsonTopicsSubscriber<T> extends SingleItemJsonTopicsSubscriber<T> {
     constructor(
         logger: PinoLogger,
-        topicHelper: TopicHelper,
         zmqConfig: ZmqConfig,
-        topicConfig: TopicConfig,
+        topics: TopicConfig,
     ) {
-        super(logger, topicHelper, zmqConfig, topicConfig);
+        super(
+            logger,
+            zmqConfig,
+            topics,
+        );
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
-        assert.equal(typeof topicHelper, "object");
         assert.equal(typeof zmqConfig, "object");
-        assert.equal(typeof topicConfig, "object");
-
-        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
-    }
-
-    protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<ITopicMessages<T>> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof topicMessages, "object");
-        assert.nonEmptyArray(topicMessages.messages);
-
-        const jsonMessages = topicMessages.messages.map((msg) => JSON.parse(msg.toString()));
-
-        const data: ITopicMessages<T> = {
-            messages: jsonMessages,
-            topic: topicMessages.topic,
-        };
-
-        return data;
+        assert.array(topics);
     }
 }

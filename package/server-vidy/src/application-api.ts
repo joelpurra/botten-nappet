@@ -26,7 +26,10 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -49,7 +52,9 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
+        private readonly sharedTopicsConfig: SharedTopicsConfig,
+        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -65,8 +70,8 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicVidyOutgoingSearchCommand),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicVidyOutgoingSearchCommand),
             );
 
         this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
@@ -76,7 +81,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         this.logger.info("Connected.");
 
         this.vidyApi = new VidyApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,

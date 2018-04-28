@@ -22,7 +22,8 @@ import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -64,7 +65,7 @@ import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/src/even
 import IIncomingWhisperEvent from "@botten-nappet/interface-twitch/src/event/iincoming-whisper-event";
 
 import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
-import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
+import IVidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
 
 /* tslint:enable max-line-length */
 
@@ -73,7 +74,8 @@ export default class PerUserHandlersMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
+        private readonly sharedTopicsConfig: SharedTopicsConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -108,42 +110,42 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             new MessageQueueTopicPublisher<ITwitchOutgoingIrcCommand>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchOutgoingIrcCommand,
+                this.backendConfig.topicTwitchOutgoingIrcCommand,
             );
 
         const messageQueueTopicPublisherForIIncomingCheeringEvent =
             new MessageQueueTopicPublisher<IIncomingCheeringEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingCheeringEvent,
+                this.sharedTopicsConfig.topicTwitchIncomingCheeringEvent,
             );
 
         const messageQueueTopicPublisherForIIncomingWhisperEvent =
             new MessageQueueTopicPublisher<IIncomingWhisperEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingWhisperEvent,
+                this.sharedTopicsConfig.topicTwitchIncomingWhisperEvent,
             );
 
         const messageQueueTopicPublisherForIIncomingSubscriptionEvent =
             new MessageQueueTopicPublisher<IIncomingSubscriptionEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingSubscriptionEvent,
+                this.sharedTopicsConfig.topicTwitchIncomingSubscriptionEvent,
             );
 
         const messageQueueTopicPublisherForIIncomingCheeringWithCheermotesEvent =
             new MessageQueueTopicPublisher<IIncomingCheeringWithCheermotesEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingCheeringWithCheermotesEvent,
+                this.sharedTopicsConfig.topicTwitchIncomingCheeringWithCheermotesEvent,
             );
 
         const messageQueueTopicPublisherForIOutgoingSearchCommand =
-            new MessageQueueTopicPublisher<VidyIOutgoingSearchCommand>(
+            new MessageQueueTopicPublisher<IVidyIOutgoingSearchCommand>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicVidyOutgoingSearchCommand,
+                this.sharedTopicsConfig.topicVidyOutgoingSearchCommand,
             );
 
         const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
@@ -155,8 +157,8 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
             messageQueueTopicPublisherForIOutgoingIrcCommand,
-            this.config.twitchChannelName,
-            this.config.vidyVideoLinkBaseUrl,
+            this.backendConfig.twitchChannelName,
+            this.backendConfig.vidyVideoLinkBaseUrl,
         );
 
         const twitchIrcTextResponseCommandHandler = new TwitchIrcTextResponseCommandHandler(
@@ -169,7 +171,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             messageQueueTopicPublisherForIOutgoingIrcCommand,
-            this.config.twitchUserName,
+            this.backendConfig.twitchUserName,
         );
         const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(
             this.logger,
@@ -185,7 +187,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             messageQueueTopicPublisherForIOutgoingIrcCommand,
-            this.config.twitchChannelName,
+            this.backendConfig.twitchChannelName,
         );
 
         const twitchFollowingIrcReplyHandler = new TwitchFollowingIrcReplyHandler(
@@ -221,7 +223,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
             messageQueueTopicPublisherForIOutgoingIrcCommand,
-            this.config.twitchChannelName,
+            this.backendConfig.twitchChannelName,
         );
 
         const twitchIncomingCheeringCommandEventTranslator = new IncomingCheeringCommandEventTranslator(
@@ -239,7 +241,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             messageQueueTopicPublisherForIIncomingSubscriptionEvent,
-            this.config.twitchUserName,
+            this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
         const twitchSubscriptionIrcReplyHandler = new TwitchSubscriptionIrcReplyHandler(
@@ -269,7 +271,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
 
         this.logger.info({
             twitchUserId: this.twitchUserId,
-            twitchUserName: this.config.twitchUserName,
+            twitchUserName: this.backendConfig.twitchUserName,
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

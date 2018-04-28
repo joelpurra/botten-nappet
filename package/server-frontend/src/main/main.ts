@@ -27,7 +27,7 @@ import configLibrary from "config";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import FrontendConfig from "../config/config";
+import FrontendConfig from "../config/frontend-config";
 
 import FrontendManagerMain from "./manager-main";
 
@@ -36,7 +36,7 @@ export default class FrontendMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: FrontendConfig,
+        private readonly frontendConfig: FrontendConfig,
         logger: PinoLogger,
         private readonly frontendManagerMain: FrontendManagerMain,
     ) {
@@ -45,7 +45,7 @@ export default class FrontendMain implements IStartableStoppable {
     }
 
     public async start(): Promise<void> {
-        this.config.validate();
+        this.frontendConfig.validate();
 
         await this.frontendManagerMain.start();
     }

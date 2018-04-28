@@ -22,7 +22,7 @@ import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -49,7 +49,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -74,7 +74,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
             new MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingIrcCommand,
+                this.backendConfig.topicTwitchIncomingIrcCommand,
             );
 
         const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
@@ -108,7 +108,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
 
         this.logger.info({
             twitchUserId: this.twitchUserId,
-            twitchUserName: this.config.twitchUserName,
+            twitchUserName: this.backendConfig.twitchUserName,
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

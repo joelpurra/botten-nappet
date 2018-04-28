@@ -20,31 +20,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     autoinject,
-} from "aurelia-dependency-injection";
-import {
-    assert,
-} from "check-types";
+} from "aurelia-framework";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 
 @autoinject
-export default class TokenHelperConfig {
+export default class IncomingSearchResultEventTopic extends TopicConfig {
     constructor(
-        private readonly backendConfig: BackendConfig,
+        sharedTopicsConfig: SharedTopicsConfig,
     ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof backendConfig, "object");
-    }
-
-    public get appClientId(): string {
-        return this.backendConfig.twitchAppClientId;
-    }
-
-    public get oauthTokenRevocationUri(): string {
-        return this.backendConfig.twitchOAuthTokenRevocationUri;
-    }
-
-    public get oauthTokenVerificationUri(): string {
-        return this.backendConfig.twitchOAuthTokenVerificationUri;
+        // NOTE: single-purpose class: supply the "configuration" value.
+        super(sharedTopicsConfig.topicVidyIncomingSearchResultEvent);
     }
 }

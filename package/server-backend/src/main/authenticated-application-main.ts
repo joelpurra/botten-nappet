@@ -26,7 +26,10 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -84,7 +87,9 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
+        private readonly sharedTopicsConfig: SharedTopicsConfig,
+        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -111,7 +116,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         const twitchUserHelper = new TwitchUserHelper(
             this.logger,
             this.twitchRequestHelper,
-            this.config.twitchUsersDataUri,
+            this.backendConfig.twitchUsersDataUri,
             twitchApplicationAccessTokenProvider,
         );
 
@@ -122,15 +127,15 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
             this.twitchCSRFHelper,
             userStorageManager,
             this.twitchRequestHelper,
-            this.config.twitchOAuthAuthorizationUri,
-            this.config.twitchAppOAuthRedirectUrl,
-            this.config.twitchOAuthTokenUri,
-            this.config.twitchAppClientId,
-            this.config.twitchAppClientSecret,
+            this.backendConfig.twitchOAuthAuthorizationUri,
+            this.backendConfig.twitchAppOAuthRedirectUrl,
+            this.backendConfig.twitchOAuthTokenUri,
+            this.backendConfig.twitchAppClientId,
+            this.backendConfig.twitchAppClientSecret,
         );
         const userTokenManager = new TwitchUserTokenManager(this.logger, this.twitchTokenHelper, twitchUserTokenHelper);
         const twitchAugmentedTokenProvider: AugmentedTokenProviderType =
-            async () => userTokenManager.get(this.config.twitchUserName);
+            async () => userTokenManager.get(this.backendConfig.twitchUserName);
         const twitchUserAccessTokenProvider: UserAccessTokenProviderType = async () => {
             const augmentedToken = await twitchAugmentedTokenProvider();
 
@@ -149,58 +154,58 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingPubSubEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchIncomingPubSubEvent),
             );
 
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
             new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingIrcCommand),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchIncomingIrcCommand),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingFollowingEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingFollowingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingStreamingEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingStreamingEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheermotesEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingCheermotesEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingCheeringEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingCheeringEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingWhisperEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingWhisperEvent),
             );
         const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicTwitchIncomingSubscriptionEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicTwitchIncomingSubscriptionEvent),
             );
 
         const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
             new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
                 this.logger,
-                this.config.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.config.topicVidyIncomingSearchResultEvent),
+                this.zmqConfig.zmqAddress,
+                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicVidyIncomingSearchResultEvent),
             );
 
         this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
@@ -218,7 +223,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         this.logger.info("Connected.");
 
         this.backendTwitchPubSubAuthenticatedApplicationApi = new BackendTwitchPubSubAuthenticatedApplicationApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,
@@ -227,7 +232,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         );
 
         this.backendTwitchIrcAuthenticatedApplicationApi = new BackendTwitchIrcAuthenticatedApplicationApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,
@@ -237,7 +242,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         );
 
         this.backendTwitchPollingAuthenticatedApplicationApi = new BackendTwitchPollingAuthenticatedApplicationApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,
@@ -245,7 +250,7 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         );
 
         this.perUserHandlersMain = new PerUserHandlersMain(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,

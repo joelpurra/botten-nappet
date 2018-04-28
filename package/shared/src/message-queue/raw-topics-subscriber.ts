@@ -25,27 +25,27 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IDistributedEvent from "@botten-nappet/backend-shared/src/storage/idistributed-event";
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 
 export default abstract class RawTopicsSubscriber extends IntersectionTopicsSubscriber<IDistributedEvent> {
     constructor(
         logger: PinoLogger,
+        topicHelper: TopicHelper,
         zmqConfig: ZmqConfig,
-        topics: string[],
+        topicConfig: TopicConfig,
     ) {
-        super(logger, zmqConfig.zmqAddress, topics);
+        super(logger, topicHelper, zmqConfig, topic);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
+        assert.equal(typeof topicHelper, "object");
         assert.equal(typeof zmqConfig, "object");
+        assert.equal(typeof topic, "object");
 
-        assert.equal(typeof zmqConfig.zmqAddress, "string");
-        assert(zmqConfig.zmqAddress.length > 0);
-        assert(zmqConfig.zmqAddress.startsWith("tcp://"));
-        assert.array(topics);
-
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }
 
     protected async parseMessages(topicMessages: IDistributedEvent): Promise<IDistributedEvent> {

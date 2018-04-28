@@ -24,7 +24,7 @@ import {
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import SharedConfig from "@botten-nappet/shared/src/config/config";
+import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
@@ -39,7 +39,7 @@ export default class SharedContainerRoot implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: SharedConfig,
+        private readonly sharedConfig: SharedConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,

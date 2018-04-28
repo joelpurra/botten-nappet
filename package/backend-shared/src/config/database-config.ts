@@ -25,18 +25,18 @@ import {
     assert,
 } from "check-types";
 
-import Config from "./config";
+import Config from "./backend-config";
 
 @autoinject
 export default class DatabaseConfig {
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: Config,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
+        assert.equal(typeof backendConfig, "object");
     }
 
     public get databaseUri(): string {
-        return this.config.databaseUri;
+        return this.backendConfig.databaseUri;
     }
 }

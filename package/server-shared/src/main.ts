@@ -29,7 +29,6 @@ import configLibrary from "config";
 
 import loadPackageJson from "@botten-nappet/shared/src/util/load-package-json";
 
-import SharedConfig from "@botten-nappet/shared/src/config/config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import RootLoggerResolver from "@botten-nappet/shared/src/util/root-logger-resolver";
 
@@ -42,10 +41,6 @@ export default async function main(): Promise<void> {
 
     const packageJson = await loadPackageJson();
     rootContainer.registerInstance("IPackageJson", packageJson);
-
-    const sharedConfig = new SharedConfig(configLibrary);
-    sharedConfig.validate();
-    rootContainer.registerInstance(SharedConfig, sharedConfig);
 
     const rootLoggerResolver = rootContainer.get(RootLoggerResolver);
     const rootLogger = rootLoggerResolver.get();

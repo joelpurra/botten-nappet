@@ -22,7 +22,8 @@ import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -44,7 +45,8 @@ export default class BackendVidyApi implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
+        private readonly sharedTopicsConfig: SharedTopicsConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -62,17 +64,17 @@ export default class BackendVidyApi implements IStartableStoppable {
             new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicVidyIncomingSearchResultEvent,
+                this.sharedTopicsConfig.topicVidyIncomingSearchResultEvent,
             );
 
-        const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(this.logger, this.config);
+        const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(this.logger, this.backendConfig);
 
         const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
             this.logger,
             this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
             messageQueueTopicPublisherForIIncomingSearchResultEvent,
             vidyAuthenticatedRequest,
-            this.config.vidyRootUrl,
+            this.backendConfig.vidyRootUrl,
         );
 
         this.startables.push(vidyOutgoingSearchCommandHandler);
@@ -80,7 +82,7 @@ export default class BackendVidyApi implements IStartableStoppable {
         await Bluebird.map(this.startables, async (startable) => startable.start());
 
         this.logger.info({
-            vidyKeyId: this.config.vidyKeyId,
+            vidyKeyId: this.backendConfig.vidyKeyId,
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

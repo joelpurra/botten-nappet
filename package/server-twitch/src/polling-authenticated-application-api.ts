@@ -23,7 +23,7 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -47,7 +47,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -66,7 +66,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
             `https://api.twitch.tv/kraken/channels/${
             this.twitchUserId
             }/follows?limit=${
-            this.config.followingPollingLimit
+            this.backendConfig.followingPollingLimit
             }`;
 
         // TODO: externalize/configure base url.
@@ -77,24 +77,24 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
 
         const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
             this.logger,
-            this.config.twitchAppClientId,
-            this.config.bottenNappetDefaultPollingInterval,
+            this.backendConfig.twitchAppClientId,
+            this.backendConfig.bottenNappetDefaultPollingInterval,
             false,
             followingPollingUri,
             "get",
         );
         const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
             this.logger,
-            this.config.twitchAppClientId,
-            this.config.bottenNappetStreamingPollingInterval,
+            this.backendConfig.twitchAppClientId,
+            this.backendConfig.bottenNappetStreamingPollingInterval,
             true,
             streamingPollingUri,
             "get",
         );
         const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
             this.logger,
-            this.config.twitchAppClientId,
-            this.config.bottenNappetCheermotesPollingInterval,
+            this.backendConfig.twitchAppClientId,
+            this.backendConfig.bottenNappetCheermotesPollingInterval,
             true,
             cheermotesPollingUri,
             "get",
@@ -109,7 +109,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         this.logger.info("Connected.");
 
         this.twitchPerUserPollingApi = new TwitchPerUserPollingApi(
-            this.config,
+            this.backendConfig,
             this.logger,
             this.gracefulShutdownManager,
             this.messageQueuePublisher,

@@ -21,35 +21,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     inject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IDistributedEvent from "@botten-nappet/backend-shared/src/storage/idistributed-event";
+import ExternalRawTopic from "@botten-nappet/server-backend/src/message-queue/external-raw-topic";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import RawTopicsSubscriber from "@botten-nappet/shared/src/message-queue/raw-topics-subscriber";
 
-@inject(PinoLogger, ZmqConfig)
+@inject(PinoLogger, ZmqConfig, ExternalRawTopic)
 export default class ExternalRawTopicsSubscriber extends RawTopicsSubscriber {
     constructor(
         logger: PinoLogger,
         zmqConfig: ZmqConfig,
+        topic: ExternalRawTopic,
     ) {
-        super(logger, zmqConfig, [
-            // NOTE: single-purpose class: supply the "configuration" value.
-            "external",
-        ]);
+        super(logger, zmqConfig, topic);
 
-        // NOTE: not checking arguments length due to inheritance.
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof zmqConfig, "object");
-
-        assert.equal(typeof zmqConfig.zmqAddress, "string");
-        assert(zmqConfig.zmqAddress.length > 0);
-        assert(zmqConfig.zmqAddress.startsWith("tcp://"));
-
-        this.logger = logger.child(`${this.constructor.name} (${this.topics.join(this.topicsStringSeparator)})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }
 }

@@ -25,22 +25,22 @@ import {
     assert,
 } from "check-types";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 
 @autoinject
 export default class ApplicationTokenManagerConfig {
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
+        assert.equal(typeof backendConfig, "object");
     }
 
     public get appClientId(): string {
-        return this.config.twitchAppClientId;
+        return this.backendConfig.twitchAppClientId;
     }
 
     public get oauthTokenRevocationUri(): string {
-        return this.config.twitchOAuthTokenRevocationUri;
+        return this.backendConfig.twitchOAuthTokenRevocationUri;
     }
 }

@@ -22,7 +22,7 @@ import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import Config from "@botten-nappet/backend-shared/src/config/config";
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -51,7 +51,7 @@ export default class TwitchPerUserPollingApi {
     private logger: PinoLogger;
 
     constructor(
-        private readonly config: Config,
+        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
@@ -71,28 +71,28 @@ export default class TwitchPerUserPollingApi {
             new MessageQueueTopicPublisher<IIncomingFollowingEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingFollowingEvent,
+                this.backendConfig.topicTwitchIncomingFollowingEvent,
             );
 
         const messageQueueTopicPublisherForIIncomingStreamingEvent =
             new MessageQueueTopicPublisher<IIncomingStreamingEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingStreamingEvent,
+                this.backendConfig.topicTwitchIncomingStreamingEvent,
             );
 
         const messageQueueTopicPublisherForIIncomingCheermotesEvent =
             new MessageQueueTopicPublisher<IIncomingCheermotesEvent>(
                 this.logger,
                 this.messageQueuePublisher,
-                this.config.topicTwitchIncomingCheermotesEvent,
+                this.backendConfig.topicTwitchIncomingCheermotesEvent,
             );
 
         const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
             this.logger,
             this.twitchPollingFollowingConnection,
             messageQueueTopicPublisherForIIncomingFollowingEvent,
-            this.config.twitchUserName,
+            this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
 
@@ -100,7 +100,7 @@ export default class TwitchPerUserPollingApi {
             this.logger,
             this.twitchPollingStreamingConnection,
             messageQueueTopicPublisherForIIncomingStreamingEvent,
-            this.config.twitchUserName,
+            this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
 
@@ -108,7 +108,7 @@ export default class TwitchPerUserPollingApi {
             this.logger,
             this.twitchPollingCheermotesConnection,
             messageQueueTopicPublisherForIIncomingCheermotesEvent,
-            this.config.twitchUserName,
+            this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
 
@@ -120,7 +120,7 @@ export default class TwitchPerUserPollingApi {
 
         this.logger.info({
             twitchUserId: this.twitchUserId,
-            twitchUserName: this.config.twitchUserName,
+            twitchUserName: this.backendConfig.twitchUserName,
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

@@ -33,7 +33,6 @@ import PackageJsonProvider from "@botten-nappet/shared/src/util/package-json-pro
 
 @inject("IConfig", PackageJsonProvider)
 export default class Config {
-    private sharedPrefix: string;
     private prefix: string;
 
     constructor(
@@ -44,7 +43,6 @@ export default class Config {
         assert.equal(typeof config, "object");
         assert.equal(typeof packageJsonProvider, "object");
 
-        this.sharedPrefix = "shared";
         this.prefix = "backend";
     }
 
@@ -56,12 +54,6 @@ export default class Config {
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingCheeringEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingWhisperEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingStreamingEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingCheermotesEvent);
-        assert.nonEmptyString(this.topicTwitchIncomingSubscriptionEvent);
         assert.integer(this.bottenNappetDefaultPollingInterval);
         assert.positive(this.bottenNappetDefaultPollingInterval);
         assert.integer(this.bottenNappetStreamingPollingInterval);
@@ -72,8 +64,6 @@ export default class Config {
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
         assert.nonEmptyString(this.twitchChannelName);
-        assert.nonEmptyString(this.zmqAddress);
-        assert.nonEmptyString(this.applicationName);
         assert.nonEmptyString(this.version);
         assert.nonEmptyString(this.vidyRootUrl);
         assert.nonEmptyString(this.vidyVideoLinkBaseUrl);
@@ -109,78 +99,6 @@ export default class Config {
 
     public get topicTwitchIncomingPubSubEvent(): string {
         const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingPubSubEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingFollowingEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingFollowingEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingCheeringWithCheermotesEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringWithCheermotesEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicVidyOutgoingSearchCommand(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.outgoingSearchCommand`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicVidyIncomingSearchResultEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.vidy.incomingSearchResultEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingStreamingEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingStreamingEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingCheermotesEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheermotesEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingCheeringEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingCheeringEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingWhisperEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingWhisperEvent`);
-
-        assert.nonEmptyString(value);
-
-        return value;
-    }
-
-    public get topicTwitchIncomingSubscriptionEvent(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.topic.twitch.incomingSubscriptionEvent`);
 
         assert.nonEmptyString(value);
 
@@ -333,23 +251,6 @@ export default class Config {
         const value = this.config.get<string[]>(`${this.prefix}.twitch.appScopes`);
 
         assert.nonEmptyArray(value);
-
-        return value;
-    }
-
-    public get zmqAddress(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.zmqAddress`);
-
-        assert.nonEmptyString(value);
-        assert(value.startsWith("tcp://"));
-
-        return value;
-    }
-
-    public get applicationName(): string {
-        const value = this.config.get<string>(`${this.sharedPrefix}.applicationName`);
-
-        assert.nonEmptyString(value);
 
         return value;
     }

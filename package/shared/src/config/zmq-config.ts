@@ -25,18 +25,18 @@ import {
     assert,
 } from "check-types";
 
-import Config from "./config";
+import SharedConfig from "./shared-config";
 
 @autoinject
 export default class ZmqConfig {
     constructor(
-        private readonly config: Config,
+        private readonly sharedConfig: SharedConfig,
     ) {
         assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
+        assert.equal(typeof sharedConfig, "object");
     }
 
     public get zmqAddress(): string {
-        return this.config.zmqAddress;
+        return this.sharedConfig.zmqAddress;
     }
 }
