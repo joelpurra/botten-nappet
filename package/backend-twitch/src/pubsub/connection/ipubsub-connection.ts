@@ -18,8 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
+
 import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
-import IPubSubResponse from "../interface/ipubsub-response";
 
 export default interface IPubSubConnection extends IWebSocketConnection<IPubSubResponse, any> {
 }

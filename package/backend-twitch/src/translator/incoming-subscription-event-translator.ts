@@ -28,9 +28,9 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/src/event//iincoming-subscription-event";
+import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-subscription-event";
 
-import IIncomingIrcCommand from "../irc/interface/iincoming-irc-command";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(

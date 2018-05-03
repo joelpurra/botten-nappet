@@ -28,26 +28,28 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IConnectable from "../connection/iconnectable";
+
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+
 import ISendingConnection from "../connection/isending-connection";
 import IEventEmitter from "../event/ievent-emitter";
 import Publisher from "./publisher";
 
 @autoinject
-export default class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {
+export default abstract class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
         private readonly publisher: Publisher,
-        private readonly topic: string,
+        private readonly topicConfig: TopicConfig,
     ) {
-        assert.hasLength(arguments, 3);
+        // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
         assert.equal(typeof publisher, "object");
-        assert.equal(typeof topic, "string");
-        assert(topic.length > 0);
+        assert.equal(typeof topicConfig, "object");
 
-        this.logger = logger.child(`${this.constructor.name} (${this.topic})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig})`);
     }
 
     public async connect(): Promise<void> {
@@ -83,10 +85,10 @@ export default class TopicPublisher<T> implements IConnectable, ISendingConnecti
             message = JSON.stringify(data);
         }
 
-        this.logger.trace(data, message, this.topic, "send");
+        this.logger.trace(data, message, this.topicConfig, "send");
 
         await this.publisher.send(
-            this.topic,
+            this.topicConfig.topic,
             message,
         );
     }

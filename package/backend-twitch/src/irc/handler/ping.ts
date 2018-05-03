@@ -24,10 +24,11 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
+
 import IIRCConnection from "../connection/iirc-connection";
 import IrcManager from "../connection/irc-manager";
-import IIncomingIrcCommand from "../interface/iincoming-irc-command";
-import IOutgoingIrcCommand from "../interface/ioutgoing-irc-command";
 
 export default class PingIrcHandler extends IrcManager {
     constructor(

@@ -24,8 +24,8 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IAugmentedToken from "@botten-nappet/interface-twitch/src/authentication/iaugmented-token";
-import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-token";
+import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 import IUser from "../iuser";
 import IUserCamo from "../iuser-camo";

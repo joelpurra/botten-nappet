@@ -18,8 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IAugmentedToken from "@botten-nappet/interface-twitch/src/authentication/iaugmented-token";
+import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
 export type AugmentedTokenProviderType = () => Promise<IAugmentedToken>;
 export type UserAccessTokenProviderType = () => Promise<string>;
 export type ApplicationAccessTokenProviderType = () => Promise<string>;
+export type UserIdProviderType = () => Promise<number>;

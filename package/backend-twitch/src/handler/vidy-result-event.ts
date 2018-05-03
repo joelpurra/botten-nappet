@@ -26,11 +26,11 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 
-import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
+import IIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IOutgoingIrcCommand from "../irc/interface/ioutgoing-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 export default class VidyResultEventHandler extends EventSubscriptionManager<IIncomingSearchResultEvent> {
     constructor(

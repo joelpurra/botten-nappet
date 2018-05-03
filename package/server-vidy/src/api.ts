@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -35,11 +38,13 @@ import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/
 
 import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/src/request/authenticated-request";
 import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/src/translator/outgoing-search-command-handler";
-import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
-import VidyIOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
+import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
+import VidyIOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
+import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
 
 /* tslint:enable max-line-length */
 
+@autoinject
 export default class BackendVidyApi implements IStartableStoppable {
     private startables: IStartableStoppable[];
     private logger: PinoLogger;
@@ -50,8 +55,11 @@ export default class BackendVidyApi implements IStartableStoppable {
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
-        private messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
-            MessageQueueSingleItemJsonTopicsSubscriber<VidyIOutgoingSearchCommand>,
+        private readonly messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+            OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
+        private readonly messageQueueTopicPublisherForIIncomingSearchResultEvent:
+            MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>,
+        private readonly vidyAuthenticatedRequest: VidyAuthenticatedRequest,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -60,20 +68,11 @@ export default class BackendVidyApi implements IStartableStoppable {
     }
 
     public async start(): Promise<void> {
-        const messageQueueTopicPublisherForIIncomingSearchResultEvent =
-            new MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.sharedTopicsConfig.topicVidyIncomingSearchResultEvent,
-            );
-
-        const vidyAuthenticatedRequest = new VidyAuthenticatedRequest(this.logger, this.backendConfig);
-
         const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
             this.logger,
             this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-            messageQueueTopicPublisherForIIncomingSearchResultEvent,
-            vidyAuthenticatedRequest,
+            this.messageQueueTopicPublisherForIIncomingSearchResultEvent,
+            this.vidyAuthenticatedRequest,
             this.backendConfig.vidyRootUrl,
         );
 

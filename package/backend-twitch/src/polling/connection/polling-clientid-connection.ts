@@ -24,8 +24,9 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IHttpData from "../interface/ihttp-data";
-import IHttpHeaders from "../interface/ihttp-header";
+import IHttpData from "@botten-nappet/interface-backend-twitch/src/event/ihttp-data";
+import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihttp-header";
+
 import PollingConnection from "./polling-connection";
 
 export default class PollingClientIdConnection<T> extends PollingConnection<T> {

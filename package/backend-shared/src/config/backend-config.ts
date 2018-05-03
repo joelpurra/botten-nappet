@@ -32,7 +32,7 @@ import {
 import PackageJsonProvider from "@botten-nappet/shared/src/util/package-json-provider";
 
 @inject("IConfig", PackageJsonProvider)
-export default class Config {
+export default class BackendConfig {
     private prefix: string;
 
     constructor(

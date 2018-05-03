@@ -18,8 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IChannelEvent from "@botten-nappet/interface-twitch/src/event/ichannel-event";
+import {
+    autoinject,
+} from "aurelia-framework";
 
-export default interface IIncomingPollingEvent extends IChannelEvent {
-    data: any;
+import TopicsConfig from "`'___TOPIC_CONFIG_PATH___()";
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
+
+@autoinject
+export default class `'___TOPIC_NAME_PASCAL_CASE___()Topic extends TopicConfig {
+    // NOTE: this file is auto-generated. Changes will be overwritten.
+    constructor(
+        topicsConfig: TopicsConfig,
+    ) {
+        // NOTE: single-purpose class: supply the "configuration" value.
+        super(topicsConfig.topic`'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___());
+    }
 }

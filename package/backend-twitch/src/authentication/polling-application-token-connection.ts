@@ -27,7 +27,7 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 import PollingApplicationTokenConnectionConfig from "../config/polling-application-token-connection-config";
 import PollingConnection from "../polling/connection/polling-connection";

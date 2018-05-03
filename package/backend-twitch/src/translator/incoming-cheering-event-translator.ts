@@ -28,10 +28,10 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheering-event";
+import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-event";
 
-import IIncomingPubSubEvent from "../pubsub/interface/iincoming-pubsub-event";
-import IPubSubResponse from "../pubsub/interface/ipubsub-response";
+import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(

@@ -37,10 +37,10 @@ import TwitchIrcLoggingHandler from "@botten-nappet/backend-twitch/src/irc/handl
 import TwitchIrcPingHandler from "@botten-nappet/backend-twitch/src/irc/handler/ping";
 import TwitchIrcReconnectHandler from "@botten-nappet/backend-twitch/src/irc/handler/reconnect";
 
-import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/ioutgoing-irc-command";
 import TwitchIncomingIrcCommandEventTranslator from "@botten-nappet/backend-twitch/src/irc/translator/incoming-irc-command-event-translator";
 import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/src/irc/translator/outgoing-irc-command-event-handler";
+import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 /* tslint:enable max-line-length */
 
@@ -56,6 +56,8 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
         private readonly twitchIrcConnection: TwitchIrcConnection,
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
+        private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
+            MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>,
         private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
@@ -70,17 +72,10 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
             this.twitchIrcConnection,
         );
 
-        const messageQueueTopicPublisherForIIncomingIrcCommand =
-            new MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.backendConfig.topicTwitchIncomingIrcCommand,
-            );
-
         const twitchIncomingIrcCommandEventTranslator = new TwitchIncomingIrcCommandEventTranslator(
             this.logger,
             this.twitchIrcConnection,
-            messageQueueTopicPublisherForIIncomingIrcCommand,
+            this.messageQueueTopicPublisherForIIncomingIrcCommand,
         );
 
         const twitchOutgoingIrcCommandEventHandler = new TwitchOutgoingIrcCommandEventHandler(

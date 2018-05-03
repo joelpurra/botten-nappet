@@ -29,8 +29,8 @@ import axios from "axios";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IAugmentedToken from "@botten-nappet/interface-twitch/src/authentication/iaugmented-token";
-import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-token";
+import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 import TokenHelperConfig from "../config/token-helper-config";
 import RequestHelper from "./request-helper";

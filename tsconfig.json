@@ -50,11 +50,14 @@
       "@botten-nappet/client-shared/*": [
         "./package/client-shared/*",
       ],
-      "@botten-nappet/interface-twitch/*": [
-        "./package/interface-twitch/*",
+      "@botten-nappet/interface-backend-twitch/*": [
+        "./package/interface-backend-twitch/*",
       ],
-      "@botten-nappet/interface-vidy/*": [
-        "./package/interface-vidy/*",
+      "@botten-nappet/interface-shared-twitch/*": [
+        "./package/interface-shared-twitch/*",
+      ],
+      "@botten-nappet/interface-shared-vidy/*": [
+        "./package/interface-shared-vidy/*",
       ],
       "@botten-nappet/server-backend/*": [
         "./package/server-backend/*",

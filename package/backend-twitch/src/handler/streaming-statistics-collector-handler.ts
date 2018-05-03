@@ -30,10 +30,10 @@ import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 import MultiEventSubscriptionManager from "@botten-nappet/shared/src/event/multi-event-subscription-manager";
 
-import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-streaming-event";
+import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
 
-import IIncomingIrcCommand from "../irc/interface/iincoming-irc-command";
-import IOutgoingIrcCommand from "../irc/interface/ioutgoing-irc-command";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 export default class StreamingStatisticsCollectorHandler
     extends MultiEventSubscriptionManager<IIncomingStreamingEvent | IIncomingIrcCommand> {

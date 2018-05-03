@@ -36,8 +36,8 @@ import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/sr
 import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
-import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/ioutgoing-irc-command";
+import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 import {
     UserAccessTokenProviderType,

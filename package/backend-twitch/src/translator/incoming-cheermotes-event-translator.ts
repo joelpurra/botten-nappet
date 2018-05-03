@@ -26,7 +26,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 
-import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheermotes-event";
+import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
 
 /* tslint:disable:max-line-length */
 

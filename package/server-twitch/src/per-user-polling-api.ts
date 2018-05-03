@@ -23,6 +23,7 @@ import Bluebird from "bluebird";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -40,9 +41,9 @@ import IncomingCheermotesCommandEventTranslator from "@botten-nappet/backend-twi
 import IncomingFollowingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-following-event-translator";
 import IncomingStreamingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-streaming-event-translator";
 
-import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-following-event";
-import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-streaming-event";
+import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
+import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
 
 /* tslint:enable max-line-length */
 
@@ -52,12 +53,19 @@ export default class TwitchPerUserPollingApi {
 
     constructor(
         private readonly backendConfig: BackendConfig,
+        private readonly sharedConfig: SharedConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
         private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
         private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
         private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
+        private readonly messageQueueTopicPublisherForIIncomingFollowingEvent:
+            MessageQueueTopicPublisher<IIncomingFollowingEvent>,
+        private readonly messageQueueTopicPublisherForIIncomingStreamingEvent:
+            MessageQueueTopicPublisher<IIncomingStreamingEvent>,
+        private readonly messageQueueTopicPublisherForIIncomingCheermotesEvent:
+            MessageQueueTopicPublisher<IIncomingCheermotesEvent>,
         private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
@@ -67,31 +75,11 @@ export default class TwitchPerUserPollingApi {
     }
 
     public async start(): Promise<void> {
-        const messageQueueTopicPublisherForIIncomingFollowingEvent =
-            new MessageQueueTopicPublisher<IIncomingFollowingEvent>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.backendConfig.topicTwitchIncomingFollowingEvent,
-            );
-
-        const messageQueueTopicPublisherForIIncomingStreamingEvent =
-            new MessageQueueTopicPublisher<IIncomingStreamingEvent>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.backendConfig.topicTwitchIncomingStreamingEvent,
-            );
-
-        const messageQueueTopicPublisherForIIncomingCheermotesEvent =
-            new MessageQueueTopicPublisher<IIncomingCheermotesEvent>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.backendConfig.topicTwitchIncomingCheermotesEvent,
-            );
 
         const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
             this.logger,
             this.twitchPollingFollowingConnection,
-            messageQueueTopicPublisherForIIncomingFollowingEvent,
+            this.messageQueueTopicPublisherForIIncomingFollowingEvent,
             this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
@@ -99,7 +87,7 @@ export default class TwitchPerUserPollingApi {
         const twitchIncomingStreamingCommandEventTranslator = new IncomingStreamingCommandEventTranslator(
             this.logger,
             this.twitchPollingStreamingConnection,
-            messageQueueTopicPublisherForIIncomingStreamingEvent,
+            this.messageQueueTopicPublisherForIIncomingStreamingEvent,
             this.backendConfig.twitchUserName,
             this.twitchUserId,
         );
@@ -107,7 +95,7 @@ export default class TwitchPerUserPollingApi {
         const twitchIncomingCheermotesCommandEventTranslator = new IncomingCheermotesCommandEventTranslator(
             this.logger,
             this.twitchPollingCheermotesConnection,
-            messageQueueTopicPublisherForIIncomingCheermotesEvent,
+            this.messageQueueTopicPublisherForIIncomingCheermotesEvent,
             this.backendConfig.twitchUserName,
             this.twitchUserId,
         );

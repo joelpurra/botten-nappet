@@ -30,8 +30,8 @@ import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publi
 import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
 
 /* tslint:disable max-line-length */
-import IIncomingPubSubEvent from "@botten-nappet/backend-twitch/src/pubsub/interface/iincoming-pubsub-event";
 import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/src/pubsub/translator/incoming-pubsub-event-translator";
+import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 /* tslint:enable max-line-length */
 
 import PubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
@@ -49,6 +49,8 @@ export default class TwitchPerUserPubSubApi {
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        private readonly messageQueueTopicPublisherForIIncomingPubSubEvent:
+            MessageQueueTopicPublisher<IIncomingPubSubEvent>,
         private readonly twitchUserId: number,
     ) {
         // TODO: validate arguments.
@@ -70,13 +72,6 @@ export default class TwitchPerUserPubSubApi {
             this.logger,
             this.twitchAllPubSubTopicsForTwitchUserIdConnection,
         );
-
-        const messageQueueTopicPublisherForIIncomingPubSubEvent =
-            new MessageQueueTopicPublisher<IIncomingPubSubEvent>(
-                this.logger,
-                this.messageQueuePublisher,
-                this.backendConfig.topicTwitchIncomingPubSubEvent,
-            );
 
         const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
             this.logger,

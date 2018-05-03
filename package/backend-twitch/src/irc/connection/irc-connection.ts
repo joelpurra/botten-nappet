@@ -31,11 +31,12 @@ import {
     UserAccessTokenProviderType,
 } from "../../authentication/provider-types";
 
-import WebSocketConnection from "../../websocket/connection/websocket-connection";
-import IWebSocketCommand from "../../websocket/interface/iwebsocket-command";
+import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
-import IIncomingIrcCommand from "../interface/iincoming-irc-command";
-import IOutgoingIrcCommand from "../interface/ioutgoing-irc-command";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
+
+import WebSocketConnection from "../../websocket/connection/websocket-connection";
 import IIRCConnection from "./iirc-connection";
 
 export default class IrcConnection

@@ -37,7 +37,9 @@ import {
 import WebSocket from "ws";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import IWebSocketCommand from "../interface/iwebsocket-command";
+
+import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
+
 import IWebSocketConnection from "./iwebsocket-connection";
 
 export default abstract class WebSocketConnection<T, V> implements IWebSocketConnection<T, V> {

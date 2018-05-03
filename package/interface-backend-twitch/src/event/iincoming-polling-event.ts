@@ -18,19 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    autoinject,
-} from "aurelia-framework";
+import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
 
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
-import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
-
-@autoinject
-export default class IncomingSearchResultEventTopic extends TopicConfig {
-    constructor(
-        sharedTopicsConfig: SharedTopicsConfig,
-    ) {
-        // NOTE: single-purpose class: supply the "configuration" value.
-        super(sharedTopicsConfig.topicVidyIncomingSearchResultEvent);
-    }
+export default interface IIncomingPollingEvent extends IChannelEvent {
+    data: any;
 }

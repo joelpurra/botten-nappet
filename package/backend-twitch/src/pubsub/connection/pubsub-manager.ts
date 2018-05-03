@@ -26,7 +26,8 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import ConnectionManager from "@botten-nappet/shared/src/connection/connection-manager";
 
-import IPubSubResponse from "../interface/ipubsub-response";
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
+
 import IPubSubConnection from "./ipubsub-connection";
 
 export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse> {

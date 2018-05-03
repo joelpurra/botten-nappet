@@ -39,15 +39,15 @@ import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publi
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
 import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
-import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
+import IOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 
+import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
 import VidyApi from "./api";
 
 /* tslint:enable:max-line-length */
 
 @autoinject
 export default class BackendVidyApplicationApi implements IStartableStoppable {
-    private vidyApi: VidyApi | null;
     private logger: any;
     private connectables: IConnectable[];
 
@@ -59,34 +59,21 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
         private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
+        private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+            OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
+        private readonly vidyApi: VidyApi,
     ) {
         this.logger = logger.child(this.constructor.name);
 
-        this.vidyApi = null;
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
-        const vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand =
-            new MessageQueueSingleItemJsonTopicsSubscriber<IOutgoingSearchCommand>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.sharedTopicsConfig.topicVidyOutgoingSearchCommand),
-            );
-
-        this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
+        this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
-
-        this.vidyApi = new VidyApi(
-            this.backendConfig,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
-        );
 
         await this.vidyApi.start();
     }

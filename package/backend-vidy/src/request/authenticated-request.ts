@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -32,6 +35,7 @@ import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-conf
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IClientContext from "./iclient-context";
 
+@autoinject
 export default class AuthenticatedRequest {
     private logger: PinoLogger;
 

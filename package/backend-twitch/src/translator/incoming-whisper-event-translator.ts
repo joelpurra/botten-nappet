@@ -31,10 +31,10 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 import IIncomingWhisperEvent,
 {
     WhisperType,
-} from "@botten-nappet/interface-twitch/src/event/iincoming-whisper-event";
+} from "@botten-nappet/interface-shared-twitch/src/event/iincoming-whisper-event";
 
-import IIncomingPubSubEvent from "../pubsub/interface/iincoming-pubsub-event";
-import IPubSubResponse from "../pubsub/interface/ipubsub-response";
+import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(

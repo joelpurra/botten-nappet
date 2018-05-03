@@ -30,7 +30,7 @@ import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 
 /* tslint:disable:max-line-length */
 
-import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-following-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
 import IPollingFollowingResponse from "../interface/response/polling/ifollowing-polling-response";
 import ITwitchApiV5ChannelFollowingEvent from "../interface/response/polling/itwitch-api-v5-channel-following-event";
 

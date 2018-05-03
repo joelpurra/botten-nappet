@@ -28,10 +28,11 @@ import {
     UserAccessTokenProviderType,
 } from "../../authentication/provider-types";
 
-import WebSocketConnection from "../../websocket/connection/websocket-connection";
-import IWebSocketCommand from "../../websocket/interface/iwebsocket-command";
+import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
-import IPubSubResponse from "../interface/ipubsub-response";
+import WebSocketConnection from "../../websocket/connection/websocket-connection";
+
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 import IPubSubConnection from "./ipubsub-connection";
 
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {

@@ -31,7 +31,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import ConnectionManager from "@botten-nappet/shared/src/connection/connection-manager";
 
-import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 import ApplicationTokenManagerConfig from "../config/application-token-manager-config";
 import IPollingConnection from "../polling/connection/ipolling-connection";

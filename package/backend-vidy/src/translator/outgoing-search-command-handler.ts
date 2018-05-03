@@ -28,8 +28,8 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
-import IOutgoingSearchCommand from "@botten-nappet/interface-vidy/src/command/ioutgoing-search-command";
+import IIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
+import IOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 
 import AuthenticatedRequest from "../request/authenticated-request";
 

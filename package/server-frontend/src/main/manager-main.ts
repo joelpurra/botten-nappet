@@ -45,11 +45,13 @@ import FrontendConfig from "../config/frontend-config";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
 import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
-import ITwitchIncomingIrcCommand from "@botten-nappet/backend-twitch/src/irc/interface/iincoming-irc-command";
-import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-following-event";
-import IIncomingSubscriptionEvent from "@botten-nappet/interface-twitch/src/event/iincoming-subscription-event";
-import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
+import IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheering-with-cheermotes-event-single-item-json-topics-subscriber";
+import IncomingFollowingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-following-event-single-item-json-topics-subscriber";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
+import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-search-result-event-single-item-json-topics-subscriber";
+import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-subscription-event-single-item-json-topics-subscriber";
+
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 /* tslint:enable max-line-length */
 
@@ -77,6 +79,16 @@ export default class FrontendManagerMain {
         logger: PinoLogger,
         private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
         private readonly frontendManagedMain: FrontendManagedMain,
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+            IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
+            IncomingFollowingEventSingleItemJsonTopicsSubscriber,
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent:
+            IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber,
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
+            IncomingSubscriptionEventSingleItemJsonTopicsSubscriber,
+        private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
+            IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -109,48 +121,16 @@ export default class FrontendManagerMain {
         this.server = http.createServer(app.callback());
         this.io = SocketIo(this.server);
 
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
-            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                // TODO: no backend events.
-                await this.messageQueueTopicHelper.split("external:backend:twitch:incoming:irc:command"),
-            );
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent =
-            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingFollowingEvent),
-            );
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent =
-            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringWithCheermotesEvent>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingCheeringWithCheermotesEvent),
-            );
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent =
-            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.frontendConfig.topicTwitchIncomingSubscriptionEvent),
-            );
-        const vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent =
-            new MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.frontendConfig.topicVidyIncomingSearchResultEvent),
-            );
-
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent);
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
-        this.connectables.push(vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
+        this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
 
         // TODO: separate connectables and startables/observers.
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable
+        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand.dataObservable
             .forEach((data) => {
                 assert.not.null(this.io);
 
@@ -192,7 +172,7 @@ export default class FrontendManagerMain {
                 this.io.send(msg);
             });
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable
+        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent.dataObservable
             .forEach((data) => {
                 assert.not.null(this.io);
 
@@ -212,7 +192,7 @@ export default class FrontendManagerMain {
                 this.io.send(msg);
             });
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.dataObservable
+        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent.dataObservable
             .forEach((data) => {
                 assert.not.null(this.io);
 
@@ -237,7 +217,7 @@ export default class FrontendManagerMain {
                 this.io.send(msg);
             });
 
-        twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable
+        this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent.dataObservable
             .forEach((data) => {
                 assert.not.null(this.io);
 
@@ -257,7 +237,7 @@ export default class FrontendManagerMain {
                 this.io.send(msg);
             });
 
-        vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable
+        this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent.dataObservable
             .forEach((data) => {
                 assert.not.null(this.io);
 
@@ -356,7 +336,7 @@ export default class FrontendManagerMain {
         this.server = null;
     }
 
-    private getIrcPrivMsgWebsocketEventData(data: ITwitchIncomingIrcCommand): ICustomWebSocketEventData | null {
+    private getIrcPrivMsgWebsocketEventData(data: IIncomingIrcCommand): ICustomWebSocketEventData | null {
         if (data.message === null) {
             throw new Error("data.message");
         }

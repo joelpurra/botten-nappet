@@ -25,12 +25,12 @@ import {
     assert,
 } from "check-types";
 
-import Config from "./backend-config";
+import BackendConfig from "./backend-config";
 
 @autoinject
 export default class DatabaseConfig {
     constructor(
-        private readonly backendConfig: Config,
+        private readonly backendConfig: BackendConfig,
     ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof backendConfig, "object");

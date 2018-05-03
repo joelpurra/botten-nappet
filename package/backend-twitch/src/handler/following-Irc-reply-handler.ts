@@ -28,9 +28,9 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IIncomingFollowingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-following-event";
+import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
 
-import IOutgoingIrcCommand from "../irc/interface/ioutgoing-irc-command";
+import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 export default class FollowingIrcReplyHandler extends EventSubscriptionManager<IIncomingFollowingEvent> {
     constructor(

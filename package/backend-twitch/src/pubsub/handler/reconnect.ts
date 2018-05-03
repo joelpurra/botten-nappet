@@ -23,9 +23,11 @@ import {
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+
+import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
+
 import IPubSubConnection from "../connection/ipubsub-connection";
 import PubSubManager from "../connection/pubsub-manager";
-import IPubSubResponse from "../interface/ipubsub-response";
 
 export default class ReconnectPubSubHandler extends PubSubManager {
     constructor(logger: PinoLogger, connection: IPubSubConnection) {

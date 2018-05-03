@@ -33,10 +33,10 @@ import MultiEventSubscriptionManager from "@botten-nappet/shared/src/event/multi
 import {
     ICheerToken,
     ICheerTokenWithCheermoteUrl,
-} from "@botten-nappet/interface-twitch/src/event/icheertoken-with-cheermotes-url";
-import IIncomingCheeringEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheering-event";
-import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingCheermotesEvent from "@botten-nappet/interface-twitch/src/event/iincoming-cheermotes-event";
+} from "@botten-nappet/interface-shared-twitch/src/event/icheertoken-with-cheermotes-url";
+import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-event";
+import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-with-cheermotes-event";
+import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
 
 import {
     CheermoteBackground,

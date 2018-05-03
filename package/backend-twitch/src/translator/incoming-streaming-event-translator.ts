@@ -26,7 +26,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 
-import IIncomingStreamingEvent from "@botten-nappet/interface-twitch/src/event/iincoming-streaming-event";
+import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
 
 /* tslint:disable:max-line-length */
 

@@ -25,9 +25,10 @@ import {
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import IIncomingPollingEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-polling-event";
+
 import IPollingConnection from "../connection/ipolling-connection";
 import PollingManager from "../connection/polling-manager";
-import IIncomingPollingEvent from "../interface/iincoming-polling-event";
 
 export default class IncomingPollingEventTranslator extends PollingManager<any> {
     constructor(

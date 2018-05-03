@@ -30,8 +30,8 @@ import qs from "qs";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IAugmentedToken from "@botten-nappet/interface-twitch/src/authentication/iaugmented-token";
-import IRawToken from "@botten-nappet/interface-twitch/src/authentication/iraw-token";
+import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 import IUser from "@botten-nappet/backend-shared/src/storage/iuser";
 import UserStorageManager from "@botten-nappet/backend-shared/src/storage/manager/user-storage-manager";

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    inject,
+    autoinject,
 } from "aurelia-framework";
 import {
     assert,
@@ -27,31 +27,32 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 
 import SingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
 
-import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
-import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
-@inject(PinoLogger, ZmqConfig)
-export default class ZmqSingleItemJsonTopicsSubscriber<T> extends SingleItemJsonTopicsSubscriber<T> {
+import I`'___TOPIC_NAME_PASCAL_CASE___() from "@botten-nappet/interface-`'___SECTION_NAME_LOWER_CASE___()-`'___GROUP_NAME_LOWER_CASE___()/src/event/i`'___TOPIC_NAME_PARAM_CASE___()";
+import `'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___TOPIC_NAME_PARAM_CASE___()-topic";
+
+@autoinject
+export default class `'___TOPIC_NAME_PASCAL_CASE___()SingleItemJsonTopicsSubscriber
+    extends SingleItemJsonTopicsSubscriber<I`'___TOPIC_NAME_PASCAL_CASE___()> {
+
+    // NOTE: this file is auto-generated. Changes will be overwritten.
     constructor(
         logger: PinoLogger,
+        topicHelper: TopicHelper,
         zmqConfig: ZmqConfig,
-        topics: TopicConfig,
+        topicConfig: `'___TOPIC_NAME_PASCAL_CASE___()Topic,
     ) {
-        super(
-            logger,
-            zmqConfig,
-            topics,
-        );
+        super(logger, topicHelper, zmqConfig, topicConfig);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
+        assert.equal(typeof topicHelper, "object");
         assert.equal(typeof zmqConfig, "object");
-        assert.array(topics);
+        assert.equal(typeof topicConfig, "object");
     }
 }

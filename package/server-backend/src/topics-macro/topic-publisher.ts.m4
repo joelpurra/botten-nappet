@@ -27,30 +27,27 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
-import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+import Publisher from "@botten-nappet/shared/src/message-queue/publisher";
+import TopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
 
-import SingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-
-import IIncomingSearchResultEvent from "@botten-nappet/interface-vidy/src/command/iincoming-search-result-event";
-import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
-import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
+import I`'___TOPIC_NAME_PASCAL_CASE___() from "@botten-nappet/interface-`'___SECTION_NAME_LOWER_CASE___()-`'___GROUP_NAME_LOWER_CASE___()/src/event/i`'___TOPIC_NAME_PARAM_CASE___()";
+import `'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___TOPIC_NAME_PARAM_CASE___()-topic";
 
 @autoinject
-export default class IIncomingSearchResultEventSingleItemJsonTopicsSubscriber
-    extends SingleItemJsonTopicsSubscriber<IIncomingSearchResultEvent> {
+export default class `'___TOPIC_NAME_PASCAL_CASE___()TopicsPublisher
+    extends TopicPublisher<I`'___TOPIC_NAME_PASCAL_CASE___()> {
+
+    // NOTE: this file is auto-generated. Changes will be overwritten.
     constructor(
         logger: PinoLogger,
-        topicHelper: TopicHelper,
-        zmqConfig: ZmqConfig,
-        topicConfig: TopicConfig,
+        publisher: Publisher,
+        topicConfig: `'___TOPIC_NAME_PASCAL_CASE___()Topic,
     ) {
-        super(logger, topicHelper, zmqConfig, topicConfig);
+        super(logger, publisher, topicConfig);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
-        assert.equal(typeof topicHelper, "object");
-        assert.equal(typeof zmqConfig, "object");
+        assert.equal(typeof publisher, "object");
         assert.equal(typeof topicConfig, "object");
     }
 }

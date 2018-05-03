@@ -24,7 +24,7 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IAugmentedToken from "@botten-nappet/interface-twitch/src/authentication/iaugmented-token";
+import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
 import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
