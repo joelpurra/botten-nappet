@@ -24,8 +24,8 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IIRCConnection from "../connection/iirc-connection";
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import IIRCConnection from "../connection/iirc-connection";
 
 import IrcManager from "../connection/irc-manager";
 

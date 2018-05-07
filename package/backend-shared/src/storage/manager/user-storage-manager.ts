@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -32,18 +35,24 @@ import IUserCamo from "../iuser-camo";
 import IUserSchema from "../repository/iuser-schema";
 import UserRepositoryClass from "../repository/user-repository";
 
+@autoinject
 export default class UserStorageManager {
+    private UserRepository: typeof UserRepositoryClass;
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        private UserRepository: typeof UserRepositoryClass,
+        // TODO: inject the static UserRepositoryClass.
+        // private UserRepository: typeof UserRepositoryClass,
     ) {
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 1);
         assert.equal(typeof logger, "object");
-        assert.equal(typeof UserRepository, "function");
 
         this.logger = logger.child(this.constructor.name);
+
+        // TODO: inject the static (and uninstantiated) UserRepositoryClass.
+        assert.equal(typeof UserRepositoryClass, "function");
+        this.UserRepository = UserRepositoryClass;
     }
 
     public async getByUsername(username: string): Promise<IUser> {

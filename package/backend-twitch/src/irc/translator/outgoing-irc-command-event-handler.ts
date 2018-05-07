@@ -27,8 +27,8 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
-import IIRCConnection from "../connection/iirc-connection";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
+import IIRCConnection from "../connection/iirc-connection";
 
 export default class OutgoingIrcCommandEventHandler extends EventSubscriptionManager<IOutgoingIrcCommand> {
     constructor(

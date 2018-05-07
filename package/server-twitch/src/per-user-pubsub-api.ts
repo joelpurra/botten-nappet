@@ -18,40 +18,52 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
+import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 
 /* tslint:disable max-line-length */
+
+import IncomingPubSubEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-pub-sub-event-topic-publisher";
+
 import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/src/pubsub/translator/incoming-pubsub-event-translator";
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
-/* tslint:enable max-line-length */
 
 import PubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
 import PubSubLoggingHandler from "@botten-nappet/backend-twitch/src/pubsub/handler/logging";
 import PubSubPingHandler from "@botten-nappet/backend-twitch/src/pubsub/handler/ping";
 import PubSubReconnectHandler from "@botten-nappet/backend-twitch/src/pubsub/handler/reconnect";
 
+/* tslint:enable max-line-length */
+
 export default class TwitchPerUserPubSubApi {
     private startables: IStartableStoppable[];
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
+        @within(PubSubConnection, "TwitchPerUserPubSubApi")
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        @scoped(IncomingPubSubEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingPubSubEvent:
-            MessageQueueTopicPublisher<IIncomingPubSubEvent>,
-        private readonly twitchUserId: number,
+            IncomingPubSubEventTopicPublisher,
+        @within(TwitchUserNameProvider, "PerUserHandlersMain")
+        private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @within(TwitchUserIdProvider, "PerUserHandlersMain")
+        private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -76,7 +88,7 @@ export default class TwitchPerUserPubSubApi {
         const twitchIncomingPubSubEventTranslator = new IncomingPubSubEventTranslator(
             this.logger,
             this.twitchAllPubSubTopicsForTwitchUserIdConnection,
-            messageQueueTopicPublisherForIIncomingPubSubEvent,
+            this.messageQueueTopicPublisherForIIncomingPubSubEvent,
         );
 
         this.startables.push(twitchPubSubPingHandler);
@@ -87,8 +99,8 @@ export default class TwitchPerUserPubSubApi {
         await Bluebird.map(this.startables, async (startable) => startable.start());
 
         this.logger.info({
-            twitchUserId: this.twitchUserId,
-            twitchUserName: this.backendConfig.twitchUserName,
+            twitchUserId: await this.twitchUserIdProvider.get(),
+            twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

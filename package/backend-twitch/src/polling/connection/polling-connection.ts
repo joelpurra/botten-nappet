@@ -39,6 +39,7 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 import IHttpData from "@botten-nappet/interface-backend-twitch/src/event/ihttp-data";
 import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihttp-header";
 import IPollingConnection from "./ipolling-connection";
@@ -72,19 +73,16 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         logger: PinoLogger,
         private readonly intervalInMilliseconds: number,
         private readonly atBegin: boolean,
-        private readonly uri: string,
         private readonly method: string,
+        private dataSerializer?: RequestHelper,
         private defaultHeaders?: IHttpHeaders,
         private defaultData?: IHttpData,
     ) {
-        assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
+        assert(arguments.length === 4 || arguments.length === 5 || arguments.length === 6);
         assert.equal(typeof logger, "object");
         assert.number(intervalInMilliseconds);
         assert.greater(intervalInMilliseconds, 0);
         assert.equal(typeof atBegin, "boolean");
-        assert.equal(typeof uri, "string");
-        assert.greater(uri.length, 0);
-        assert(uri.startsWith("https://"));
         assert.equal(typeof method, "string");
         assert.greater(method.length, 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");
@@ -171,7 +169,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
         if (this.atBegin === true) {
             this.logger.warn(this.atBegin, "atBegin", "connect");
-            this.sendInternal();
+            await this.sendInternal();
         }
     }
 
@@ -215,6 +213,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         //     this.logger.warn(resetInterval, "send");
         // }
     }
+
+    protected abstract async getUri(): Promise<string>;
 
     protected abstract async getHeaders(): Promise<IHttpHeaders>;
 
@@ -282,6 +282,12 @@ export default abstract class PollingConnection<T> implements IPollingConnection
             ...overriddenData,
         };
 
+        if (this.dataSerializer) {
+            const serializedData = this.dataSerializer.serialize(data);
+
+            return serializedData;
+        }
+
         return data;
     }
 
@@ -289,14 +295,23 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         assert.hasLength(arguments, 0);
         assert.not.null(this.pollingSubject);
 
-        const [headers, data] = await Promise.all([
+        const [
+            uri,
+            headers,
+            data,
+        ] = await Promise.all([
+            this.getUri(),
             this.getAllHeaders(),
             this.getAllData(),
         ]);
 
+        assert.equal(typeof uri, "string");
+        assert.greater(uri.length, 0);
+        assert(uri.startsWith("https://"));
+
         const axiosInstanceConfig = {
             // TODO: don't pass URL both here and in rxios instance method call.
-            baseURL: this.uri,
+            baseURL: uri,
             // TODO: don't pass data both here and in rxios instance method call.
             data,
             headers,
@@ -312,38 +327,38 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         // TODO: log sending data through the polling.
         switch (this.method) {
             case "get":
-                request = rxios.get<any>(this.uri);
+                request = rxios.get<any>(uri);
                 break;
 
             case "delete":
-                request = rxios.delete(this.uri);
+                request = rxios.delete(uri);
                 break;
 
             case "head":
                 // TODO: patch rxios to give head.
-                // request = rxios.head<any>(this.uri);
+                // request = rxios.head<any>(uri);
                 // break;
                 throw new Error("HTTP method 'head' not supported.");
 
             case "options":
                 // TODO: patch rxios to allow options.
-                // request = rxios.options<any>(this.uri);
+                // request = rxios.options<any>(uri);
                 // break;
                 throw new Error("HTTP method 'head' not supported.");
 
             case "post":
                 // TODO: patch rxios to have optional post data; it's already set on the axios instance.
-                request = rxios.post<any>(this.uri, data);
+                request = rxios.post<any>(uri, data);
                 break;
 
             case "put":
                 // TODO: patch rxios to have optional put data; it's already set on the axios instance.
-                request = rxios.put<any>(this.uri, data);
+                request = rxios.put<any>(uri, data);
                 break;
 
             case "patch":
                 // TODO: patch rxios to have optional patch data; it's already set on the axios instance.
-                request = rxios.patch<any>(this.uri, data);
+                request = rxios.patch<any>(uri, data);
                 break;
 
             default:
@@ -367,7 +382,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         };
 
         const responseSubscription = request
-            // .do((val) => this.logger.trace(val, this.uri, "response", "request"))
+            // .do((val) => this.logger.trace(val, uri, "response", "request"))
             .subscribe(responseObserver);
     }
 }

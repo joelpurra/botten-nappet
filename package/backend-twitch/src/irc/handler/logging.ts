@@ -24,9 +24,9 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IIRCConnection from "../connection/iirc-connection";
 import IrcManager from "../connection/irc-manager";
-import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 export default class LoggingIrcHandler extends IrcManager {
     constructor(

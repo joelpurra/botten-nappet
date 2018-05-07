@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-framework";
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import {
     assert,
 } from "check-types";
@@ -37,7 +37,6 @@ import ApplicationTokenManagerConfig from "../config/application-token-manager-c
 import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingApplicationTokenConnection from "./polling-application-token-connection";
 
-@autoinject
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
     private tokenHasBeenSet: (() => void) | null;
@@ -48,6 +47,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
     constructor(
         logger: PinoLogger,
+        @within(PollingApplicationTokenConnection, "BackendManagedMain")
         connection: PollingApplicationTokenConnection,
         private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {

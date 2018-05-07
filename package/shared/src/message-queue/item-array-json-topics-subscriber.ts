@@ -30,7 +30,7 @@ import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 
-export default class ItemArrayJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T[]> {
+export default abstract class ItemArrayJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T[]> {
     constructor(
         logger: PinoLogger,
         topicHelper: TopicHelper,

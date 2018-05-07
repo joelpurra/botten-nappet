@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -30,15 +33,20 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 
 import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-subscription-event";
 
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
+import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-subscription-event-topic-publisher";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
 
+@autoinject
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        private incomingSubscriptionEventEmitter: IEventEmitter<IIncomingSubscriptionEvent>,
-        private readonly username: string,
-        private readonly userid: number,
+        connection: IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        private readonly incomingSubscriptionEventEmitter: IncomingSubscriptionEventTopicPublisher,
+        private readonly userNameProvider: UserNameProvider,
+        private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
 
@@ -46,9 +54,8 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingSubscriptionEventEmitter, "object");
-        assert.nonEmptyString(username);
-        assert.integer(userid);
-        assert.positive(userid);
+        assert.equal(typeof userNameProvider, "object");
+        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -68,8 +75,8 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
 
         const event: IIncomingSubscriptionEvent = {
             channel: {
-                id: this.userid,
-                name: this.username,
+                id: await this.userIdProvider.get(),
+                name: await this.userNameProvider.get(),
             },
             message: data.message,
             months,

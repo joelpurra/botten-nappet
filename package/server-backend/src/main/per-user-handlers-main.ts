@@ -18,6 +18,15 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -64,8 +73,30 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/
 import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-subscription-event";
 import IIncomingWhisperEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-whisper-event";
 
+import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
+
 import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
 import IVidyIOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
+import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-event-topic-publisher";
+import IncomingCheeringWithCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-with-cheermotes-event-topic-publisher";
+import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-subscription-event-topic-publisher";
+import IncomingWhisperEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-whisper-event-topic-publisher";
+import OutgoingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/outgoing-irc-command-topic-publisher";
+import OutgoingSearchCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/outgoing-search-command-topic-publisher";
+import IncomingCheeringEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheering-event-single-item-json-topics-subscriber";
+import IncomingCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheermotes-event-single-item-json-topics-subscriber";
+import IncomingFollowingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-following-event-single-item-json-topics-subscriber";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
+import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
+import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-search-result-event-single-item-json-topics-subscriber";
+import IncomingStreamingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-streaming-event-single-item-json-topics-subscriber";
+import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-subscription-event-single-item-json-topics-subscriber";
+import IncomingWhisperEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-whisper-event-single-item-json-topics-subscriber";
+
+import BackendTwitchIrcAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/irc-authenticated-application-api";
+import BackendTwitchPollingAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/polling-authenticated-application-api";
+import BackendTwitchPubSubAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/pubsub-authenticated-application-api";
 
 /* tslint:enable max-line-length */
 
@@ -79,37 +110,62 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        @within(IncomingPubSubEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingPubSubEvent>,
+            IncomingPubSubEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
-            MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>,
+            IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        @within(IncomingFollowingEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingFollowingEvent>,
+            IncomingFollowingEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingStreamingEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingStreamingEvent>,
+            IncomingStreamingEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingCheermotesEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheermotesEvent>,
+            IncomingCheermotesEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingCheeringEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingCheeringEvent>,
+            IncomingCheeringEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingWhisperEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingWhisperEvent>,
+            IncomingWhisperEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<IIncomingSubscriptionEvent>,
+            IncomingSubscriptionEventSingleItemJsonTopicsSubscriber,
+        @within(IncomingSearchResultEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
-            MessageQueueSingleItemJsonTopicsSubscriber<VidyIIncomingSearchResultEvent>,
+            IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
+        @scoped(OutgoingIrcCommandTopicPublisher)
         private readonly messageQueueTopicPublisherForIOutgoingIrcCommand:
-            MessageQueueTopicPublisher<ITwitchOutgoingIrcCommand>,
+            OutgoingIrcCommandTopicPublisher,
+        @scoped(IncomingCheeringEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingCheeringEvent:
-            MessageQueueTopicPublisher<IIncomingCheeringEvent>,
+            IncomingCheeringEventTopicPublisher,
+        @scoped(IncomingWhisperEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingWhisperEvent:
-            MessageQueueTopicPublisher<IIncomingWhisperEvent>,
+            IncomingWhisperEventTopicPublisher,
+        @scoped(IncomingSubscriptionEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingSubscriptionEvent:
-            MessageQueueTopicPublisher<IIncomingSubscriptionEvent>,
+            IncomingSubscriptionEventTopicPublisher,
+        @scoped(IncomingCheeringWithCheermotesEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingCheeringWithCheermotesEvent:
-            MessageQueueTopicPublisher<IIncomingCheeringWithCheermotesEvent>,
+            IncomingCheeringWithCheermotesEventTopicPublisher,
+        @scoped(OutgoingSearchCommandTopicPublisher)
         private readonly messageQueueTopicPublisherForIOutgoingSearchCommand:
-            MessageQueueTopicPublisher<IVidyIOutgoingSearchCommand>,
-        private readonly twitchUserId: number,
+            OutgoingSearchCommandTopicPublisher,
+        @scoped(TwitchUserNameProvider)
+        private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @scoped(TwitchUserIdProvider)
+        private readonly twitchUserIdProvider: TwitchUserIdProvider,
+        @context(BackendTwitchPubSubAuthenticatedApplicationApi, "BackendTwitchPubSubAuthenticatedApplicationApi")
+        private readonly backendTwitchPubSubAuthenticatedApplicationApi: BackendTwitchPubSubAuthenticatedApplicationApi,
+        @context(BackendTwitchIrcAuthenticatedApplicationApi, "BackendTwitchIrcAuthenticatedApplicationApi")
+        private readonly backendTwitchIrcAuthenticatedApplicationApi: BackendTwitchIrcAuthenticatedApplicationApi,
+        @context(BackendTwitchPollingAuthenticatedApplicationApi, "BackendTwitchPollingAuthenticatedApplicationApi")
+        private readonly backendTwitchPollingAuthenticatedApplicationApi:
+            BackendTwitchPollingAuthenticatedApplicationApi,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -141,7 +197,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             this.messageQueueTopicPublisherForIOutgoingIrcCommand,
-            this.backendConfig.twitchUserName,
+            this.twitchUserNameProvider,
         );
         const twitchIrcNewChatterHandler = new TwitchIrcNewChatterHandler(
             this.logger,
@@ -211,8 +267,8 @@ export default class PerUserHandlersMain implements IStartableStoppable {
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
             this.messageQueueTopicPublisherForIIncomingSubscriptionEvent,
-            this.backendConfig.twitchUserName,
-            this.twitchUserId,
+            this.twitchUserNameProvider,
+            this.twitchUserIdProvider,
         );
         const twitchSubscriptionIrcReplyHandler = new TwitchSubscriptionIrcReplyHandler(
             this.logger,
@@ -240,17 +296,33 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         await Bluebird.map(this.startables, async (startable) => startable.start());
 
         this.logger.info({
-            twitchUserId: this.twitchUserId,
-            twitchUserName: this.backendConfig.twitchUserName,
+            twitchUserId: await this.twitchUserIdProvider.get(),
+            twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        await Promise.all([
+            this.backendTwitchPubSubAuthenticatedApplicationApi.start(),
+            this.backendTwitchIrcAuthenticatedApplicationApi.start(),
+            this.backendTwitchPollingAuthenticatedApplicationApi.start(),
+        ]);
     }
 
     public async stop(): Promise<void> {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
+        if (this.backendTwitchPubSubAuthenticatedApplicationApi) {
+            this.backendTwitchPubSubAuthenticatedApplicationApi.stop();
+        }
+
+        if (this.backendTwitchIrcAuthenticatedApplicationApi) {
+            this.backendTwitchIrcAuthenticatedApplicationApi.stop();
+        }
+
+        if (this.backendTwitchPollingAuthenticatedApplicationApi) {
+            this.backendTwitchPollingAuthenticatedApplicationApi.stop();
+        }
+
         await Bluebird.map(
             this.startables,
             async (startable) => {

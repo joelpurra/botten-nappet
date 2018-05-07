@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -36,18 +39,23 @@ import ITwitchApiV5ChannelFollowingEvent from "../interface/response/polling/itw
 
 /* tslint:enable:max-line-length */
 
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
+import IncomingFollowingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-following-event-topic-publisher";
+import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
 import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
+@autoinject
 export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {
     private lastFollowingMessageTimestamp: number;
 
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<IPollingFollowingResponse>,
-        private incomingFollowingEventEmitter: IEventEmitter<IIncomingFollowingEvent>,
-        private readonly username: string,
-        private readonly userid: number,
+        connection: FollowingResponsePollingClientIdConnection,
+        private readonly incomingFollowingEventEmitter: IncomingFollowingEventTopicPublisher,
+        private readonly userNameProvider: UserNameProvider,
+        private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
 
@@ -55,9 +63,8 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingFollowingEventEmitter, "object");
-        assert.nonEmptyString(username);
-        assert.integer(userid);
-        assert.positive(userid);
+        assert.equal(typeof userNameProvider, "object");
+        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
 
@@ -72,15 +79,15 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
 
         this.lastFollowingMessageTimestamp = Date.now();
 
-        newFollows.forEach((follow) => {
+        newFollows.forEach(async (follow) => {
             const userId = parseInt(follow.user._id, 10);
 
             const timestamp = moment(follow.created_at).toDate();
 
             const event: IIncomingFollowingEvent = {
                 channel: {
-                    id: this.userid,
-                    name: this.username,
+                    id: await this.userIdProvider.get(),
+                    name: await this.userNameProvider.get(),
                 },
                 timestamp,
                 triggerer: {

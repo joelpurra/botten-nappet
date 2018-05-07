@@ -19,48 +19,58 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import {
-    UserAccessTokenProviderType,
-} from "../../authentication/provider-types";
-
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
 import WebSocketConnection from "../../websocket/connection/websocket-connection";
 
+/* tslint:disable max-line-length */
+
+import UserAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-access-token-provider";
+import PubSubConfig from "@botten-nappet/backend-twitch/src/config/pubsub-config";
+import UserPubSubTopicsProvider from "@botten-nappet/backend-twitch/src/pubsub/connection/user-pubsub-topics-provider";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 import IPubSubConnection from "./ipubsub-connection";
 
+/* tslint:enable max-line-length */
+
+@autoinject
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {
     constructor(
+        private readonly pubSubConfig: PubSubConfig,
         logger: PinoLogger,
-        uri: string,
-        private topics: string[],
-        private readonly userAccessTokenProvider: UserAccessTokenProviderType,
+        private userPubSubTopicsProvider: UserPubSubTopicsProvider,
+        private readonly userAccessTokenProvider: UserAccessTokenProvider,
     ) {
-        super(logger, uri);
+        super(logger, pubSubConfig.twitchPubSubWebSocketUri);
 
         assert.hasLength(arguments, 4);
+        assert.equal(typeof pubSubConfig, "object");
         assert.equal(typeof logger, "object");
-        assert.equal(typeof uri, "string");
-        assert.nonEmptyString(uri);
-        assert(uri.startsWith("wss://"));
-        assert.array(topics);
-        assert.nonEmptyArray(topics);
-        assert.equal(typeof userAccessTokenProvider, "function");
+        assert.equal(typeof userPubSubTopicsProvider, "object");
+        assert.equal(typeof userAccessTokenProvider, "object");
+
+        assert.equal(typeof pubSubConfig.twitchPubSubWebSocketUri, "string");
+        assert.nonEmptyString(pubSubConfig.twitchPubSubWebSocketUri);
+        assert(pubSubConfig.twitchPubSubWebSocketUri.startsWith("wss://"));
 
         this.logger = logger.child(this.constructor.name);
     }
 
     protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse, any>>> {
-        const userAccessToken = await this.userAccessTokenProvider();
+        const userAccessToken = await this.userAccessTokenProvider.get();
 
         const listenNonce = Math.random()
             .toString(10);
+
+        const topics = await this.userPubSubTopicsProvider.get();
 
         const setupConnectionCommands: Array<IWebSocketCommand<IPubSubResponse, any>> = [
             {
@@ -86,7 +96,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
                         // TODO: typing for the LISTEN request.
                         data: {
                             auth_token: userAccessToken,
-                            topics: this.topics,
+                            topics,
                         },
                         nonce: listenNonce,
                         type: "LISTEN",

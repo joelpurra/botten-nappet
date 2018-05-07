@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -36,9 +39,12 @@ import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication
 import IUser from "@botten-nappet/backend-shared/src/storage/iuser";
 import UserStorageManager from "@botten-nappet/backend-shared/src/storage/manager/user-storage-manager";
 
+import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
+
 import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 
+@autoinject
 export default class UserTokenHelper {
     private logger: PinoLogger;
 
@@ -47,25 +53,23 @@ export default class UserTokenHelper {
         private readonly csrfHelper: CSRFHelper,
         private readonly userStorageManager: UserStorageManager,
         private readonly requestHelper: RequestHelper,
-        private readonly oauthAuthorizationUri: string,
-        private readonly appOAuthRedirectUrl: string,
-        private readonly oauthTokenUri: string,
-        private readonly appClientId: string,
-        private readonly appClientSecret: string,
+        private readonly userAuthenticationConfig: UserAuthenticationConfig,
     ) {
-        assert.hasLength(arguments, 9);
+        assert.hasLength(arguments, 5);
         assert.equal(typeof logger, "object");
         assert.equal(typeof csrfHelper, "object");
         assert.equal(typeof userStorageManager, "object");
         assert.equal(typeof requestHelper, "object");
-        assert.nonEmptyString(oauthAuthorizationUri);
-        assert(oauthAuthorizationUri.startsWith("https://"));
-        assert.nonEmptyString(appOAuthRedirectUrl);
-        assert(appOAuthRedirectUrl.startsWith("https://"));
-        assert.nonEmptyString(oauthTokenUri);
-        assert(oauthTokenUri.startsWith("https://"));
-        assert.nonEmptyString(appClientId);
-        assert.nonEmptyString(appClientSecret);
+        assert.equal(typeof userAuthenticationConfig, "object");
+
+        assert.nonEmptyString(userAuthenticationConfig.twitchOAuthAuthorizationUri);
+        assert(userAuthenticationConfig.twitchOAuthAuthorizationUri.startsWith("https://"));
+        assert.nonEmptyString(userAuthenticationConfig.twitchAppOAuthRedirectUrl);
+        assert(userAuthenticationConfig.twitchAppOAuthRedirectUrl.startsWith("https://"));
+        assert.nonEmptyString(userAuthenticationConfig.twitchOAuthTokenUri);
+        assert(userAuthenticationConfig.twitchOAuthTokenUri.startsWith("https://"));
+        assert.nonEmptyString(userAuthenticationConfig.twitchAppClientId);
+        assert.nonEmptyString(userAuthenticationConfig.twitchAppClientSecret);
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -87,17 +91,17 @@ export default class UserTokenHelper {
         assert.nonEmptyString(code);
 
         const data = {
-            client_id: this.appClientId,
-            client_secret: this.appClientSecret,
+            client_id: this.userAuthenticationConfig.twitchAppClientId,
+            client_secret: this.userAuthenticationConfig.twitchAppClientSecret,
             code,
             grant_type: "authorization_code",
-            redirect_uri: this.appOAuthRedirectUrl,
+            redirect_uri: this.userAuthenticationConfig.twitchAppOAuthRedirectUrl,
         };
 
         const serializedData = this.requestHelper.twitchQuerystringSerializer(data);
 
         // TODO: use an https class.
-        const response = await axios.post(this.oauthTokenUri, serializedData);
+        const response = await axios.post(this.userAuthenticationConfig.twitchOAuthTokenUri, serializedData);
 
         // NOTE: axios response data.
         // TODO: verify token format.
@@ -191,8 +195,8 @@ export default class UserTokenHelper {
         assert.equal(typeof tokenToRefresh.token, "object");
 
         const data = {
-            client_id: this.appClientId,
-            client_secret: this.appClientSecret,
+            client_id: this.userAuthenticationConfig.twitchAppClientId,
+            client_secret: this.userAuthenticationConfig.twitchAppClientSecret,
             grant_type: "refresh_token",
             // TODO: better null handling.
             refresh_token: tokenToRefresh.token!.refresh_token,
@@ -201,7 +205,7 @@ export default class UserTokenHelper {
         const serializedData = this.requestHelper.twitchQuerystringSerializer(data);
 
         // TODO: use an https class.
-        const response = await axios.post(this.oauthTokenUri, serializedData);
+        const response = await axios.post(this.userAuthenticationConfig.twitchOAuthTokenUri, serializedData);
 
         // NOTE: axios response data.
         // TODO: verify reponse data.
@@ -226,9 +230,9 @@ export default class UserTokenHelper {
         const serializedScopes = scopes.join(" ");
 
         const params = {
-            client_id: this.appClientId,
+            client_id: this.userAuthenticationConfig.twitchAppClientId,
             force_verify: "true",
-            redirect_uri: this.appOAuthRedirectUrl,
+            redirect_uri: this.userAuthenticationConfig.twitchAppOAuthRedirectUrl,
             response_type: "code",
             scope: serializedScopes,
             state: randomCSRF,
@@ -236,7 +240,7 @@ export default class UserTokenHelper {
 
         const serializedParams = this.requestHelper.twitchQuerystringSerializer(params);
 
-        const url = `${this.oauthAuthorizationUri}?${serializedParams}`;
+        const url = `${this.userAuthenticationConfig.twitchOAuthAuthorizationUri}?${serializedParams}`;
 
         return url;
     }

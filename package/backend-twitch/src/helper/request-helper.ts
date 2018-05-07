@@ -51,4 +51,8 @@ export default class RequestHelper {
 
         return qs.stringify(params, qsConfig);
     }
+
+    public serialize(params: object) {
+        return this.twitchQuerystringSerializer(params);
+    }
 }

@@ -18,17 +18,21 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
+import {
+    autoinject,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
 import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
 
@@ -37,10 +41,14 @@ import TwitchIrcLoggingHandler from "@botten-nappet/backend-twitch/src/irc/handl
 import TwitchIrcPingHandler from "@botten-nappet/backend-twitch/src/irc/handler/ping";
 import TwitchIrcReconnectHandler from "@botten-nappet/backend-twitch/src/irc/handler/reconnect";
 
+import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import TwitchIncomingIrcCommandEventTranslator from "@botten-nappet/backend-twitch/src/irc/translator/incoming-irc-command-event-translator";
 import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/src/irc/translator/outgoing-irc-command-event-handler";
 import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
+import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
+import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
 
 /* tslint:enable max-line-length */
 
@@ -49,16 +57,20 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
+        @within(TwitchIrcConnection, "BackendTwitchIrcAuthenticatedApplicationApi")
         private readonly twitchIrcConnection: TwitchIrcConnection,
+        @within(OutgoingIrcCommandSingleItemJsonTopicsSubscriber, "BackendTwitchIrcAuthenticatedApplicationApi")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
-            MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>,
+            OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
+        @within(IncomingIrcCommandTopicPublisher, "BackendTwitchIrcAuthenticatedApplicationApi")
         private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
-            MessageQueueTopicPublisher<ITwitchIncomingIrcCommand>,
-        private readonly twitchUserId: number,
+            IncomingIrcCommandTopicPublisher,
+        @within(TwitchUserNameProvider, "PerUserHandlersMain")
+        private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @within(TwitchUserIdProvider, "PerUserHandlersMain")
+        private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -102,8 +114,8 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
         await Bluebird.map(this.startables, async (startable) => startable.start());
 
         this.logger.info({
-            twitchUserId: this.twitchUserId,
-            twitchUserName: this.backendConfig.twitchUserName,
+            twitchUserId: await this.twitchUserIdProvider.get(),
+            twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -29,6 +32,7 @@ import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authenti
 import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
 
+@autoinject
 export default class UserTokenManager {
     private logger: PinoLogger;
 

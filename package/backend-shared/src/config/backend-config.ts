@@ -29,19 +29,15 @@ import {
     IConfig,
 } from "config";
 
-import PackageJsonProvider from "@botten-nappet/shared/src/util/package-json-provider";
-
-@inject("IConfig", PackageJsonProvider)
+@inject("IConfig")
 export default class BackendConfig {
     private prefix: string;
 
     constructor(
         private readonly config: IConfig,
-        private readonly packageJsonProvider: PackageJsonProvider,
     ) {
-        assert.hasLength(arguments, 2);
+        assert.hasLength(arguments, 1);
         assert.equal(typeof config, "object");
-        assert.equal(typeof packageJsonProvider, "object");
 
         this.prefix = "backend";
     }
@@ -64,7 +60,6 @@ export default class BackendConfig {
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
         assert.nonEmptyString(this.twitchChannelName);
-        assert.nonEmptyString(this.version);
         assert.nonEmptyString(this.vidyRootUrl);
         assert.nonEmptyString(this.vidyVideoLinkBaseUrl);
         assert.nonEmptyString(this.vidyKeyId);
@@ -251,14 +246,6 @@ export default class BackendConfig {
         const value = this.config.get<string[]>(`${this.prefix}.twitch.appScopes`);
 
         assert.nonEmptyArray(value);
-
-        return value;
-    }
-
-    public get version(): string {
-        const value = this.packageJsonProvider.version;
-
-        assert.nonEmptyString(value);
 
         return value;
     }

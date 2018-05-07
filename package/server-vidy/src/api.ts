@@ -40,6 +40,7 @@ import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/src/request/au
 import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/src/translator/outgoing-search-command-handler";
 import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
 import VidyIOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
+import IncomingSearchResultEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-search-result-event-topic-publisher";
 import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
 
 /* tslint:enable max-line-length */
@@ -58,7 +59,7 @@ export default class BackendVidyApi implements IStartableStoppable {
         private readonly messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
         private readonly messageQueueTopicPublisherForIIncomingSearchResultEvent:
-            MessageQueueTopicPublisher<VidyIIncomingSearchResultEvent>,
+            IncomingSearchResultEventTopicPublisher,
         private readonly vidyAuthenticatedRequest: VidyAuthenticatedRequest,
     ) {
         // TODO: validate arguments.

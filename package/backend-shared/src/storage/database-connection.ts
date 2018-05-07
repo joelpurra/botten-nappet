@@ -75,7 +75,8 @@ export default class DatabaseConnection {
         assert.not.equal(this.database, null);
 
         // NOTE: hack to reach NeDB through Camo.
-        const collections = this.database._collections;
+        // TODO: better null handling.
+        const collections = this.database!._collections;
 
         const dbs = Object.values(collections);
 

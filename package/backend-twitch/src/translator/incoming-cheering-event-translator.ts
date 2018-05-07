@@ -32,12 +32,14 @@ import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/e
 
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
+import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-event-topic-publisher";
+import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
 
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingPubSubEvent>,
-        private incomingCheeringEventEmitter: IEventEmitter<IIncomingCheeringEvent>,
+        connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
+        private readonly incomingCheeringEventEmitter: IncomingCheeringEventTopicPublisher,
     ) {
         super(logger, connection);
 

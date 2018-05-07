@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -35,12 +38,15 @@ import IIncomingWhisperEvent,
 
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
+import IncomingWhisperEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-whisper-event-topic-publisher";
+import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
 
+@autoinject
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
         logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingPubSubEvent>,
-        private incomingWhisperEventEmitter: IEventEmitter<IIncomingWhisperEvent>,
+        connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
+        private readonly incomingWhisperEventEmitter: IncomingWhisperEventTopicPublisher,
     ) {
         super(logger, connection);
 

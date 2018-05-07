@@ -28,6 +28,7 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
+import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
@@ -37,8 +38,8 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
     constructor(
         logger: PinoLogger,
         connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private readonly username: string,
+        private readonly outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        private readonly twitchUserNameProvider: TwitchUserNameProvider,
     ) {
         super(logger, connection);
 
@@ -46,8 +47,6 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
-        assert.equal(typeof username, "string");
-        assert.greater(username.length, 0);
 
         this.logger = logger.child(this.constructor.name);
 
@@ -113,7 +112,7 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
             return false;
         }
 
-        if (data.username === this.username) {
+        if (data.username === await this.twitchUserNameProvider.get()) {
             return false;
         }
 

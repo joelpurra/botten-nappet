@@ -29,29 +29,25 @@ import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihtt
 
 import PollingConnection from "./polling-connection";
 
-export default class PollingClientIdConnection<T> extends PollingConnection<T> {
+export default abstract class PollingClientIdConnection<T> extends PollingConnection<T> {
     constructor(
         logger: PinoLogger,
         private readonly applicationClientId: string,
         interval: number,
         atBegin: boolean,
-        uri: string,
         method: string,
         defaultHeaders?: IHttpHeaders,
         defaultData?: IHttpData,
     ) {
-        super(logger, interval, atBegin, uri, method, defaultHeaders, defaultData);
+        super(logger, interval, atBegin, method, defaultHeaders, defaultData);
 
-        assert(arguments.length === 6 || arguments.length === 7 || arguments.length === 8);
+        assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
         assert.equal(typeof logger, "object");
         assert.equal(typeof applicationClientId, "string");
         assert.greater(applicationClientId.length, 0);
         assert.number(interval);
         assert.greater(interval, 0);
         assert.equal(typeof atBegin, "boolean");
-        assert.equal(typeof uri, "string");
-        assert.greater(uri.length, 0);
-        assert(uri.startsWith("https://"));
         assert.equal(typeof method, "string");
         assert.greater(method.length, 0);
         assert(typeof defaultHeaders === "undefined" || typeof defaultHeaders === "object");

@@ -18,96 +18,72 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
-
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
+import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
-import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
-import {
-    UserAccessTokenProviderType,
-} from "@botten-nappet/backend-twitch/src/authentication/provider-types";
+import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
+import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
 
 import TwitchPerUserIrcApi from "./per-user-irc-api";
 
 /* tslint:enable:max-line-length */
 
 export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
-    private twitchPerUserIrcApi: TwitchPerUserIrcApi | null;
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
-        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
-        private readonly twitchUserAccessTokenProvider: UserAccessTokenProviderType,
-        private readonly twitchUserId: number,
+        @scoped(TwitchIrcConnection)
+        private readonly twitchIrcConnection: TwitchIrcConnection,
+        @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+            IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+            OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
+        @scoped(IncomingIrcCommandTopicPublisher)
+        private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
+            IncomingIrcCommandTopicPublisher,
+        @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
+        private readonly twitchPerUserIrcApi: TwitchPerUserIrcApi,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 
-        this.twitchPerUserIrcApi = null;
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
-        const twitchIrcConnection = new TwitchIrcConnection(
-            this.logger,
-            this.backendConfig.twitchIrcWebSocketUri,
-            this.backendConfig.twitchChannelName,
-            this.backendConfig.twitchUserName,
-            this.twitchUserAccessTokenProvider,
-        );
+        this.connectables.push(this.twitchIrcConnection);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
 
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand =
-            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchIncomingIrcCommand>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchIncomingIrcCommand),
-            );
-        const twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand =
-            new MessageQueueSingleItemJsonTopicsSubscriber<ITwitchOutgoingIrcCommand>(
-                this.logger,
-                this.zmqConfig.zmqAddress,
-                await this.messageQueueTopicHelper.split(this.backendConfig.topicTwitchOutgoingIrcCommand),
-            );
-
-        this.connectables.push(twitchIrcConnection);
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
-        this.connectables.push(twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
+        // TODO: decide where the subscriber gets connected, preferably in an automated fashion.
+        // this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
-
-        this.twitchPerUserIrcApi = new TwitchPerUserIrcApi(
-            this.backendConfig,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            twitchIrcConnection,
-            twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
-            this.twitchUserId,
-        );
 
         await this.twitchPerUserIrcApi.start();
     }

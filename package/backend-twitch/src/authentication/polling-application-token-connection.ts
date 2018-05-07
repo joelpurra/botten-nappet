@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-framework";
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import {
     assert,
 } from "check-types";
@@ -29,25 +29,29 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
+
 import PollingApplicationTokenConnectionConfig from "../config/polling-application-token-connection-config";
 import PollingConnection from "../polling/connection/polling-connection";
 
-@autoinject
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     constructor(
         logger: PinoLogger,
+        private readonly requestHelper: RequestHelper,
+        @within(PollingApplicationTokenConnectionConfig, "BackendManagedMain")
         private readonly pollingApplicationTokenConnectionConfig: PollingApplicationTokenConnectionConfig,
     ) {
         super(
             logger,
             pollingApplicationTokenConnectionConfig.appTokenRefreshInterval,
             false,
-            pollingApplicationTokenConnectionConfig.oauthTokenUri,
             "post",
+            requestHelper,
         );
 
-        assert(arguments.length === 2);
+        assert(arguments.length === 3);
         assert.equal(typeof logger, "object");
+        assert.equal(typeof requestHelper, "object");
         assert.equal(typeof pollingApplicationTokenConnectionConfig, "object");
 
         assert.equal(typeof pollingApplicationTokenConnectionConfig.appClientId, "string");
@@ -62,6 +66,12 @@ export default class PollingApplicationTokenConnection extends PollingConnection
         assert(Array.isArray(pollingApplicationTokenConnectionConfig.appScopes));
 
         this.logger = logger.child(this.constructor.name);
+    }
+
+    protected async getUri(): Promise<string> {
+        assert.hasLength(arguments, 0);
+
+        return this.pollingApplicationTokenConnectionConfig.oauthTokenUri;
     }
 
     protected async getHeaders() {

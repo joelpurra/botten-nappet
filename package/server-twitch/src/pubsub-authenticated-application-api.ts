@@ -18,73 +18,48 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-
-import {
-    UserAccessTokenProviderType,
-} from "@botten-nappet/backend-twitch/src/authentication/provider-types";
 
 import TwitchPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
 
+import UserAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-access-token-provider";
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchPerUserPubSubApi from "./per-user-pubsub-api";
 
 export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {
-    private twitchPerUserPubSubApi: TwitchPerUserPubSubApi | null;
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly twitchUserAccessTokenProvider: UserAccessTokenProviderType,
-        private readonly twitchUserId: number,
+        @scoped(TwitchPubSubConnection)
+        private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
+        @context(TwitchPerUserPubSubApi, "TwitchPerUserPubSubApi")
+        private readonly twitchPerUserPubSubApi: TwitchPerUserPubSubApi,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 
-        this.twitchPerUserPubSubApi = null;
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
-        const allPubSubTopicsForTwitchUserId = [
-            `channel-bits-events-v1.${this.twitchUserId}`,
-            `channel-subscribe-events-v1.${this.twitchUserId}`,
-            `channel-commerce-events-v1.${this.twitchUserId}`,
-            `whispers.${this.twitchUserId}`,
-        ];
-
-        const twitchAllPubSubTopicsForTwitchUserIdConnection = new TwitchPubSubConnection(
-            this.logger,
-            this.backendConfig.twitchPubSubWebSocketUri,
-            allPubSubTopicsForTwitchUserId,
-            this.twitchUserAccessTokenProvider,
-        );
-        this.connectables.push(twitchAllPubSubTopicsForTwitchUserIdConnection);
+        this.connectables.push(this.twitchAllPubSubTopicsForTwitchUserIdConnection);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
-
-        this.twitchPerUserPubSubApi = new TwitchPerUserPubSubApi(
-            this.backendConfig,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            twitchAllPubSubTopicsForTwitchUserIdConnection,
-            this.twitchUserId,
-        );
 
         await this.twitchPerUserPubSubApi.start();
     }

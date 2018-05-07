@@ -19,7 +19,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
+import {
+    Container,
 } from "aurelia-framework";
 
 import configLibrary from "config";
@@ -31,15 +40,21 @@ import FrontendConfig from "../config/frontend-config";
 
 import FrontendManagerMain from "./manager-main";
 
-@autoinject
 export default class FrontendMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
+        @scoped(FrontendConfig)
         private readonly frontendConfig: FrontendConfig,
         logger: PinoLogger,
+        @context(FrontendManagerMain, "FrontendManagerMain")
         private readonly frontendManagerMain: FrontendManagerMain,
+        private readonly container: Container,
     ) {
+        // TODO DEBUG REMOVE
+        console.log(this.constructor.name, "container === container.root", container === container.root);
+        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
+
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
     }

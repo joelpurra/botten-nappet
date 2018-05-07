@@ -26,20 +26,9 @@ import Bluebird from "bluebird";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
-import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
-
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-import MessageQueueTopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-
-import IOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 
 import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
 import VidyApi from "./api";
@@ -52,13 +41,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
 
     constructor(
-        private readonly backendConfig: BackendConfig,
-        private readonly sharedTopicsConfig: SharedTopicsConfig,
-        private readonly zmqConfig: ZmqConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly messageQueueTopicHelper: MessageQueueTopicHelper,
         private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
         private readonly vidyApi: VidyApi,

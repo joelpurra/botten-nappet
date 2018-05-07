@@ -33,8 +33,12 @@ import SingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-qu
 
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
+/* tslint:disable max-line-length */
+
 import I`'___TOPIC_NAME_PASCAL_CASE___() from "@botten-nappet/interface-`'___SECTION_NAME_LOWER_CASE___()-`'___GROUP_NAME_LOWER_CASE___()/src/event/i`'___TOPIC_NAME_PARAM_CASE___()";
 import `'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___TOPIC_NAME_PARAM_CASE___()-topic";
+
+/* tslint:enable max-line-length */
 
 @autoinject
 export default class `'___TOPIC_NAME_PASCAL_CASE___()SingleItemJsonTopicsSubscriber

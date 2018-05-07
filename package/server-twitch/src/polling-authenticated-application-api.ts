@@ -18,18 +18,23 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    Container,
+} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 
 import PollingClientIdConnection from "@botten-nappet/backend-twitch/src/polling/connection/polling-clientid-connection";
 
@@ -37,87 +42,52 @@ import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/src/interf
 import IPollingFollowingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/ifollowing-polling-response";
 import IPollingStreamingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/istreaming-polling-response";
 
+import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
+import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
+import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
+
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchPerUserPollingApi from "./per-user-polling-api";
 
 /* tslint:enable:max-line-length */
 
 export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
-    private twitchPerUserPollingApi: TwitchPerUserPollingApi | null;
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private readonly twitchUserId: number,
+        private readonly userIdProvider: UserIdProvider,
+        @scoped(CheermotesResponsePollingClientIdConnection)
+        private readonly twitchPollingCheermotesConnection: CheermotesResponsePollingClientIdConnection,
+        @scoped(StreamingResponsePollingClientIdConnection)
+        private readonly twitchPollingStreamingConnection: StreamingResponsePollingClientIdConnection,
+        @scoped(FollowingResponsePollingClientIdConnection)
+        private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
+        @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
+        private readonly twitchPerUserPollingApi: TwitchPerUserPollingApi,
+        private readonly container: Container,
     ) {
+        // TODO DEBUG REMOVE
+        console.log(this.constructor.name, "container === container.root", container === container.root);
+        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
+
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 
-        this.twitchPerUserPollingApi = null;
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
-        // TODO: externalize/configure base url.
-        const followingPollingUri =
-            `https://api.twitch.tv/kraken/channels/${
-            this.twitchUserId
-            }/follows?limit=${
-            this.backendConfig.followingPollingLimit
-            }`;
+        const userId = await this.userIdProvider.get();
 
-        // TODO: externalize/configure base url.
-        const streamingPollingUri = `https://api.twitch.tv/helix/streams?user_id=${this.twitchUserId}`;
-
-        // TODO: externalize/configure base url.
-        const cheermotesPollingUri = `https://api.twitch.tv/kraken/bits/actions?channel_id=${this.twitchUserId}`;
-
-        const twitchPollingFollowingConnection = new PollingClientIdConnection<IPollingFollowingResponse>(
-            this.logger,
-            this.backendConfig.twitchAppClientId,
-            this.backendConfig.bottenNappetDefaultPollingInterval,
-            false,
-            followingPollingUri,
-            "get",
-        );
-        const twitchPollingStreamingConnection = new PollingClientIdConnection<IPollingStreamingResponse>(
-            this.logger,
-            this.backendConfig.twitchAppClientId,
-            this.backendConfig.bottenNappetStreamingPollingInterval,
-            true,
-            streamingPollingUri,
-            "get",
-        );
-        const twitchPollingCheermotesConnection = new PollingClientIdConnection<IPollingCheermotesResponse>(
-            this.logger,
-            this.backendConfig.twitchAppClientId,
-            this.backendConfig.bottenNappetCheermotesPollingInterval,
-            true,
-            cheermotesPollingUri,
-            "get",
-        );
-
-        this.connectables.push(twitchPollingFollowingConnection);
-        this.connectables.push(twitchPollingStreamingConnection);
-        this.connectables.push(twitchPollingCheermotesConnection);
+        this.connectables.push(this.twitchPollingFollowingConnection);
+        this.connectables.push(this.twitchPollingStreamingConnection);
+        this.connectables.push(this.twitchPollingCheermotesConnection);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
-
-        this.twitchPerUserPollingApi = new TwitchPerUserPollingApi(
-            this.backendConfig,
-            this.logger,
-            this.gracefulShutdownManager,
-            this.messageQueuePublisher,
-            twitchPollingFollowingConnection,
-            twitchPollingStreamingConnection,
-            twitchPollingCheermotesConnection,
-            this.twitchUserId,
-        );
 
         await this.twitchPerUserPollingApi.start();
     }

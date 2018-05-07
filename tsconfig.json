@@ -11,7 +11,7 @@
     // Linting.
     "allowSyntheticDefaultImports": true,
     // "allowUnreachableCode": false,
-    // "allowUnusedLabels": false,
+    "allowUnusedLabels": false,
     // "alwaysStrict": true,
     // "noEmitOnError": true,
     // "noEmitOnError": true,
@@ -35,7 +35,7 @@
       "@botten-nappet/backend-shared/*": [
         "./package/backend-shared/*",
       ],
-      "@botten-nappet/backend-twitch/src/*": [
+      "@botten-nappet/backend-twitch/*": [
         "./package/backend-twitch/*",
       ],
       "@botten-nappet/backend-vidy/*": [

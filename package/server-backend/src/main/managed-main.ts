@@ -19,15 +19,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    Container,
 } from "aurelia-framework";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 
 /* tslint:disable max-line-length */
 import TwitchApplicationTokenManager from "@botten-nappet/backend-twitch/src/authentication/application-token-manager";
@@ -38,19 +41,25 @@ import BackendVidyApplicationApi from "@botten-nappet/server-vidy/src/applicatio
 
 import BackendAuthenticatedApplicationMain from "./authenticated-application-main";
 
-@autoinject
 export default class BackendManagedMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
+        @scoped(TwitchPollingApplicationTokenConnection)
         private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
+        @scoped(TwitchApplicationTokenManager)
         private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
+        @context(BackendVidyApplicationApi, "BackendVidyApplicationApi")
         private readonly backendVidyApplicationApi: BackendVidyApplicationApi,
+        @context(BackendAuthenticatedApplicationMain, "BackendAuthenticatedApplicationMain")
         private readonly backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain,
+        private readonly container: Container,
     ) {
+        // TODO DEBUG REMOVE
+        console.log(this.constructor.name, "container === container.root", container === container.root);
+        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
+
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
     }

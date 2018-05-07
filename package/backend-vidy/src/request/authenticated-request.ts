@@ -31,8 +31,11 @@ import os from "os";
 import axios from "axios";
 import moment from "moment";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+
+import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
+
 import IClientContext from "./iclient-context";
 
 @autoinject
@@ -40,12 +43,14 @@ export default class AuthenticatedRequest {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
         private readonly backendConfig: BackendConfig,
+        private readonly sharedConfig: SharedConfig,
+        logger: PinoLogger,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
+        assert.hasLength(arguments, 3);
         assert.equal(typeof backendConfig, "object");
+        assert.equal(typeof sharedConfig, "object");
+        assert.equal(typeof logger, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -143,8 +148,8 @@ export default class AuthenticatedRequest {
         const clientContext: IClientContext = {
             app: {
                 build: 0,
-                name: this.backendConfig.applicationName,
-                version: this.backendConfig.version,
+                name: this.sharedConfig.applicationName,
+                version: this.sharedConfig.version,
             },
             device: {
                 id: this.backendConfig.vidySystemUuid,

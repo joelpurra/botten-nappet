@@ -29,15 +29,19 @@ import {
     IConfig,
 } from "config";
 
-@inject("IConfig")
+import PackageJsonProvider from "@botten-nappet/shared/src/util/package-json-provider";
+
+@inject("IConfig", PackageJsonProvider)
 export default class SharedConfig {
     public prefix: string;
 
     constructor(
         private readonly config: IConfig,
+        private readonly packageJsonProvider: PackageJsonProvider,
     ) {
-        assert.hasLength(arguments, 1);
+        assert.hasLength(arguments, 2);
         assert.equal(typeof config, "object");
+        assert.equal(typeof packageJsonProvider, "object");
 
         this.prefix = "shared";
     }
@@ -46,6 +50,7 @@ export default class SharedConfig {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.
         assert.nonEmptyString(this.applicationName);
+        assert.nonEmptyString(this.version);
         assert.nonEmptyString(this.loggingLevel);
         assert.nonEmptyString(this.loggingFile);
         assert.nonEmptyString(this.zmqAddress);
@@ -63,6 +68,14 @@ export default class SharedConfig {
 
     public get applicationName(): string {
         const value = this.config.get<string>(`${this.prefix}.applicationName`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get version(): string {
+        const value = this.packageJsonProvider.version;
 
         assert.nonEmptyString(value);
 

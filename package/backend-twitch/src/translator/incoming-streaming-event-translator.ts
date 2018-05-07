@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
@@ -30,19 +33,24 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/
 
 /* tslint:disable:max-line-length */
 
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
+import IncomingStreamingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-streaming-event-topic-publisher";
+import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
 import IPollingStreamingResponse from "../interface/response/polling/istreaming-polling-response";
 import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
+@autoinject
 export default class IncomingStreamingCommandEventTranslator extends PollingManager<IPollingStreamingResponse> {
     constructor(
         logger: PinoLogger,
-        connection: IPollingConnection<IPollingStreamingResponse>,
-        private incomingStreamingEventEmitter: IEventEmitter<IIncomingStreamingEvent>,
-        private readonly username: string,
-        private readonly userid: number,
+        connection: StreamingResponsePollingClientIdConnection,
+        private readonly incomingStreamingEventEmitter: IncomingStreamingEventTopicPublisher,
+        private readonly userNameProvider: UserNameProvider,
+        private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
 
@@ -50,9 +58,8 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         assert.equal(typeof logger, "object");
         assert.equal(typeof connection, "object");
         assert.equal(typeof incomingStreamingEventEmitter, "object");
-        assert.nonEmptyString(username);
-        assert.integer(userid);
-        assert.positive(userid);
+        assert.equal(typeof userNameProvider, "object");
+        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -61,15 +68,18 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         assert.hasLength(arguments, 1);
         assert.equal(typeof data, "object");
 
-        data.data.forEach((streamEvent) => {
+        data.data.forEach(async (streamEvent) => {
             const userId = parseInt(streamEvent.user_id, 10);
 
-            assert.equal(this.userid, userId);
+            const classUserId = await this.userIdProvider.get();
+            assert.equal(classUserId, userId);
+
+            const username = await this.userNameProvider.get();
 
             const event: IIncomingStreamingEvent = {
                 channel: {
                     id: userId,
-                    name: this.username,
+                    name: username,
                 },
                 startedAt: streamEvent.started_at,
                 // TODO: move upwards in the object creation chain?

@@ -24,5 +24,5 @@ import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
 
 export default interface IIRCConnection extends IWebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand> {
-    readonly channel: string;
+    readonly channel: Promise<string>;
 }

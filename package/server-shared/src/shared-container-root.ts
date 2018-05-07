@@ -19,7 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    Container,
 } from "aurelia-framework";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -34,7 +37,6 @@ import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publi
 import BackendMain from "@botten-nappet/server-backend/src/main/main";
 import FrontendMain from "@botten-nappet/server-frontend/src/main/main";
 
-@autoinject
 export default class SharedContainerRoot implements IStartableStoppable {
     private logger: PinoLogger;
 
@@ -43,9 +45,16 @@ export default class SharedContainerRoot implements IStartableStoppable {
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
+        @context(BackendMain, "BackendMain")
         private readonly backendMain: BackendMain,
+        @context(FrontendMain, "FrontendMain")
         private readonly frontendMain: FrontendMain,
+        private readonly container: Container,
     ) {
+        // TODO DEBUG REMOVE
+        console.log(this.constructor.name, "container === container.root", container === container.root);
+        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
+
         this.logger = logger.child(this.constructor.name);
     }
 

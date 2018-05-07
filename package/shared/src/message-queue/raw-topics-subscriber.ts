@@ -37,13 +37,13 @@ export default abstract class RawTopicsSubscriber extends IntersectionTopicsSubs
         zmqConfig: ZmqConfig,
         topicConfig: TopicConfig,
     ) {
-        super(logger, topicHelper, zmqConfig, topic);
+        super(logger, topicHelper, zmqConfig, topicConfig);
 
         // NOTE: not checking arguments length due to inheritance.
         assert.equal(typeof logger, "object");
         assert.equal(typeof topicHelper, "object");
         assert.equal(typeof zmqConfig, "object");
-        assert.equal(typeof topic, "object");
+        assert.equal(typeof topicConfig, "object");
 
         this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }

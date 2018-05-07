@@ -19,7 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
+    context,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    Container,
 } from "aurelia-framework";
 
 // NOTE: this is a hack, modifying the global Rx.Observable.prototype.
@@ -32,15 +35,20 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import BackendManagerMain from "./manager-main";
 
-@autoinject
 export default class BackendMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
         private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
+        @context(BackendManagerMain, "BackendManagerMain")
         private readonly backendManagerMain: BackendManagerMain,
+        private readonly container: Container,
     ) {
+        // TODO DEBUG REMOVE
+        console.log(this.constructor.name, "container === container.root", container === container.root);
+        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
+
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
     }

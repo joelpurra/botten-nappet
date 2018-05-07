@@ -19,23 +19,35 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    inject,
+    autoinject,
 } from "aurelia-framework";
+import {
+    assert,
+} from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import ExternalRawTopic from "@botten-nappet/server-backend/src/message-queue/external-raw-topic";
+import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import RawTopicsSubscriber from "@botten-nappet/shared/src/message-queue/raw-topics-subscriber";
+import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
 
-@inject(PinoLogger, ZmqConfig, ExternalRawTopic)
+@autoinject
 export default class ExternalRawTopicsSubscriber extends RawTopicsSubscriber {
     constructor(
         logger: PinoLogger,
+        topicHelper: TopicHelper,
         zmqConfig: ZmqConfig,
-        topic: ExternalRawTopic,
+        topicConfig: ExternalRawTopic,
     ) {
-        super(logger, zmqConfig, topic);
+        super(logger, topicHelper, zmqConfig, topicConfig);
+
+        // NOTE: not checking arguments length due to inheritance.
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof topicHelper, "object");
+        assert.equal(typeof zmqConfig, "object");
+        assert.equal(typeof topicConfig, "object");
 
         this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }

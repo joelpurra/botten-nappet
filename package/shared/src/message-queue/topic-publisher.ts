@@ -19,9 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-framework";
-import {
     assert,
 } from "check-types";
 
@@ -35,7 +32,6 @@ import ISendingConnection from "../connection/isending-connection";
 import IEventEmitter from "../event/ievent-emitter";
 import Publisher from "./publisher";
 
-@autoinject
 export default abstract class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {
     private logger: PinoLogger;
 

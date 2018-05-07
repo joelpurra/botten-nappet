@@ -22,14 +22,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
 import {
+    autoinject,
+} from "aurelia-framework";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import {
-    UserAccessTokenProviderType,
-} from "../../authentication/provider-types";
+import IrcConfig from "../../config/irc-config";
+
+import UserAccessTokenProvider from "../../authentication/user-access-token-provider";
+import UserChannelNameProvider from "../../authentication/user-channel-provider";
+import UserNameProvider from "../../authentication/user-name-provider";
 
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
@@ -39,42 +44,40 @@ import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 import WebSocketConnection from "../../websocket/connection/websocket-connection";
 import IIRCConnection from "./iirc-connection";
 
+@autoinject
 export default class IrcConnection
     extends WebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand>
     implements IIRCConnection {
 
     constructor(
+        private readonly ircConfig: IrcConfig,
         logger: PinoLogger,
-        uri: string,
-        private readonly channelName: string,
-        private readonly username: string,
-        private readonly userAccessTokenProvider: UserAccessTokenProviderType,
+        private readonly userChannelNameProvider: UserChannelNameProvider,
+        private readonly userNameProvider: UserNameProvider,
+        private readonly userAccessTokenProvider: UserAccessTokenProvider,
     ) {
-        super(logger, uri, "irc");
+        super(logger, ircConfig.twitchIrcWebSocketUri, "irc");
 
         assert.hasLength(arguments, 5);
+        assert.equal(typeof ircConfig, "object");
         assert.equal(typeof logger, "object");
-        assert.equal(typeof uri, "string");
-        assert.nonEmptyString(uri);
-        assert(uri.startsWith("wss://"));
-        assert.equal(typeof channelName, "string");
-        assert.nonEmptyString(channelName);
-        assert(channelName.startsWith("#"));
-        assert.equal(typeof username, "string");
-        assert.nonEmptyString(username);
-        assert.equal(typeof userAccessTokenProvider, "function");
+        assert.equal(typeof userChannelNameProvider, "object");
+        assert.equal(typeof userNameProvider, "object");
+        assert.equal(typeof userAccessTokenProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    public get channel(): string {
-        return this.channelName;
+    public get channel(): Promise<string> {
+        return this.userChannelNameProvider.get();
     }
 
     protected async getSetupConnectionCommands(): Promise<Array<
         IWebSocketCommand<IIncomingIrcCommand, IOutgoingIrcCommand>
         >> {
-        const userAccessToken = await this.userAccessTokenProvider();
+        const userAccessToken = await this.userAccessTokenProvider.get();
+        const userChannelName = await this.userChannelNameProvider.get();
+        const userName = await this.userNameProvider.get();
 
         // TODO: make capabilities configurable/subclassable?
         const capabilities = [
@@ -114,7 +117,7 @@ export default class IrcConnection
                         {
                             channel: null,
                             command: "NICK",
-                            message: this.username,
+                            message: userName,
                             tags: {},
                             timestamp: new Date(),
                         },
@@ -129,12 +132,12 @@ export default class IrcConnection
                         {
                             channel: null,
                             command: "JOIN",
-                            message: this.channelName,
+                            message: userChannelName,
                             tags: {},
                             timestamp: new Date(),
                         },
                     ],
-                    verifier: (message) => message.original.includes(`JOIN ${this.channelName}`),
+                    verifier: (message) => message.original.includes(`JOIN ${userChannelName}`),
                 },
             ];
 

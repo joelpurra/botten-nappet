@@ -26,9 +26,9 @@ import axios from "axios";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import {
-    ApplicationAccessTokenProviderType,
-} from "../authentication/provider-types";
+import ApplicationAccessTokenProvider from "../authentication/application-access-token-provider";
+
+import UserAuthenticationConfig from "../config/user-authentication-config";
 import RequestHelper from "./request-helper";
 
 type UserNameOrId = string | number;
@@ -39,15 +39,17 @@ export default class UserHelper {
     constructor(
         logger: PinoLogger,
         private readonly requestHelper: RequestHelper,
-        private readonly usersDataUri: string,
-        private readonly applicationAccessTokenProvider: ApplicationAccessTokenProviderType,
+        private readonly userAuthenticationConfig: UserAuthenticationConfig,
+        private readonly applicationAccessTokenProvider: ApplicationAccessTokenProvider,
     ) {
         assert.hasLength(arguments, 4);
         assert.equal(typeof logger, "object");
         assert.equal(typeof requestHelper, "object");
-        assert.nonEmptyString(usersDataUri);
-        assert(usersDataUri.startsWith("https://"));
-        assert.equal(typeof applicationAccessTokenProvider, "function");
+        assert.equal(typeof userAuthenticationConfig, "object");
+        assert.equal(typeof applicationAccessTokenProvider, "object");
+
+        assert.nonEmptyString(userAuthenticationConfig.twitchUsersDataUri);
+        assert(userAuthenticationConfig.twitchUsersDataUri.startsWith("https://"));
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -80,7 +82,7 @@ export default class UserHelper {
         // };
         /* tslint:enable:max-line-length */
 
-        const applicationAccessToken = await this.applicationAccessTokenProvider();
+        const applicationAccessToken = await this.applicationAccessTokenProvider.get();
 
         const usernames = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "string");
         const ids = usernamesAndIds.filter((usernameOrId) => typeof usernameOrId === "number");
@@ -92,7 +94,7 @@ export default class UserHelper {
 
         // TODO: use an https class.
         const response = await axios.get(
-            this.usersDataUri,
+            this.userAuthenticationConfig.twitchUsersDataUri,
             {
                 headers: {
                     Authorization: `Bearer ${applicationAccessToken}`,

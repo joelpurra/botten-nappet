@@ -18,29 +18,29 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    within,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
-
-import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/icheermotes-polling-response";
-import IPollingFollowingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/ifollowing-polling-response";
-import IPollingStreamingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/istreaming-polling-response";
-import PollingClientIdConnection from "@botten-nappet/backend-twitch/src/polling/connection/polling-clientid-connection";
 
 import IncomingCheermotesCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-cheermotes-event-translator";
 import IncomingFollowingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-following-event-translator";
 import IncomingStreamingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-streaming-event-translator";
 
+import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
+import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
 import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
 import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
@@ -52,21 +52,18 @@ export default class TwitchPerUserPollingApi {
     private logger: PinoLogger;
 
     constructor(
-        private readonly backendConfig: BackendConfig,
-        private readonly sharedConfig: SharedConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-        private twitchPollingFollowingConnection: PollingClientIdConnection<IPollingFollowingResponse>,
-        private twitchPollingStreamingConnection: PollingClientIdConnection<IPollingStreamingResponse>,
-        private twitchPollingCheermotesConnection: PollingClientIdConnection<IPollingCheermotesResponse>,
-        private readonly messageQueueTopicPublisherForIIncomingFollowingEvent:
-            MessageQueueTopicPublisher<IIncomingFollowingEvent>,
-        private readonly messageQueueTopicPublisherForIIncomingStreamingEvent:
-            MessageQueueTopicPublisher<IIncomingStreamingEvent>,
-        private readonly messageQueueTopicPublisherForIIncomingCheermotesEvent:
-            MessageQueueTopicPublisher<IIncomingCheermotesEvent>,
-        private readonly twitchUserId: number,
+        @scoped(IncomingFollowingCommandEventTranslator)
+        private readonly twitchIncomingFollowingCommandEventTranslator: IncomingFollowingCommandEventTranslator,
+        @scoped(IncomingStreamingCommandEventTranslator)
+        private readonly twitchIncomingStreamingCommandEventTranslator: IncomingStreamingCommandEventTranslator,
+        @scoped(IncomingCheermotesCommandEventTranslator)
+        private readonly twitchIncomingCheermotesCommandEventTranslator: IncomingCheermotesCommandEventTranslator,
+        @within(TwitchUserNameProvider, "PerUserHandlersMain")
+        private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @within(TwitchUserIdProvider, "PerUserHandlersMain")
+        private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
@@ -75,40 +72,15 @@ export default class TwitchPerUserPollingApi {
     }
 
     public async start(): Promise<void> {
-
-        const twitchIncomingFollowingCommandEventTranslator = new IncomingFollowingCommandEventTranslator(
-            this.logger,
-            this.twitchPollingFollowingConnection,
-            this.messageQueueTopicPublisherForIIncomingFollowingEvent,
-            this.backendConfig.twitchUserName,
-            this.twitchUserId,
-        );
-
-        const twitchIncomingStreamingCommandEventTranslator = new IncomingStreamingCommandEventTranslator(
-            this.logger,
-            this.twitchPollingStreamingConnection,
-            this.messageQueueTopicPublisherForIIncomingStreamingEvent,
-            this.backendConfig.twitchUserName,
-            this.twitchUserId,
-        );
-
-        const twitchIncomingCheermotesCommandEventTranslator = new IncomingCheermotesCommandEventTranslator(
-            this.logger,
-            this.twitchPollingCheermotesConnection,
-            this.messageQueueTopicPublisherForIIncomingCheermotesEvent,
-            this.backendConfig.twitchUserName,
-            this.twitchUserId,
-        );
-
-        this.startables.push(twitchIncomingFollowingCommandEventTranslator);
-        this.startables.push(twitchIncomingStreamingCommandEventTranslator);
-        this.startables.push(twitchIncomingCheermotesCommandEventTranslator);
+        this.startables.push(this.twitchIncomingFollowingCommandEventTranslator);
+        this.startables.push(this.twitchIncomingStreamingCommandEventTranslator);
+        this.startables.push(this.twitchIncomingCheermotesCommandEventTranslator);
 
         await Bluebird.map(this.startables, async (startable) => startable.start());
 
         this.logger.info({
-            twitchUserId: this.twitchUserId,
-            twitchUserName: this.backendConfig.twitchUserName,
+            twitchUserId: await this.twitchUserIdProvider.get(),
+            twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();

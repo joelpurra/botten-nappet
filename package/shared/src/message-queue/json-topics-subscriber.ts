@@ -31,7 +31,7 @@ import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 import ITopicMessages from "./itopic-messages";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 
-export default class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<ITopicMessages<T>> {
+export default abstract class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<ITopicMessages<T>> {
     constructor(
         logger: PinoLogger,
         topicHelper: TopicHelper,
