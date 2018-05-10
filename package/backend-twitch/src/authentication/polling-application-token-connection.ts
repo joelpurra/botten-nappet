@@ -37,7 +37,7 @@ import PollingConnection from "../polling/connection/polling-connection";
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     constructor(
         logger: PinoLogger,
-        private readonly requestHelper: RequestHelper,
+        requestHelper: RequestHelper,
         @within(PollingApplicationTokenConnectionConfig, "BackendManagedMain")
         private readonly pollingApplicationTokenConnectionConfig: PollingApplicationTokenConnectionConfig,
     ) {

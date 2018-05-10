@@ -25,23 +25,15 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
 import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
 
 @autoinject
 export default class UserChannelNameProvider {
-    private logger: PinoLogger;
-
     constructor(
-        logger: PinoLogger,
         private readonly userAuthenticationConfig: UserAuthenticationConfig,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
+        assert.hasLength(arguments, 1);
         assert.equal(typeof userAuthenticationConfig, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async get(): Promise<string> {

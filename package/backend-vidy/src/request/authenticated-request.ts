@@ -31,8 +31,6 @@ import os from "os";
 import axios from "axios";
 import moment from "moment";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 
@@ -40,19 +38,13 @@ import IClientContext from "./iclient-context";
 
 @autoinject
 export default class AuthenticatedRequest {
-    private logger: PinoLogger;
-
     constructor(
         private readonly backendConfig: BackendConfig,
         private readonly sharedConfig: SharedConfig,
-        logger: PinoLogger,
     ) {
-        assert.hasLength(arguments, 3);
+        assert.hasLength(arguments, 2);
         assert.equal(typeof backendConfig, "object");
         assert.equal(typeof sharedConfig, "object");
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async request<T>(method: string, url: string, params: object): Promise<T> {

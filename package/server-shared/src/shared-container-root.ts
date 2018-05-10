@@ -21,14 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     context,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
-import {
-    Container,
-} from "aurelia-framework";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
-
-import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
@@ -38,24 +32,15 @@ import BackendMain from "@botten-nappet/server-backend/src/main/main";
 import FrontendMain from "@botten-nappet/server-frontend/src/main/main";
 
 export default class SharedContainerRoot implements IStartableStoppable {
-    private logger: PinoLogger;
-
     constructor(
-        private readonly sharedConfig: SharedConfig,
-        logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
         @context(BackendMain, "BackendMain")
         private readonly backendMain: BackendMain,
         @context(FrontendMain, "FrontendMain")
         private readonly frontendMain: FrontendMain,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
-        this.logger = logger.child(this.constructor.name);
+        // TODO: validate arguments.
     }
 
     public async start(): Promise<void> {

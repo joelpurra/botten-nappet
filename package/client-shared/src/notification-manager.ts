@@ -26,7 +26,7 @@ export default class NotificationManager {
 
     constructor(
         private readonly logger: ConsoleLog,
-        private readonly elementId: string,
+        elementId: string,
     ) {
         const containerElement = document.getElementById(elementId);
 

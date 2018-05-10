@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     autoinject,
 } from "aurelia-framework";
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -43,7 +42,7 @@ import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/use
 export default class CheermotesResponsePollingClientIdConnection
     extends PollingClientIdConnection<IPollingCheermotesResponse> {
     constructor(
-        private readonly backendConfig: BackendConfig,
+        backendConfig: BackendConfig,
         logger: PinoLogger,
         private readonly userIdProvider: UserIdProvider,
     ) {

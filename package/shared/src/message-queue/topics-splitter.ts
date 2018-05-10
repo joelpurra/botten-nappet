@@ -25,22 +25,12 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
-import IZeroMqTopicMessages from "./izeromq-topic-message";
-import TopicsSubscriber from "./topics-subscriber";
-
 @autoinject
 export default class TopicHelper {
     private readonly topicsStringSeparator: string;
 
-    constructor(
-        private readonly logger: PinoLogger,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
+    constructor() {
+        assert.hasLength(arguments, 0);
 
         // TODO: configurable.
         this.topicsStringSeparator = ":";

@@ -25,27 +25,19 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
 import TokenHelper from "../helper/token-helper";
 
 import UserRawTokenProvider from "./user-raw-token-provider";
 
 @autoinject
 export default class UserIdProvider {
-    private logger: PinoLogger;
-
     constructor(
-        logger: PinoLogger,
         private readonly tokenHelper: TokenHelper,
         private readonly userRawTokenProvider: UserRawTokenProvider,
     ) {
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
+        assert.hasLength(arguments, 2);
         assert.equal(typeof tokenHelper, "object");
         assert.equal(typeof userRawTokenProvider, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async get(): Promise<number> {

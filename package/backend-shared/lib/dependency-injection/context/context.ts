@@ -13,12 +13,12 @@ import { Container, Resolver, resolver, getDecoratorDependencies } from "aurelia
 /**
  * Decorator: Specifies the dependency denotes a new context (named child of the current container).
  */
-export function context(keyValue: any, name: string | Symbol) {
-    if (!name || (!(name instanceof Symbol) && (typeof name !== "string" || name.length === 0))) {
+export function context(keyValue: any, name: string) {
+    if (!name || typeof name !== "string" || name.length === 0) {
         throw new Error(`Invalid name (${name})`);
     }
 
-    return function (target, key, index) {
+    return function (target: any, key: any, index: number) {
         let params = getDecoratorDependencies(target, "context");
         params[index] = Context.of(keyValue, name);
     };
@@ -30,20 +30,20 @@ export function context(keyValue: any, name: string | Symbol) {
 @resolver()
 export class Context implements Resolver {
     private _key: any;
-    private _name: string | Symbol
+    private _name: string;
 
     /**
      * Creates an instance of the Context class.
      * @param key The key to resolve.
      * @param name The name of the context.
      */
-    public constructor(key: any, name: string | Symbol) {
-        if (!name || (!(name instanceof Symbol) && (typeof name !== "string" || name.length === 0))) {
+    public constructor(key: any, name: string) {
+        if (!name || typeof name !== "string" || name.length === 0) {
             throw new Error(`Invalid name (${name})`);
         }
 
         this._key = key;
-        this._name = name;
+        this._name = `context:${name}`;
     }
 
     /**
@@ -52,7 +52,7 @@ export class Context implements Resolver {
      * @param name The name of the context.
      * @return Returns an instance of Context for the key.
      */
-    public static of(key: any, name: string | Symbol): Context {
+    public static of(key: any, name: string): Context {
         return new Context(key, name);
     }
 
@@ -64,9 +64,7 @@ export class Context implements Resolver {
     public get(container: Container): any {
         const childContainer = container.createChild();
 
-        // TODO: function for the context prefix.
-        const containerContextIdentifier = `context:${this._name}`;
-        childContainer.registerInstance(CONTAINER_CONTEXT_IDENTIFIER, containerContextIdentifier);
+        childContainer.registerInstance(CONTAINER_CONTEXT_IDENTIFIER, this._name);
 
         // TODO: keep a list of active contexts.
         // TODO: unregister the context at some point.

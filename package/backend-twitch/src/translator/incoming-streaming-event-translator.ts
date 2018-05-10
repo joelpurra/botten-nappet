@@ -27,8 +27,6 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-
 import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
 
 /* tslint:disable:max-line-length */
@@ -38,7 +36,6 @@ import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/u
 import IncomingStreamingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-streaming-event-topic-publisher";
 import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
 import IPollingStreamingResponse from "../interface/response/polling/istreaming-polling-response";
-import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */

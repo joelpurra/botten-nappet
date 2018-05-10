@@ -26,20 +26,13 @@ import Bluebird from "bluebird";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
 
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
-
 import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/src/request/authenticated-request";
 import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/src/translator/outgoing-search-command-handler";
-import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
-import VidyIOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 import IncomingSearchResultEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-search-result-event-topic-publisher";
 import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
 
@@ -52,10 +45,8 @@ export default class BackendVidyApi implements IStartableStoppable {
 
     constructor(
         private readonly backendConfig: BackendConfig,
-        private readonly sharedTopicsConfig: SharedTopicsConfig,
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
         private readonly messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
         private readonly messageQueueTopicPublisherForIIncomingSearchResultEvent:

@@ -29,22 +29,19 @@ import moment from "moment";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-
 /* tslint:disable:max-line-length */
 
 import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
 import IPollingFollowingResponse from "../interface/response/polling/ifollowing-polling-response";
 import ITwitchApiV5ChannelFollowingEvent from "../interface/response/polling/itwitch-api-v5-channel-following-event";
 
-/* tslint:enable:max-line-length */
-
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import IncomingFollowingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-following-event-topic-publisher";
 import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
-import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
+
+/* tslint:enable:max-line-length */
 
 @autoinject
 export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {

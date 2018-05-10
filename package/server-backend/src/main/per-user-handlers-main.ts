@@ -32,18 +32,9 @@ import Bluebird from "bluebird";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import SharedTopicsConfig from "@botten-nappet/shared/src/config/shared-topics-config";
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
-
-import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
-import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
-
-import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 import TwitchCheeringIrcReplyHandler from "@botten-nappet/backend-twitch/src/handler/cheering-irc-reply-handler";
 import TwitchCheeringWithCheermotesHandler from "@botten-nappet/backend-twitch/src/handler/cheering-with-cheermotes-handler";
@@ -63,21 +54,9 @@ import IncomingCheeringCommandEventTranslator from "@botten-nappet/backend-twitc
 import IncomingSubscriptionCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-subscription-event-translator";
 import IncomingWhisperCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-whisper-event-translator";
 
-import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
-
-import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-event";
-import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-with-cheermotes-event";
-import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
-import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
-import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-subscription-event";
-import IIncomingWhisperEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-whisper-event";
-
 import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 
-import VidyIIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
-import IVidyIOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-event-topic-publisher";
 import IncomingCheeringWithCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-with-cheermotes-event-topic-publisher";
 import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-subscription-event-topic-publisher";
@@ -106,10 +85,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
 
     constructor(
         private readonly backendConfig: BackendConfig,
-        private readonly sharedTopicsConfig: SharedTopicsConfig,
         logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
         @within(IncomingPubSubEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
             IncomingPubSubEventSingleItemJsonTopicsSubscriber,

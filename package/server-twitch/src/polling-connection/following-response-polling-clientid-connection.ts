@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     autoinject,
 } from "aurelia-framework";
-import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";

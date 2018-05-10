@@ -29,17 +29,10 @@ import qs, {
     IStringifyOptions,
 } from "qs";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
 @autoinject
 export default class RequestHelper {
-    private logger: PinoLogger;
-
-    constructor(logger: PinoLogger) {
-        assert.equal(arguments.length, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
+    constructor() {
+        assert.equal(arguments.length, 0);
     }
 
     public twitchQuerystringSerializer(params: object) {
@@ -54,5 +47,11 @@ export default class RequestHelper {
 
     public serialize(params: object) {
         return this.twitchQuerystringSerializer(params);
+    }
+
+    public parseQuerystring(querystring: string): any {
+        const params = qs.parse(querystring);
+
+        return params;
     }
 }

@@ -24,9 +24,6 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    Container,
-} from "aurelia-framework";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -54,12 +51,7 @@ export default class BackendManagedMain implements IStartableStoppable {
         private readonly backendVidyApplicationApi: BackendVidyApplicationApi,
         @context(BackendAuthenticatedApplicationMain, "BackendAuthenticatedApplicationMain")
         private readonly backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
     }

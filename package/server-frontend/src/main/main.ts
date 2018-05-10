@@ -24,39 +24,21 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
-import {
-    Container,
-} from "aurelia-framework";
-
-import configLibrary from "config";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import FrontendConfig from "../config/frontend-config";
 
 import FrontendManagerMain from "./manager-main";
 
 export default class FrontendMain implements IStartableStoppable {
-    private logger: PinoLogger;
-
     constructor(
         @scoped(FrontendConfig)
         private readonly frontendConfig: FrontendConfig,
-        logger: PinoLogger,
         @context(FrontendManagerMain, "FrontendManagerMain")
         private readonly frontendManagerMain: FrontendManagerMain,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
         // TODO: validate arguments.
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async start(): Promise<void> {

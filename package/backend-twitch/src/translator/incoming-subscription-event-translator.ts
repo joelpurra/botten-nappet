@@ -28,16 +28,18 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-subscription-event";
+
+/* tslint:disable:max-line-length */
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-subscription-event-topic-publisher";
 import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
+
+/* tslint:enable:max-line-length */
 
 @autoinject
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {

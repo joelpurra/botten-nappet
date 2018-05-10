@@ -24,9 +24,6 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    Container,
-} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
@@ -35,13 +32,6 @@ import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/i
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
-
-import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-
-import IIncomingSearchResultEvent from "@botten-nappet/interface-shared-vidy/src/event/iincoming-search-result-event";
-
-import UserStorageManager from "@botten-nappet/backend-shared/src/storage/manager/user-storage-manager";
-import UserRepository from "@botten-nappet/backend-shared/src/storage/repository/user-repository";
 
 import IncomingCheeringEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheering-event-single-item-json-topics-subscriber";
 import IncomingCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheermotes-event-single-item-json-topics-subscriber";
@@ -92,12 +82,8 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
         @context(PerUserHandlersMain, "PerUserHandlersMain")
         private readonly perUserHandlersMain: PerUserHandlersMain,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
+        // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];

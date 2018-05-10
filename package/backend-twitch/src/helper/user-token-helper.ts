@@ -29,7 +29,6 @@ import {
 import readline from "readline";
 
 import axios from "axios";
-import qs from "qs";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -262,7 +261,7 @@ export default class UserTokenHelper {
 
             const querystring = matches![1];
 
-            const params = qs.parse(querystring);
+            const params = this.requestHelper.parseQuerystring(querystring);
 
             // NOTE: security check.
             if (params.state !== randomCSRF) {

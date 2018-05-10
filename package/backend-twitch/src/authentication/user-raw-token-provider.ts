@@ -25,29 +25,16 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
-import TokenHelper from "../helper/token-helper";
-import UserTokenHelper from "../helper/user-token-helper";
-
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 import UserAugmentedTokenProvider from "./user-augmented-token-provider";
 
 @autoinject
 export default class UserRawTokenProvider {
-    private logger: PinoLogger;
-
     constructor(
-        logger: PinoLogger,
-        private readonly tokenHelper: TokenHelper,
         private readonly userAugmentedTokenProvider: UserAugmentedTokenProvider,
     ) {
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof tokenHelper, "object");
+        assert.hasLength(arguments, 1);
         assert.equal(typeof userAugmentedTokenProvider, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async get(): Promise<IRawToken> {

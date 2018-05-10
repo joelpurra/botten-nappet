@@ -25,23 +25,15 @@ import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-
 import ApplicationTokenManager from "./application-token-manager";
 
 @autoinject
 export default class ApplicationAccessTokenProvider {
-    private logger: PinoLogger;
-
     constructor(
-        logger: PinoLogger,
         private readonly twitchApplicationTokenManager: ApplicationTokenManager,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
+        assert.hasLength(arguments, 1);
         assert.equal(typeof twitchApplicationTokenManager, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async get(): Promise<string> {

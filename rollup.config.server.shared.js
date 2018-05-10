@@ -22,14 +22,12 @@ import nodeResolve from "rollup-plugin-node-resolve";
 import commonjs from "rollup-plugin-commonjs";
 import json from "rollup-plugin-json";
 
-// import typescript from "./rollup.config.typescript.js";
-// TODO: enable for production builds?
-// import uglify from "./rollup.config.uglify.js";
-import filesize from "./rollup.config.filesize.js";
-import license from "./rollup.config.license.js";
+import modeSelector from "./rollup.config.mode-selector";
 
 const inputName = "./package/server-shared/index.js";
-const outputName = "./package/server-shared/dist/cjs/index.js";
+const outputName = "./package/server-shared/dist/cjs/index.cjs.js";
+
+const additionalPlugins = modeSelector(process.env, inputName);
 
 export default {
     external: [
@@ -96,10 +94,6 @@ export default {
             // exclude: ["node_modules/foo/**", "node_modules/bar/**"],
             include: "node_modules/@botten-nappet/**",
         }),
-        // typescript(),
-        // TODO: enable for production builds?
-        // uglify(),
-        license(inputName),
-        filesize(),
+        ...additionalPlugins,
     ],
 };

@@ -25,7 +25,10 @@ import {
     Container,
 } from "aurelia-dependency-injection";
 
-import configLibrary from "config";
+import configLibrary,
+{
+    IConfig,
+} from "config";
 
 import loadPackageJson from "@botten-nappet/shared/src/util/load-package-json";
 
@@ -34,8 +37,24 @@ import RootLoggerResolver from "@botten-nappet/shared/src/util/root-logger-resol
 
 import SharedContainerRoot from "./shared-container-root";
 
+import generateDependencyGraph,
+{
+    IGraphsConfig,
+} from "@botten-nappet/shared/src/depdency-graph/generate-dependency-graph";
+
+const checkAndGenerateGraphs = (rootContainer: Container, rootConfig: IConfig) => {
+    const graphsEnabled: boolean = rootConfig.get("graphs.enabled");
+    if (graphsEnabled) {
+        const graphsDependenciesServerSharedConfig: IGraphsConfig = rootConfig.get("graphs.dependencies.server.shared");
+
+        generateDependencyGraph(rootContainer, graphsDependenciesServerSharedConfig);
+    }
+};
+
 export default async function main(): Promise<void> {
     const rootContainer = new Container();
+
+    checkAndGenerateGraphs(rootContainer, configLibrary);
 
     rootContainer.registerInstance("IConfig", configLibrary);
 

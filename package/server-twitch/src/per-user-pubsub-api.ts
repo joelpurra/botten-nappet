@@ -39,7 +39,6 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 import IncomingPubSubEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-pub-sub-event-topic-publisher";
 
 import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/src/pubsub/translator/incoming-pubsub-event-translator";
-import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 
 import PubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
 import PubSubLoggingHandler from "@botten-nappet/backend-twitch/src/pubsub/handler/logging";

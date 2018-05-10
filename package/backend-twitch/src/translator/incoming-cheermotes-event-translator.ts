@@ -27,8 +27,6 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-
 import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
 
 /* tslint:disable:max-line-length */
@@ -38,7 +36,6 @@ import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/u
 import IncomingCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheermotes-event-topic-publisher";
 import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
 import IPollingCheermotesResponse from "../interface/response/polling/icheermotes-polling-response";
-import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */

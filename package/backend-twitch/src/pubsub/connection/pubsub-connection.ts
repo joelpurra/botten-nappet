@@ -44,7 +44,7 @@ import IPubSubConnection from "./ipubsub-connection";
 @autoinject
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {
     constructor(
-        private readonly pubSubConfig: PubSubConfig,
+        pubSubConfig: PubSubConfig,
         logger: PinoLogger,
         private userPubSubTopicsProvider: UserPubSubTopicsProvider,
         private readonly userAccessTokenProvider: UserAccessTokenProvider,

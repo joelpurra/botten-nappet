@@ -19,9 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-dependency-injection";
-import {
     assert,
 } from "check-types";
 

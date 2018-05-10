@@ -28,7 +28,6 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import ExternalRawTopic from "@botten-nappet/server-backend/src/message-queue/external-raw-topic";
-import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import RawTopicsSubscriber from "@botten-nappet/shared/src/message-queue/raw-topics-subscriber";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";

@@ -31,8 +31,6 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import DistributedEventManager from "@botten-nappet/backend-shared/src/distributed-events/distributed-event-manager";
 import DistributedEventStorageManager from "@botten-nappet/backend-shared/src/storage/manager/distributed-event-storage-manager";
-import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
-import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 /* tslint:enable max-line-length */
 

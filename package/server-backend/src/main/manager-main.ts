@@ -26,9 +26,6 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    Container,
-} from "aurelia-framework";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -36,9 +33,6 @@ import DatabaseConnection from "@botten-nappet/backend-shared/src/storage/databa
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import MessageQueueExternalRawTopicsSubscriber from "../message-queue/external-raw-topics-subscriber";
-
-import DistributedEventManager from "@botten-nappet/backend-shared/src/distributed-events/distributed-event-manager";
-import DistributedEventRepository from "@botten-nappet/backend-shared/src/storage/repository/distributed-event-repository";
 
 import ExternalDistributedEventManager from "../distributed-events/external-distributed-event-manager";
 
@@ -57,12 +51,7 @@ export default class BackendManagerMain implements IStartableStoppable {
         private readonly externalDistributedEventManager: ExternalDistributedEventManager,
         @context(BackendManagedMain, "BackendManagedMain")
         private readonly backendManagedMain: BackendManagedMain,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
     }

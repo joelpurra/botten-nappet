@@ -2,7 +2,7 @@
   "name": "botten-nappet",
   "version": "7.0.0",
   "description": "A Twitch bot and streaming tool",
-  "main": "./package/server-shared/dist/cjs/index.js",
+  "main": "./package/server-shared/dist/cjs/index.cjs.js",
   "scripts": {
     "start": "node $npm_package_main",
     "debug": "node --inspect $npm_package_main",
@@ -28,7 +28,11 @@
     "lint:copyright": "find . -not \\( -path './.git/*' -or -path './node_modules/*' -or -path './dist/*' -or -path './package/backend-shared/lib/*' \\) -type f \\( -iname '*.ts' \\) -print0 | xargs -0 grep -L 'This file is part of botten-nappet' | sed 's/^/File is missing copyright notice: /'",
     "lint:typecheck": "tsc --noEmit",
     "tslint": "tslint --config tslint.json --project .",
-    "tslint:fix": "tslint --config tslint.json --project ."
+    "tslint:fix": "tslint --config tslint.json --project .",
+    "graph": "npm run --silent graph:server:shared && npm run --silent graph:client:obs && npm run --silent graph:client:browser",
+    "graph:server:shared": "BOTTEN_NAPPET_GENERATE_GRAPH=true rollup --config rollup.config.server.shared.js > rollup.config.server.shared.js.gv && dot -T 'pdf' -O rollup.config.server.shared.js.gv",
+    "graph:client:obs": "BOTTEN_NAPPET_GENERATE_GRAPH=true rollup --config rollup.config.client.obs.js > rollup.config.client.obs.js.gv && dot -T 'pdf' -O rollup.config.client.obs.js.gv",
+    "graph:client:browser": "BOTTEN_NAPPET_GENERATE_GRAPH=true rollup --config rollup.config.client.browser.js > rollup.config.client.browser.js.gv && dot -T 'pdf' -O rollup.config.client.browser.js.gv"
   },
   "keywords": [
     "twitch",
@@ -119,6 +123,7 @@
     "rollup-plugin-commonjs": "^9.1.0",
     "rollup-plugin-ejs": "^1.1.1",
     "rollup-plugin-filesize": "^1.5.0",
+    "rollup-plugin-graph": "^1.2.0",
     "rollup-plugin-json": "^2.3.0",
     "rollup-plugin-license": "^0.6.0",
     "rollup-plugin-node-resolve": "^3.3.0",

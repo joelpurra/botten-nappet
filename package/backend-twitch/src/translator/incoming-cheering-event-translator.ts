@@ -25,15 +25,17 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-event";
+
+/* tslint:disable:max-line-length */
 
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-event-topic-publisher";
 import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
+
+/* tslint:enable:max-line-length */
 
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(

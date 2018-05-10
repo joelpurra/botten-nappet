@@ -36,8 +36,6 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
 
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
-
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 
 import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
@@ -56,15 +54,15 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         logger: PinoLogger,
         @scoped(TwitchIrcConnection)
         private readonly twitchIrcConnection: TwitchIrcConnection,
-        @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
-            IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        // @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
+        // private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        //     IncomingIrcCommandSingleItemJsonTopicsSubscriber,
         @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingIrcCommandTopicPublisher)
-        private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
-            IncomingIrcCommandTopicPublisher,
+        // @scoped(IncomingIrcCommandTopicPublisher)
+        // private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
+        //     IncomingIrcCommandTopicPublisher,
         @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
         private readonly twitchPerUserIrcApi: TwitchPerUserIrcApi,
     ) {

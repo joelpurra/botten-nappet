@@ -134,6 +134,48 @@ export -n BOTTEN_NAPPET_BACKEND_DATABASE_URI
 
 
 
+### Generating dependency graphs
+
+Some dependencies are easier to analyze with some visual aid, in the form of graphs in `.pdf` format.
+
+- Requires [graphviz](https://www.graphviz.org).
+- It's easy to modify the generated `.gv` files to fix layout issues as well as remove/comment out parts of the graph — it can get pretty cluttered.
+- Some parts of the runtime generation can be configured to include/exclude/cluster classes.
+
+
+**Build time module import graphs**
+
+```shell
+# NOTE: generates graphs for the rollup config files.
+# NOTE: see output in rollup.config.*.gv.
+# NOTE: see output in rollup.config.*.gv.pdf.
+npm run --silent graph
+```
+
+
+**Runtime dependency injection graph**
+
+```shell
+# NOTE: enable dependency injection graph generation.
+# NOTE: see configuration files.
+export BOTTEN_NAPPET_GENERATE_GRAPH="true"
+
+# NOTE: start the server.
+npm run --silent start
+
+# NOTE: the graph is written to disk after server shutdown.
+# NOTE: these commands generates most recent graph to pdf.
+# NOTE: see output in dependency-graph.*.gv.
+# NOTE: see output in dependency-graph.*.gv.pdf.
+export DGGV="$(find . -iname 'dependency-graph.*.gv' | sort | tail -n 1)"
+dot -T "pdf" -O "$DGGV"
+
+echo "$DGGV"
+open "${DGGV}.pdf"
+```
+
+
+
 ## Acknowledgements
 
 - thor10768765 on Twitch for inspiration and pushing me to start this project.

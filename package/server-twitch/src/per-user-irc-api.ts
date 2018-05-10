@@ -21,9 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     within,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
-import {
-    autoinject,
-} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -32,9 +29,6 @@ import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shu
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
-
-import MessageQueueSingleItemJsonTopicsSubscriber from "@botten-nappet/shared/src/message-queue/single-item-topics-subscriber";
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 import TwitchIrcLoggingHandler from "@botten-nappet/backend-twitch/src/irc/handler/logging";
@@ -45,8 +39,6 @@ import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authenticati
 import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import TwitchIncomingIrcCommandEventTranslator from "@botten-nappet/backend-twitch/src/irc/translator/incoming-irc-command-event-translator";
 import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/src/irc/translator/outgoing-irc-command-event-handler";
-import ITwitchIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-import ITwitchOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
 import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
 

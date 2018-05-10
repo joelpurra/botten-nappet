@@ -33,8 +33,6 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TwitchPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
 
-import UserAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-access-token-provider";
-import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchPerUserPubSubApi from "./per-user-pubsub-api";
 
 export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {

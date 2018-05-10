@@ -84,4 +84,39 @@ templates:
                         topicConfigObjectPath: shared.topic.twitch
                     vidy:
                         topicConfigObjectPath: shared.topic.vidy
-
+graphs:
+    enabled: false
+    dependencies:
+        server:
+            shared:
+                ignoredDependencyNames:
+                    - BackendConfig
+                    - Container
+                    - GracefulShutdownManager
+                    - PinoLogger
+                    - Publisher
+                    - SharedTopicsConfig
+                    - TopicHelper
+                    - ZmqConfig
+                suffixes:
+                    - Config
+                    - PollingClientIdConnection
+                    - SingleItemJsonTopicsSubscriber
+                    - Topic
+                    - TopicPublisher
+                manual:
+                    TwitchApplicationAuthentication:
+                        - ApplicationAccessTokenProvider
+                        - ApplicationTokenManager
+                        - PollingApplicationTokenConnection
+                    TwitchUserAuthentication:
+                        - UserAccessTokenProvider
+                        - UserAugmentedTokenProvider
+                        - UserChannelNameProvider
+                        - UserIdProvider
+                        - UserNameProvider
+                        - UserRawTokenProvider
+                        - UserStorageManager
+                        - UserTokenHelper
+                        - UserTokenManager
+                graphvizOutputFilenameTemplate: "dependency-graph.${Date.now()}.gv"

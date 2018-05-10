@@ -24,9 +24,6 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    Container,
-} from "aurelia-framework";
 import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
@@ -35,12 +32,6 @@ import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/i
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
-
-import PollingClientIdConnection from "@botten-nappet/backend-twitch/src/polling/connection/polling-clientid-connection";
-
-import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/icheermotes-polling-response";
-import IPollingFollowingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/ifollowing-polling-response";
-import IPollingStreamingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/istreaming-polling-response";
 
 import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
 import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
@@ -66,12 +57,7 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
         @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
         private readonly twitchPerUserPollingApi: TwitchPerUserPollingApi,
-        private readonly container: Container,
     ) {
-        // TODO DEBUG REMOVE
-        console.log(this.constructor.name, "container === container.root", container === container.root);
-        console.log(this.constructor.name, "container.parent === container.root", container.parent === container.root);
-
         // TODO: validate arguments.
         this.logger = logger.child(this.constructor.name);
 

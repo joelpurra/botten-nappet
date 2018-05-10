@@ -18,15 +18,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConsoleLog from "./console-log";
-
 export default class BallzManager {
     private defaultBallTimeout: number;
-    private logger: ConsoleLog;
 
-    constructor(logger: ConsoleLog) {
-        this.logger = logger;
-
+    constructor() {
         this.defaultBallTimeout = 5000;
     }
 

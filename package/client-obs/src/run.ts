@@ -47,7 +47,7 @@ export default async function client() {
 
     const notificationHandlerContainerElementId = "notification-container";
     const notificationManager = new NotificationManager(logger, notificationHandlerContainerElementId);
-    const ballzManager = new BallzManager(logger);
+    const ballzManager = new BallzManager();
 
     const followingHandler = new FollowingHandler(
         logger,
@@ -72,7 +72,6 @@ export default async function client() {
         "cowbell",
     );
     const vidyHandler = new VidyHandler(
-        logger,
         "vidy-video",
     );
 

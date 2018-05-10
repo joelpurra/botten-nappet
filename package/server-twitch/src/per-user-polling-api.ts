@@ -33,17 +33,12 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
 
-import MessageQueueTopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publisher";
-
 import IncomingCheermotesCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-cheermotes-event-translator";
 import IncomingFollowingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-following-event-translator";
 import IncomingStreamingCommandEventTranslator from "@botten-nappet/backend-twitch/src/translator/incoming-streaming-event-translator";
 
 import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
-import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
-import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
-import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-streaming-event";
 
 /* tslint:enable max-line-length */
 

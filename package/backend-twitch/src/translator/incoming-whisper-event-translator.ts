@@ -28,18 +28,20 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
-import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
-import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 import IIncomingWhisperEvent,
 {
     WhisperType,
 } from "@botten-nappet/interface-shared-twitch/src/event/iincoming-whisper-event";
 
+/* tslint:disable:max-line-length */
+
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 import IncomingWhisperEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-whisper-event-topic-publisher";
 import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
+
+/* tslint:enable:max-line-length */
 
 @autoinject
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {

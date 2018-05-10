@@ -28,21 +28,14 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
-import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
 @autoinject
 export default class UserPubSubTopicsProvider {
-    private logger: PinoLogger;
-
     constructor(
-        logger: PinoLogger,
         private readonly userIdProvider: UserIdProvider,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
+        assert.hasLength(arguments, 1);
         assert.equal(typeof userIdProvider, "object");
-
-        this.logger = logger.child(this.constructor.name);
     }
 
     public async get(): Promise<string[]> {
