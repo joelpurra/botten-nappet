@@ -21,10 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -54,23 +54,30 @@ export default class TwitchPerUserPubSubApi {
     constructor(
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        @within(PubSubConnection, "TwitchPerUserPubSubApi")
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
         @scoped(IncomingPubSubEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingPubSubEvent:
             IncomingPubSubEventTopicPublisher,
-        @within(TwitchUserNameProvider, "PerUserHandlersMain")
         private readonly twitchUserNameProvider: TwitchUserNameProvider,
-        @within(TwitchUserIdProvider, "PerUserHandlersMain")
         private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 6);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof gracefulShutdownManager, "object");
+        assert.equal(typeof twitchAllPubSubTopicsForTwitchUserIdConnection, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingPubSubEvent, "object");
+        assert.equal(typeof twitchUserNameProvider, "object");
+        assert.equal(typeof twitchUserIdProvider, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.startables, 0);
+
         const twitchPubSubPingHandler = new PubSubPingHandler(
             this.logger,
             this.twitchAllPubSubTopicsForTwitchUserIdConnection,
@@ -106,6 +113,8 @@ export default class TwitchPerUserPubSubApi {
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

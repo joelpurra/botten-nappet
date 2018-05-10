@@ -72,6 +72,8 @@ export default class FrontendManagerMain {
     private logger: PinoLogger;
 
     constructor(
+        @context(FrontendManagedMain, "FrontendManagedMain")
+        private readonly frontendManagedMain: () => FrontendManagedMain,
         private readonly frontendConfig: FrontendConfig,
         logger: PinoLogger,
         @scoped(IncomingIrcCommandSingleItemJsonTopicsSubscriber)
@@ -89,10 +91,19 @@ export default class FrontendManagerMain {
         @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
         private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
-        @context(FrontendManagedMain, "FrontendManagedMain")
-        private readonly frontendManagedMain: FrontendManagedMain,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 8);
+        assert.equal(typeof frontendManagedMain, "function");
+        assert.equal(typeof frontendConfig, "object");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent, "object");
+        assert.equal(
+            typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent, "object",
+        );
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent, "object");
+        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.server = null;
@@ -101,6 +112,9 @@ export default class FrontendManagerMain {
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.connectables, 0);
+
         const app = new Koa();
         app.on("error", (err, ctx) => {
             // TODO: shut down server.
@@ -140,7 +154,7 @@ export default class FrontendManagerMain {
             .forEach((data) => {
                 assert.not.null(this.io);
 
-                // TODO: beter null handling.
+                // TODO: better null handling.
                 if (!this.io) {
                     throw new Error("this.io was not set.");
                 }
@@ -182,7 +196,7 @@ export default class FrontendManagerMain {
             .forEach((data) => {
                 assert.not.null(this.io);
 
-                // TODO: beter null handling.
+                // TODO: better null handling.
                 if (!this.io) {
                     throw new Error("this.io was not set.");
                 }
@@ -202,7 +216,7 @@ export default class FrontendManagerMain {
             .forEach((data) => {
                 assert.not.null(this.io);
 
-                // TODO: beter null handling.
+                // TODO: better null handling.
                 if (!this.io) {
                     throw new Error("this.io was not set.");
                 }
@@ -227,7 +241,7 @@ export default class FrontendManagerMain {
             .forEach((data) => {
                 assert.not.null(this.io);
 
-                // TODO: beter null handling.
+                // TODO: better null handling.
                 if (!this.io) {
                     throw new Error("this.io was not set.");
                 }
@@ -247,7 +261,7 @@ export default class FrontendManagerMain {
             .forEach((data) => {
                 assert.not.null(this.io);
 
-                // TODO: beter null handling.
+                // TODO: better null handling.
                 if (!this.io) {
                     throw new Error("this.io was not set.");
                 }
@@ -292,15 +306,17 @@ export default class FrontendManagerMain {
             context: this.server,
         })(this.frontendConfig.port);
 
-        await this.frontendManagedMain.start();
+        await this.frontendManagedMain().start();
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.frontendManagedMain) {
-            await this.frontendManagedMain.stop();
+            await this.frontendManagedMain().stop();
         }
 
         await Bluebird.map(

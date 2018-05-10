@@ -51,7 +51,7 @@ export default abstract class ConnectionManager<T> implements IStartableStoppabl
     }
 
     public async start(): Promise<void> {
-        assert(arguments.length === 0);
+        assert.hasLength(arguments, 0);
         assert.null(this.dataHandlerSubscription);
 
         const filter: ((data: T) => Promise<boolean>) = this.filter.bind(this);

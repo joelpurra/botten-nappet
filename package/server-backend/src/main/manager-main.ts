@@ -26,6 +26,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -44,19 +47,27 @@ export default class BackendManagerMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
+        @context(BackendManagedMain, "BackendManagedMain")
+        private readonly backendManagedMain: () => BackendManagedMain,
         logger: PinoLogger,
         private readonly databaseConnection: DatabaseConnection,
         private readonly messageQueueExternalRawTopicsSubscriber: MessageQueueExternalRawTopicsSubscriber,
         @scoped(ExternalDistributedEventManager)
         private readonly externalDistributedEventManager: ExternalDistributedEventManager,
-        @context(BackendManagedMain, "BackendManagedMain")
-        private readonly backendManagedMain: BackendManagedMain,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 5);
+        assert.equal(typeof backendManagedMain, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof databaseConnection, "object");
+        assert.equal(typeof messageQueueExternalRawTopicsSubscriber, "object");
+        assert.equal(typeof externalDistributedEventManager, "object");
+
         this.logger = logger.child(this.constructor.name);
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         await this.databaseConnection.connect();
         await this.messageQueueExternalRawTopicsSubscriber.connect();
 
@@ -65,15 +76,17 @@ export default class BackendManagerMain implements IStartableStoppable {
 
         this.logger.info("Managed.");
 
-        await this.backendManagedMain.start();
+        await this.backendManagedMain().start();
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.backendManagedMain) {
-            await this.backendManagedMain.stop();
+            await this.backendManagedMain().stop();
         }
 
         if (this.externalDistributedEventManager) {

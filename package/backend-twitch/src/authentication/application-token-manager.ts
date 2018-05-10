@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
+    autoinject,
+} from "aurelia-framework";
 import {
     assert,
 } from "check-types";
@@ -37,6 +37,7 @@ import ApplicationTokenManagerConfig from "../config/application-token-manager-c
 import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingApplicationTokenConnection from "./polling-application-token-connection";
 
+@autoinject
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
     private tokenHasBeenSet: (() => void) | null;
@@ -47,7 +48,6 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
 
     constructor(
         logger: PinoLogger,
-        @within(PollingApplicationTokenConnection, "BackendManagedMain")
         connection: PollingApplicationTokenConnection,
         private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
@@ -89,7 +89,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
             });
     }
 
-    public async start() {
+    public async start(): Promise<void> {
         assert.hasLength(arguments, 0);
 
         await super.start();
@@ -99,7 +99,7 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return pollingConnection.send(undefined);
     }
 
-    public async stop() {
+    public async stop(): Promise<void> {
         assert.hasLength(arguments, 0);
 
         await this.revokeTokenIfSet(this.applicationAccessToken);

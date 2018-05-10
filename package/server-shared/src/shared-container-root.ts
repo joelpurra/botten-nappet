@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     context,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -33,33 +36,41 @@ import FrontendMain from "@botten-nappet/server-frontend/src/main/main";
 
 export default class SharedContainerRoot implements IStartableStoppable {
     constructor(
+        @context(BackendMain, "BackendMain")
+        private readonly backendMain: () => BackendMain,
+        @context(FrontendMain, "FrontendMain")
+        private readonly frontendMain: () => FrontendMain,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
         private readonly messageQueuePublisher: MessageQueuePublisher,
-        @context(BackendMain, "BackendMain")
-        private readonly backendMain: BackendMain,
-        @context(FrontendMain, "FrontendMain")
-        private readonly frontendMain: FrontendMain,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof backendMain, "function");
+        assert.equal(typeof frontendMain, "function");
+        assert.equal(typeof gracefulShutdownManager, "object");
+        assert.equal(typeof messageQueuePublisher, "object");
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         await this.gracefulShutdownManager.start();
         await this.messageQueuePublisher.connect();
 
         await Promise.all([
-            this.backendMain.start(),
-            this.frontendMain.start(),
+            this.backendMain().start(),
+            this.frontendMain().start(),
         ]);
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         await Promise.all([
-            this.backendMain.stop(),
-            this.frontendMain.stop(),
+            this.backendMain().stop(),
+            this.frontendMain().stop(),
         ]);
 
         await this.messageQueuePublisher.disconnect();

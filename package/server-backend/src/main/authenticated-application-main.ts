@@ -25,6 +25,9 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -52,6 +55,8 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
     private logger: PinoLogger;
 
     constructor(
+        @context(PerUserHandlersMain, "PerUserHandlersMain")
+        private readonly perUserHandlersMain: () => PerUserHandlersMain,
         logger: PinoLogger,
         @scoped(IncomingPubSubEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
@@ -80,16 +85,29 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
         private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
-        @context(PerUserHandlersMain, "PerUserHandlersMain")
-        private readonly perUserHandlersMain: PerUserHandlersMain,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 11);
+        assert.equal(typeof perUserHandlersMain, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent, "object");
+        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.connectables, 0);
+
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
@@ -104,15 +122,17 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
 
         this.logger.info("Connected.");
 
-        await this.perUserHandlersMain.start();
+        await this.perUserHandlersMain().start();
     }
 
     public async  stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.perUserHandlersMain) {
-            this.perUserHandlersMain.stop();
+            this.perUserHandlersMain().stop();
         }
 
         await Bluebird.map(

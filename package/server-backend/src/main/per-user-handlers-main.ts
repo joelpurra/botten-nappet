@@ -24,10 +24,10 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -84,34 +84,32 @@ export default class PerUserHandlersMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
+        @context(BackendTwitchPubSubAuthenticatedApplicationApi, "BackendTwitchPubSubAuthenticatedApplicationApi")
+        private readonly backendTwitchPubSubAuthenticatedApplicationApi: () => BackendTwitchPubSubAuthenticatedApplicationApi,
+        @context(BackendTwitchIrcAuthenticatedApplicationApi, "BackendTwitchIrcAuthenticatedApplicationApi")
+        private readonly backendTwitchIrcAuthenticatedApplicationApi: () => BackendTwitchIrcAuthenticatedApplicationApi,
+        @context(BackendTwitchPollingAuthenticatedApplicationApi, "BackendTwitchPollingAuthenticatedApplicationApi")
+        private readonly backendTwitchPollingAuthenticatedApplicationApi:
+            () => BackendTwitchPollingAuthenticatedApplicationApi,
         private readonly backendConfig: BackendConfig,
         logger: PinoLogger,
-        @within(IncomingPubSubEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
             IncomingPubSubEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
             IncomingIrcCommandSingleItemJsonTopicsSubscriber,
-        @within(IncomingFollowingEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
             IncomingFollowingEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingStreamingEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
             IncomingStreamingEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingCheermotesEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
             IncomingCheermotesEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingCheeringEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
             IncomingCheeringEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingWhisperEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
             IncomingWhisperEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
             IncomingSubscriptionEventSingleItemJsonTopicsSubscriber,
-        @within(IncomingSearchResultEventSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
-        private vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
+        private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
         @scoped(OutgoingIrcCommandTopicPublisher)
         private readonly messageQueueTopicPublisherForIOutgoingIrcCommand:
@@ -135,21 +133,39 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         private readonly twitchUserNameProvider: TwitchUserNameProvider,
         @scoped(TwitchUserIdProvider)
         private readonly twitchUserIdProvider: TwitchUserIdProvider,
-        @context(BackendTwitchPubSubAuthenticatedApplicationApi, "BackendTwitchPubSubAuthenticatedApplicationApi")
-        private readonly backendTwitchPubSubAuthenticatedApplicationApi: BackendTwitchPubSubAuthenticatedApplicationApi,
-        @context(BackendTwitchIrcAuthenticatedApplicationApi, "BackendTwitchIrcAuthenticatedApplicationApi")
-        private readonly backendTwitchIrcAuthenticatedApplicationApi: BackendTwitchIrcAuthenticatedApplicationApi,
-        @context(BackendTwitchPollingAuthenticatedApplicationApi, "BackendTwitchPollingAuthenticatedApplicationApi")
-        private readonly backendTwitchPollingAuthenticatedApplicationApi:
-            BackendTwitchPollingAuthenticatedApplicationApi,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 22);
+        assert.equal(typeof backendTwitchPubSubAuthenticatedApplicationApi, "function");
+        assert.equal(typeof backendTwitchIrcAuthenticatedApplicationApi, "function");
+        assert.equal(typeof backendTwitchPollingAuthenticatedApplicationApi, "function");
+        assert.equal(typeof backendConfig, "object");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent, "object");
+        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIOutgoingIrcCommand, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingCheeringEvent, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingWhisperEvent, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingSubscriptionEvent, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingCheeringWithCheermotesEvent, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIOutgoingSearchCommand, "object");
+        assert.equal(typeof twitchUserNameProvider, "object");
+        assert.equal(typeof twitchUserIdProvider, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
             this.logger,
             this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
@@ -277,9 +293,9 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         }, "Started listening to events");
 
         await Promise.all([
-            this.backendTwitchPubSubAuthenticatedApplicationApi.start(),
-            this.backendTwitchIrcAuthenticatedApplicationApi.start(),
-            this.backendTwitchPollingAuthenticatedApplicationApi.start(),
+            this.backendTwitchPubSubAuthenticatedApplicationApi().start(),
+            this.backendTwitchIrcAuthenticatedApplicationApi().start(),
+            this.backendTwitchPollingAuthenticatedApplicationApi().start(),
         ]);
     }
 
@@ -288,15 +304,15 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.backendTwitchPubSubAuthenticatedApplicationApi) {
-            this.backendTwitchPubSubAuthenticatedApplicationApi.stop();
+            this.backendTwitchPubSubAuthenticatedApplicationApi().stop();
         }
 
         if (this.backendTwitchIrcAuthenticatedApplicationApi) {
-            this.backendTwitchIrcAuthenticatedApplicationApi.stop();
+            this.backendTwitchIrcAuthenticatedApplicationApi().stop();
         }
 
         if (this.backendTwitchPollingAuthenticatedApplicationApi) {
-            this.backendTwitchPollingAuthenticatedApplicationApi.stop();
+            this.backendTwitchPollingAuthenticatedApplicationApi().stop();
         }
 
         await Bluebird.map(

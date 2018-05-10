@@ -25,6 +25,9 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -40,34 +43,43 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
     private logger: PinoLogger;
 
     constructor(
+        @context(TwitchPerUserPubSubApi, "TwitchPerUserPubSubApi")
+        private readonly twitchPerUserPubSubApi: () => TwitchPerUserPubSubApi,
         logger: PinoLogger,
         @scoped(TwitchPubSubConnection)
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
-        @context(TwitchPerUserPubSubApi, "TwitchPerUserPubSubApi")
-        private readonly twitchPerUserPubSubApi: TwitchPerUserPubSubApi,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 3);
+        assert.equal(typeof twitchPerUserPubSubApi, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchAllPubSubTopicsForTwitchUserIdConnection, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.connectables, 0);
+
         this.connectables.push(this.twitchAllPubSubTopicsForTwitchUserIdConnection);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
 
-        await this.twitchPerUserPubSubApi.start();
+        await this.twitchPerUserPubSubApi().start();
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.twitchPerUserPubSubApi) {
-            this.twitchPerUserPubSubApi.stop();
+            this.twitchPerUserPubSubApi().stop();
         }
 
         await Bluebird.map(

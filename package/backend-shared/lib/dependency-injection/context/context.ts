@@ -61,7 +61,7 @@ export class Context implements Resolver {
      * @param container The container to resolve from.
      * @return Returns an instance within the current context.
      */
-    public get(container: Container): any {
+    public get(container: Container): () => any {
         const childContainer = container.createChild();
 
         childContainer.registerInstance(CONTAINER_CONTEXT_IDENTIFIER, this._name);
@@ -72,6 +72,10 @@ export class Context implements Resolver {
         //container.root.unregister(containerContextIdentifier);
         childContainer.registerSingleton(this._key);
 
-        return childContainer.get(this._key);
+        const factory = () => {
+            return childContainer.get(this._key);
+        };
+
+        return factory;
     }
 }

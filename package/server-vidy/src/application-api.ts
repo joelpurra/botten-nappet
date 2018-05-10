@@ -22,6 +22,9 @@ import {
     autoinject,
 } from "aurelia-framework";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -46,12 +49,20 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
         private readonly vidyApi: VidyApi,
     ) {
+        assert.hasLength(arguments, 3);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand, "object");
+        assert.equal(typeof vidyApi, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.connectables, 0);
+
         this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
@@ -62,6 +73,8 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

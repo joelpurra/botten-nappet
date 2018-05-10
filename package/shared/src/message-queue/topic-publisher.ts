@@ -45,7 +45,7 @@ export default abstract class TopicPublisher<T> implements IConnectable, ISendin
         assert.equal(typeof publisher, "object");
         assert.equal(typeof topicConfig, "object");
 
-        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig})`);
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }
 
     public async connect(): Promise<void> {
@@ -81,7 +81,7 @@ export default abstract class TopicPublisher<T> implements IConnectable, ISendin
             message = JSON.stringify(data);
         }
 
-        this.logger.trace(data, message, this.topicConfig, "send");
+        this.logger.trace(data, message, this.topicConfig.topic, "send");
 
         await this.publisher.send(
             this.topicConfig.topic,

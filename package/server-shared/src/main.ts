@@ -24,6 +24,9 @@ import "reflect-metadata";
 import {
     Container,
 } from "aurelia-dependency-injection";
+import {
+    assert,
+} from "check-types";
 
 import configLibrary,
 {
@@ -52,6 +55,8 @@ const checkAndGenerateGraphs = (rootContainer: Container, rootConfig: IConfig) =
 };
 
 export default async function main(): Promise<void> {
+    assert.hasLength(arguments, 0);
+
     const rootContainer = new Container();
 
     checkAndGenerateGraphs(rootContainer, configLibrary);
@@ -67,6 +72,15 @@ export default async function main(): Promise<void> {
 
     const sharedContainerRoot = rootContainer.get(SharedContainerRoot) as SharedContainerRoot;
 
-    await sharedContainerRoot.start();
-    await sharedContainerRoot.stop();
+    try {
+        await sharedContainerRoot.start();
+    } catch (error) {
+        throw error;
+    } finally {
+        try {
+            await sharedContainerRoot.stop();
+        } catch (stoppingError) {
+            rootLogger.error(stoppingError, "Masking related error while stopping due to error.", "stoppingError");
+        }
+    }
 }

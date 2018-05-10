@@ -25,6 +25,9 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -37,7 +40,6 @@ import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-t
 import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
 import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
 
-import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import TwitchPerUserPollingApi from "./per-user-polling-api";
 
 /* tslint:enable:max-line-length */
@@ -47,25 +49,31 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
     private logger: PinoLogger;
 
     constructor(
+        @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
+        private readonly twitchPerUserPollingApi: () => TwitchPerUserPollingApi,
         logger: PinoLogger,
-        private readonly userIdProvider: UserIdProvider,
         @scoped(CheermotesResponsePollingClientIdConnection)
         private readonly twitchPollingCheermotesConnection: CheermotesResponsePollingClientIdConnection,
         @scoped(StreamingResponsePollingClientIdConnection)
         private readonly twitchPollingStreamingConnection: StreamingResponsePollingClientIdConnection,
         @scoped(FollowingResponsePollingClientIdConnection)
         private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
-        @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
-        private readonly twitchPerUserPollingApi: TwitchPerUserPollingApi,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 5);
+        assert.equal(typeof twitchPerUserPollingApi, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchPollingCheermotesConnection, "object");
+        assert.equal(typeof twitchPollingStreamingConnection, "object");
+        assert.equal(typeof twitchPollingFollowingConnection, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
-        const userId = await this.userIdProvider.get();
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.connectables, 0);
 
         this.connectables.push(this.twitchPollingFollowingConnection);
         this.connectables.push(this.twitchPollingStreamingConnection);
@@ -75,15 +83,17 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
 
         this.logger.info("Connected.");
 
-        await this.twitchPerUserPollingApi.start();
+        await this.twitchPerUserPollingApi().start();
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.twitchPerUserPollingApi) {
-            await this.twitchPerUserPollingApi.stop();
+            await this.twitchPerUserPollingApi().stop();
         }
 
         await Bluebird.map(

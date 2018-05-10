@@ -19,9 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    autoinject,
-} from "aurelia-framework";
-import {
     assert,
 } from "check-types";
 
@@ -41,7 +38,6 @@ import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/ser
 
 /* tslint:enable:max-line-length */
 
-@autoinject
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(
         logger: PinoLogger,

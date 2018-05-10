@@ -19,9 +19,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -51,26 +54,32 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
     constructor(
         logger: PinoLogger,
         private readonly gracefulShutdownManager: GracefulShutdownManager,
-        @within(TwitchIrcConnection, "BackendTwitchIrcAuthenticatedApplicationApi")
         private readonly twitchIrcConnection: TwitchIrcConnection,
-        @within(OutgoingIrcCommandSingleItemJsonTopicsSubscriber, "BackendTwitchIrcAuthenticatedApplicationApi")
         private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
-        @within(IncomingIrcCommandTopicPublisher, "BackendTwitchIrcAuthenticatedApplicationApi")
+        @scoped(IncomingIrcCommandTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
             IncomingIrcCommandTopicPublisher,
-        @within(TwitchUserNameProvider, "PerUserHandlersMain")
         private readonly twitchUserNameProvider: TwitchUserNameProvider,
-        @within(TwitchUserIdProvider, "PerUserHandlersMain")
         private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 7);
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof gracefulShutdownManager, "object");
+        assert.equal(typeof twitchIrcConnection, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingIrcCommand, "object");
+        assert.equal(typeof twitchUserNameProvider, "object");
+        assert.equal(typeof twitchUserIdProvider, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(this.startables, 0);
+
         const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
             this.logger,
             this.twitchIrcConnection,

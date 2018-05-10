@@ -22,6 +22,9 @@ import {
     autoinject,
 } from "aurelia-framework";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -53,13 +56,23 @@ export default class BackendVidyApi implements IStartableStoppable {
             IncomingSearchResultEventTopicPublisher,
         private readonly vidyAuthenticatedRequest: VidyAuthenticatedRequest,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 6);
+        assert.equal(typeof backendConfig, "object");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof gracefulShutdownManager, "object");
+        assert.equal(typeof messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand, "object");
+        assert.equal(typeof messageQueueTopicPublisherForIIncomingSearchResultEvent, "object");
+        assert.equal(typeof vidyAuthenticatedRequest, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+        assert.hasLength(this.startables, 0);
+
         const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
             this.logger,
             this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
@@ -80,6 +93,8 @@ export default class BackendVidyApi implements IStartableStoppable {
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

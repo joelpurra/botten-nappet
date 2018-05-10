@@ -24,10 +24,10 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
 import Bluebird from "bluebird";
+import {
+    assert,
+} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -51,28 +51,31 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
     private logger: PinoLogger;
 
     constructor(
+        @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
+        private readonly twitchPerUserIrcApi: () => TwitchPerUserIrcApi,
         logger: PinoLogger,
         @scoped(TwitchIrcConnection)
         private readonly twitchIrcConnection: TwitchIrcConnection,
-        // @within(IncomingIrcCommandSingleItemJsonTopicsSubscriber, "BackendAuthenticatedApplicationMain")
         // private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
         //     IncomingIrcCommandSingleItemJsonTopicsSubscriber,
         @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
-        // @scoped(IncomingIrcCommandTopicPublisher)
-        // private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
-        //     IncomingIrcCommandTopicPublisher,
-        @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
-        private readonly twitchPerUserIrcApi: TwitchPerUserIrcApi,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 4);
+        assert.equal(typeof twitchPerUserIrcApi, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchIrcConnection, "object");
+        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand, "object");
+
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(this.connectables, 0);
+
         this.connectables.push(this.twitchIrcConnection);
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
 
@@ -83,7 +86,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
 
         this.logger.info("Connected.");
 
-        await this.twitchPerUserIrcApi.start();
+        await this.twitchPerUserIrcApi().start();
     }
 
     public async stop(): Promise<void> {
@@ -91,7 +94,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.twitchPerUserIrcApi) {
-            await this.twitchPerUserIrcApi.stop();
+            await this.twitchPerUserIrcApi().stop();
         }
 
         await Bluebird.map(

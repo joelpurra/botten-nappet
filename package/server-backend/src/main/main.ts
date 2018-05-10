@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     context,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
+import {
+    assert,
+} from "check-types";
 
 // NOTE: this is a hack, modifying the global Rx.Observable.prototype.
 import "@botten-nappet/backend-shared/lib/rxjs-extensions/async-filter";
@@ -33,25 +36,31 @@ import BackendManagerMain from "./manager-main";
 
 export default class BackendMain implements IStartableStoppable {
     constructor(
-        private readonly backendConfig: BackendConfig,
         @context(BackendManagerMain, "BackendManagerMain")
-        private readonly backendManagerMain: BackendManagerMain,
+        private readonly backendManagerMain: () => BackendManagerMain,
+        private readonly backendConfig: BackendConfig,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 2);
+        assert.equal(typeof backendManagerMain, "function");
+        assert.equal(typeof backendConfig, "object");
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         this.backendConfig.validate();
 
-        await this.backendManagerMain.start();
+        await this.backendManagerMain().start();
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.backendManagerMain) {
-            await this.backendManagerMain.stop();
+            await this.backendManagerMain().stop();
         }
     }
 }

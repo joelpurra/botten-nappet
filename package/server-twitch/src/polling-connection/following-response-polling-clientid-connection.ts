@@ -54,7 +54,11 @@ export default class FollowingResponsePollingClientIdConnection
             "get",
         );
 
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 3);
+        assert.equal(typeof backendConfig, "object");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof userIdProvider, "object");
+
         this.logger = logger.child(this.constructor.name);
     }
 

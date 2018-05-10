@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    within,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/within/within";
+    scoped,
+} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import {
     assert,
 } from "check-types";
@@ -38,7 +38,7 @@ export default class PollingApplicationTokenConnection extends PollingConnection
     constructor(
         logger: PinoLogger,
         requestHelper: RequestHelper,
-        @within(PollingApplicationTokenConnectionConfig, "BackendManagedMain")
+        @scoped(PollingApplicationTokenConnectionConfig)
         private readonly pollingApplicationTokenConnectionConfig: PollingApplicationTokenConnectionConfig,
     ) {
         super(
@@ -49,7 +49,7 @@ export default class PollingApplicationTokenConnection extends PollingConnection
             requestHelper,
         );
 
-        assert(arguments.length === 3);
+        assert.hasLength(arguments, 3);
         assert.equal(typeof logger, "object");
         assert.equal(typeof requestHelper, "object");
         assert.equal(typeof pollingApplicationTokenConnectionConfig, "object");

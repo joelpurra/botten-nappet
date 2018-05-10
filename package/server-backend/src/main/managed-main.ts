@@ -24,6 +24,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    assert,
+} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -42,21 +45,29 @@ export default class BackendManagedMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
+        @context(BackendVidyApplicationApi, "BackendVidyApplicationApi")
+        private readonly backendVidyApplicationApi: () => BackendVidyApplicationApi,
+        @context(BackendAuthenticatedApplicationMain, "BackendAuthenticatedApplicationMain")
+        private readonly backendAuthenticatedApplicationMain: () => BackendAuthenticatedApplicationMain,
         logger: PinoLogger,
         @scoped(TwitchPollingApplicationTokenConnection)
         private readonly twitchPollingApplicationTokenConnection: TwitchPollingApplicationTokenConnection,
         @scoped(TwitchApplicationTokenManager)
         private readonly twitchApplicationTokenManager: TwitchApplicationTokenManager,
-        @context(BackendVidyApplicationApi, "BackendVidyApplicationApi")
-        private readonly backendVidyApplicationApi: BackendVidyApplicationApi,
-        @context(BackendAuthenticatedApplicationMain, "BackendAuthenticatedApplicationMain")
-        private readonly backendAuthenticatedApplicationMain: BackendAuthenticatedApplicationMain,
     ) {
-        // TODO: validate arguments.
+        assert.hasLength(arguments, 5);
+        assert.equal(typeof backendVidyApplicationApi, "function");
+        assert.equal(typeof backendAuthenticatedApplicationMain, "function");
+        assert.equal(typeof logger, "object");
+        assert.equal(typeof twitchPollingApplicationTokenConnection, "object");
+        assert.equal(typeof twitchApplicationTokenManager, "object");
+
         this.logger = logger.child(this.constructor.name);
     }
 
     public async start(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         await this.twitchPollingApplicationTokenConnection.connect();
         await this.twitchApplicationTokenManager.start();
 
@@ -66,22 +77,24 @@ export default class BackendManagedMain implements IStartableStoppable {
         this.logger.info("Application authenticated.");
 
         await Promise.all([
-            this.backendVidyApplicationApi.start(),
+            this.backendVidyApplicationApi().start(),
 
-            this.backendAuthenticatedApplicationMain.start(),
+            this.backendAuthenticatedApplicationMain().start(),
         ]);
     }
 
     public async stop(): Promise<void> {
+        assert.hasLength(arguments, 0);
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.backendVidyApplicationApi) {
-            await this.backendVidyApplicationApi.stop();
+            await this.backendVidyApplicationApi().stop();
         }
 
         if (this.backendAuthenticatedApplicationMain) {
-            await this.backendAuthenticatedApplicationMain.stop();
+            await this.backendAuthenticatedApplicationMain().stop();
         }
 
         await this.twitchApplicationTokenManager.stop();

@@ -70,7 +70,7 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         /* tslint:enable:max-line-length */
     }
 
-    public async start() {
+    public async start(): Promise<void> {
         assert.hasLength(arguments, 0);
         assert.equal(this.reminderIntervalId, null);
 
@@ -80,7 +80,7 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         this.reminderIntervalId = setInterval(() => this.remind(), this.reminderIntervalMilliseconds);
     }
 
-    public async stop() {
+    public async stop(): Promise<void> {
         assert.hasLength(arguments, 0);
         assert.not.equal(this.reminderIntervalId, null);
 
