@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import Bluebird from "bluebird";
@@ -38,29 +41,25 @@ import VidyApi from "./api";
 
 /* tslint:enable:max-line-length */
 
+@asrt(3)
 @autoinject
 export default class BackendVidyApplicationApi implements IStartableStoppable {
     private logger: any;
     private connectables: IConnectable[];
 
     constructor(
-        logger: PinoLogger,
-        private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
-        private readonly vidyApi: VidyApi,
+        @asrt() private readonly vidyApi: VidyApi,
     ) {
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand, "object");
-        assert.equal(typeof vidyApi, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.connectables, 0);
 
         this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
@@ -72,9 +71,8 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         await this.vidyApi.start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

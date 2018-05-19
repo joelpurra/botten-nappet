@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -29,21 +29,21 @@ import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/i
 import IPubSubConnection from "../connection/ipubsub-connection";
 import PubSubManager from "../connection/pubsub-manager";
 
+@asrt(2)
 export default class ReconnectPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IPubSubConnection,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPubSubResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPubSubResponse,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         this.logger.info("Reconnecting.");
@@ -52,10 +52,10 @@ export default class ReconnectPubSubHandler extends PubSubManager {
         this.connection.reconnect();
     }
 
-    protected async filter(data: IPubSubResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPubSubResponse,
+    ): Promise<boolean> {
         if (typeof data.type !== "string") {
             return false;
         }

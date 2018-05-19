@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -41,21 +44,16 @@ import IPubSubConnection from "./ipubsub-connection";
 
 /* tslint:enable max-line-length */
 
+@asrt(4)
 @autoinject
 export default class PubSubConnection extends WebSocketConnection<IPubSubResponse, any> implements IPubSubConnection {
     constructor(
-        pubSubConfig: PubSubConfig,
-        logger: PinoLogger,
-        private userPubSubTopicsProvider: UserPubSubTopicsProvider,
-        private readonly userAccessTokenProvider: UserAccessTokenProvider,
+        @asrt() pubSubConfig: PubSubConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly userPubSubTopicsProvider: UserPubSubTopicsProvider,
+        @asrt() private readonly userAccessTokenProvider: UserAccessTokenProvider,
     ) {
         super(logger, pubSubConfig.twitchPubSubWebSocketUri);
-
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof pubSubConfig, "object");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof userPubSubTopicsProvider, "object");
-        assert.equal(typeof userAccessTokenProvider, "object");
 
         assert.equal(typeof pubSubConfig.twitchPubSubWebSocketUri, "string");
         assert.nonEmptyString(pubSubConfig.twitchPubSubWebSocketUri);
@@ -64,6 +62,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     protected async getSetupConnectionCommands(): Promise<Array<IWebSocketCommand<IPubSubResponse, any>>> {
         const userAccessToken = await this.userAccessTokenProvider.get();
 
@@ -135,7 +134,10 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         return setupConnectionCommands;
     }
 
-    protected async parseMessage(rawMessage: string): Promise<IPubSubResponse> {
+    @asrt(1)
+    protected async parseMessage(
+        @asrt() rawMessage: string,
+    ): Promise<IPubSubResponse> {
         // TODO: verify response format.
         // TODO: try-catch for bad messages.
         const data = JSON.parse(rawMessage.toString());
@@ -160,6 +162,7 @@ export default class PubSubConnection extends WebSocketConnection<IPubSubRespons
         return data;
     }
 
+    @asrt(1)
     protected async serializeMessage(data: any): Promise<string> {
         let message = null;
 

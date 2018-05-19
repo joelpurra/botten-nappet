@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -32,26 +32,22 @@ import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/e
 
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(3)
 export default class CheeringIrcReplyHandler extends EventSubscriptionManager<IIncomingCheeringEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingCheeringEvent>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingCheeringEvent>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingCheeringEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingCheeringEvent,
+    ): Promise<void> {
         const username = data.triggerer.name;
 
         this.logger.trace("Responding to follower.", username, "dataHandler");
@@ -73,10 +69,10 @@ export default class CheeringIrcReplyHandler extends EventSubscriptionManager<II
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingCheeringEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingCheeringEvent,
+    ): Promise<boolean> {
         return true;
     }
 }

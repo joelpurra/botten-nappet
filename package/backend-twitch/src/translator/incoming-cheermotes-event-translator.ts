@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -40,31 +40,25 @@ import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
+@asrt(5)
 @autoinject
 export default class IncomingCheermotesCommandEventTranslator extends PollingManager<IPollingCheermotesResponse> {
     constructor(
-        logger: PinoLogger,
-        connection: CheermotesResponsePollingClientIdConnection,
-        private readonly incomingCheermotesEventEmitter: IncomingCheermotesEventTopicPublisher,
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userIdProvider: UserIdProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: CheermotesResponsePollingClientIdConnection,
+        @asrt() private readonly incomingCheermotesEventEmitter: IncomingCheermotesEventTopicPublisher,
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingCheermotesEventEmitter, "object");
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPollingCheermotesResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPollingCheermotesResponse,
+    ): Promise<void> {
         const event: IIncomingCheermotesEvent = {
             channel: {
                 id: await this.userIdProvider.get(),
@@ -78,10 +72,10 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         this.incomingCheermotesEventEmitter.emit(event);
     }
 
-    protected async filter(data: IPollingCheermotesResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPollingCheermotesResponse,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

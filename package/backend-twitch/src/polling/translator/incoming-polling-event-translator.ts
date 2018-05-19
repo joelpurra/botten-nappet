@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -30,20 +33,17 @@ import IIncomingPollingEvent from "@botten-nappet/interface-backend-twitch/src/e
 import IPollingConnection from "../connection/ipolling-connection";
 import PollingManager from "../connection/polling-manager";
 
+@asrt(5)
 export default class IncomingPollingEventTranslator extends PollingManager<any> {
     constructor(
-        logger: PinoLogger,
-        connection: IPollingConnection<any>,
-        private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
-        private readonly username: string,
-        private readonly userid: number,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IPollingConnection<any>,
+        @asrt() private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
+        @asrt() private readonly username: string,
+        @asrt() private readonly userid: number,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingPollingEventEmitter, "object");
         assert.nonEmptyString(username);
         assert.integer(userid);
         assert.positive(userid);
@@ -51,10 +51,10 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: any): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: any,
+    ): Promise<void> {
         const event: IIncomingPollingEvent = {
             channel: {
                 id: this.userid,
@@ -68,10 +68,10 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         this.incomingPollingEventEmitter.emit(event);
     }
 
-    protected async filter(data: any): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: any,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

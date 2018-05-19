@@ -19,26 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
 
+@asrt(1)
 @autoinject
 export default class UserNameProvider {
     constructor(
-        private readonly userAuthenticationConfig: UserAuthenticationConfig,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof userAuthenticationConfig, "object");
-    }
+        @asrt() private readonly userAuthenticationConfig: UserAuthenticationConfig,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         // TODO: make dynamic based on access token.
         return this.userAuthenticationConfig.twitchUserName;
     }

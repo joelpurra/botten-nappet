@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import moment from "moment";
 
@@ -43,35 +43,29 @@ import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
+@asrt(5)
 @autoinject
 export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {
     private lastFollowingMessageTimestamp: number;
 
     constructor(
-        logger: PinoLogger,
-        connection: FollowingResponsePollingClientIdConnection,
-        private readonly incomingFollowingEventEmitter: IncomingFollowingEventTopicPublisher,
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userIdProvider: UserIdProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: FollowingResponsePollingClientIdConnection,
+        @asrt() private readonly incomingFollowingEventEmitter: IncomingFollowingEventTopicPublisher,
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingFollowingEventEmitter, "object");
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
 
         this.lastFollowingMessageTimestamp = Date.now();
     }
 
-    protected async dataHandler(data: IPollingFollowingResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPollingFollowingResponse,
+    ): Promise<void> {
         const newFollows = await this.getNewFollows(data.follows, this.lastFollowingMessageTimestamp);
 
         this.lastFollowingMessageTimestamp = Date.now();
@@ -97,10 +91,10 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         });
     }
 
-    protected async filter(data: IPollingFollowingResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPollingFollowingResponse,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

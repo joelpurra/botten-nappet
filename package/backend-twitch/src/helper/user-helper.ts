@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -37,20 +40,11 @@ export default class UserHelper {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly requestHelper: RequestHelper,
-        private readonly userAuthenticationConfig: UserAuthenticationConfig,
-        private readonly applicationAccessTokenProvider: ApplicationAccessTokenProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly requestHelper: RequestHelper,
+        @asrt() private readonly userAuthenticationConfig: UserAuthenticationConfig,
+        @asrt() private readonly applicationAccessTokenProvider: ApplicationAccessTokenProvider,
     ) {
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof requestHelper, "object");
-        assert.equal(typeof userAuthenticationConfig, "object");
-        assert.equal(typeof applicationAccessTokenProvider, "object");
-
-        assert.nonEmptyString(userAuthenticationConfig.twitchUsersDataUri);
-        assert(userAuthenticationConfig.twitchUsersDataUri.startsWith("https://"));
-
         this.logger = logger.child(this.constructor.name);
     }
 
@@ -116,10 +110,10 @@ export default class UserHelper {
         return users;
     }
 
-    public async getUserIdByUserName(username: string): Promise<number> {
-        assert.hasLength(arguments, 1);
-        assert.nonEmptyString(username);
-
+    @asrt(1)
+    public async getUserIdByUserName(
+        @asrt() username: string,
+    ): Promise<number> {
         const usersData = await this.getUsersData(username);
         const firstUserData = usersData[0];
 

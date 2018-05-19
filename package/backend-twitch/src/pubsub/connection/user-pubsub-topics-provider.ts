@@ -19,28 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
-
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 
+@asrt(1)
 @autoinject
 export default class UserPubSubTopicsProvider {
     constructor(
-        private readonly userIdProvider: UserIdProvider,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof userIdProvider, "object");
-    }
+        @asrt() private readonly userIdProvider: UserIdProvider,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<string[]> {
-        assert.hasLength(arguments, 0);
-
         const userId = await this.userIdProvider.get();
 
         const allPubSubTopicsForTwitchUserId = [

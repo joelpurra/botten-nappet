@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import axios from "axios";
 
@@ -35,33 +35,23 @@ import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication
 import TokenHelperConfig from "../config/token-helper-config";
 import RequestHelper from "./request-helper";
 
+@asrt(3)
 @autoinject
 export default class TokenHelper {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly requestHelper: RequestHelper,
-        private readonly twitchTokenHelperConfig: TokenHelperConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly requestHelper: RequestHelper,
+        @asrt() private readonly twitchTokenHelperConfig: TokenHelperConfig,
     ) {
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof requestHelper, "object");
-        assert.equal(typeof twitchTokenHelperConfig, "object");
-
-        assert.nonEmptyString(twitchTokenHelperConfig.oauthTokenRevocationUri);
-        assert(twitchTokenHelperConfig.oauthTokenRevocationUri.startsWith("https://"));
-        assert.nonEmptyString(twitchTokenHelperConfig.oauthTokenVerificationUri);
-        assert(twitchTokenHelperConfig.oauthTokenVerificationUri.startsWith("https://"));
-        assert.nonEmptyString(twitchTokenHelperConfig.appClientId);
-
         this.logger = logger.child(this.constructor.name);
     }
 
-    public async revoke(rawToken: IRawToken): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof rawToken, "object");
-
+    @asrt(1)
+    public async revoke(
+        @asrt() rawToken: IRawToken,
+    ): Promise<void> {
         // https://dev.twitch.tv/docs/authentication#revoking-access-tokens
 
         const accessToken = rawToken.access_token;
@@ -90,11 +80,10 @@ export default class TokenHelper {
         this.logger.trace(rawToken, data, "revoke");
     }
 
-    public async isExpired(token: IAugmentedToken): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof token, "object");
-        assert.equal(typeof token.token, "object");
-
+    @asrt(1)
+    public async isExpired(
+        @asrt() token: IAugmentedToken,
+    ): Promise<boolean> {
         if (token.expiresApproximatelyAt === null) {
             return true;
         }
@@ -106,10 +95,10 @@ export default class TokenHelper {
         return false;
     }
 
-    public async validate(rawToken: IRawToken): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof rawToken, "object");
-
+    @asrt(1)
+    public async validate(
+        @asrt() rawToken: IRawToken,
+    ): Promise<boolean> {
         // TODO: only allow a single outstanding token validation per user.
         // TODO: memoize the most recent good result for a couple of seconds, to reduce remote calls.
         const tokenValidation = await this.getTokenValidation(rawToken);
@@ -122,11 +111,10 @@ export default class TokenHelper {
         return valid;
     }
 
-    public async getUserIdByRawAccessToken(token: IRawToken): Promise<number> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof token, "object");
-        assert.not.null(token);
-
+    @asrt(1)
+    public async getUserIdByRawAccessToken(
+        @asrt() token: IRawToken,
+    ): Promise<number> {
         const tokenValidation = await this.getTokenValidation(token);
 
         // NOTE: twitch response data.
@@ -138,10 +126,10 @@ export default class TokenHelper {
         return userId;
     }
 
-    public async getUserNameByRawAccessToken(token: IRawToken): Promise<string> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof token, "object");
-
+    @asrt(1)
+    public async getUserNameByRawAccessToken(
+        @asrt() token: IRawToken,
+    ): Promise<string> {
         const tokenValidation = await this.getTokenValidation(token);
 
         // NOTE: twitch response data.
@@ -152,11 +140,10 @@ export default class TokenHelper {
         return userName;
     }
 
-    private async getTokenValidation(rawToken: IRawToken) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof rawToken, "object");
-        assert.nonEmptyString(rawToken.access_token);
-
+    @asrt(1)
+    private async getTokenValidation(
+        @asrt() rawToken: IRawToken,
+    ) {
         // https://dev.twitch.tv/docs/v5#root-url
         //
         // const sampleResponse = {

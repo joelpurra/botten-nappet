@@ -27,8 +27,8 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -43,31 +43,24 @@ import BackendManagedMain from "./managed-main";
 
 /* tslint:enable max-line-length */
 
+@asrt(5)
 export default class BackendManagerMain implements IStartableStoppable {
     private logger: PinoLogger;
 
     constructor(
-        @context(BackendManagedMain, "BackendManagedMain")
+        @asrt() @context(BackendManagedMain, "BackendManagedMain")
         private readonly backendManagedMain: () => BackendManagedMain,
-        logger: PinoLogger,
-        private readonly databaseConnection: DatabaseConnection,
-        private readonly messageQueueExternalRawTopicsSubscriber: MessageQueueExternalRawTopicsSubscriber,
-        @scoped(ExternalDistributedEventManager)
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly databaseConnection: DatabaseConnection,
+        @asrt() private readonly messageQueueExternalRawTopicsSubscriber: MessageQueueExternalRawTopicsSubscriber,
+        @asrt() @scoped(ExternalDistributedEventManager)
         private readonly externalDistributedEventManager: ExternalDistributedEventManager,
     ) {
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof backendManagedMain, "function");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof databaseConnection, "object");
-        assert.equal(typeof messageQueueExternalRawTopicsSubscriber, "object");
-        assert.equal(typeof externalDistributedEventManager, "object");
-
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.databaseConnection.connect();
         await this.messageQueueExternalRawTopicsSubscriber.connect();
 
@@ -79,9 +72,8 @@ export default class BackendManagerMain implements IStartableStoppable {
         await this.backendManagedMain().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

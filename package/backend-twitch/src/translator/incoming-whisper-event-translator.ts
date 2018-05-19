@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -40,26 +40,22 @@ import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/se
 
 /* tslint:enable:max-line-length */
 
+@asrt(3)
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
-        private readonly incomingWhisperEventEmitter: IncomingWhisperEventTopicPublisher,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
+        @asrt() private readonly incomingWhisperEventEmitter: IncomingWhisperEventTopicPublisher,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingWhisperEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPubSubResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPubSubResponse,
+    ): Promise<void> {
         const whisperEventOwner = parseInt(data.data!.topic.replace("whispers.", ""), 10);
         const whisperEvent: any = data.data!.messageParsed.data_object;
         const whisperType = this.getWhisperType(whisperEventOwner, whisperEvent.from_id, whisperEvent.recipient.id);
@@ -82,10 +78,10 @@ export default class IncomingWhisperCommandEventTranslator extends EventSubscrip
         this.incomingWhisperEventEmitter.emit(event);
     }
 
-    protected async filter(data: IPubSubResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPubSubResponse,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

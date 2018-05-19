@@ -19,36 +19,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
     assert,
 } from "check-types";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IDistributedEvent from "../idistributed-event";
 import DistributedEventRepositoryClass from "../repository/distributed-event-repository";
 import IDistributedEventSchema from "../repository/idistributed-event-schema";
 
+@asrt(0)
 @autoinject
 export default class DistributedEventStorageManager {
     private readonly DistributedEventRepository: typeof DistributedEventRepositoryClass;
-    private logger: PinoLogger;
 
-    constructor(
-        logger: PinoLogger,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof logger, "object");
-
-        this.logger = logger.child(this.constructor.name);
-
+    constructor() {
         // TODO: use injectable type?
         this.DistributedEventRepository = DistributedEventRepositoryClass;
     }
 
-    public async getByDistributedEventTopic(topic: string): Promise<IDistributedEvent[]> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async getByDistributedEventTopic(
+        @asrt() topic: string,
+    ): Promise<IDistributedEvent[]> {
         assert.nonEmptyString(topic);
 
         const findDistributedEvent = {
@@ -64,9 +61,10 @@ export default class DistributedEventStorageManager {
         return distributedEvents as IDistributedEvent[];
     }
 
-    public async store(distributedEvent: IDistributedEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof distributedEvent, "object");
+    @asrt(1)
+    public async store(
+        @asrt() distributedEvent: IDistributedEvent,
+    ): Promise<void> {
         assert.nonEmptyString(distributedEvent.topic);
 
         const distributedEventAfterStoring = await this.DistributedEventRepository.create(distributedEvent);

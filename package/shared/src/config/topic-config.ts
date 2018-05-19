@@ -19,14 +19,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
+@asrt(1)
 export default abstract class TopicConfig {
     constructor(
-        private readonly topicWithSeparators: string,
+        @asrt() private readonly topicWithSeparators: string,
     ) {
-        assert.hasLength(arguments, 1);
         assert.nonEmptyString(typeof topicWithSeparators);
     }
 

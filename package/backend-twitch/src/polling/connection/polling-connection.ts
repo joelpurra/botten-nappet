@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -51,6 +54,7 @@ interface IDataHandlerObject {
     filter: DataFilter;
 }
 
+@asrt()
 export default abstract class PollingConnection<T> implements IPollingConnection<T> {
     protected logger: PinoLogger;
     private intervalSubscription: Rx.Subscription | null;
@@ -70,15 +74,15 @@ export default abstract class PollingConnection<T> implements IPollingConnection
     ];
 
     constructor(
-        logger: PinoLogger,
-        private readonly intervalInMilliseconds: number,
-        private readonly atBegin: boolean,
-        private readonly method: string,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly intervalInMilliseconds: number,
+        @asrt() private readonly atBegin: boolean,
+        @asrt() private readonly method: string,
         private dataSerializer?: RequestHelper,
         private defaultHeaders?: IHttpHeaders,
         private defaultData?: IHttpData,
     ) {
-        assert(arguments.length === 4 || arguments.length === 5 || arguments.length === 6);
+        assert(arguments.length === 4 || arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
         assert.equal(typeof logger, "object");
         assert.number(intervalInMilliseconds);
         assert.greater(intervalInMilliseconds, 0);
@@ -104,22 +108,20 @@ export default abstract class PollingConnection<T> implements IPollingConnection
     }
 
     public get dataObservable(): Rx.Observable<T> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.sharedpollingObservable);
 
         // TODO: better null handling.
         return this.sharedpollingObservable!;
     }
 
+    @asrt(0)
     public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.disconnect();
         await this.connect();
     }
 
+    @asrt(0)
     public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.null(this.pollingSubject);
         assert.null(this.pollingSubcription);
 
@@ -173,8 +175,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         }
     }
 
+    @asrt(0)
     public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.intervalSubscription);
         assert.not.null(this.pollingSubject);
         assert.not.null(this.pollingSubcription);
@@ -220,9 +222,10 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
     protected abstract async getData(): Promise<IHttpData>;
 
-    protected async dataHandler(data: any): Promise<void> {
-        assert.hasLength(arguments, 1);
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: any,
+    ): Promise<void> {
         const applicableHandlers = await Bluebird.filter(
             this.dataHandlerObjects,
             (dataHandler) => Promise.resolve(dataHandler.filter(data))
@@ -251,7 +254,10 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         );
     }
 
-    protected async parseMessage(rawMessage: any): Promise<T> {
+    @asrt(1)
+    protected async parseMessage(
+        @asrt() rawMessage: any,
+    ): Promise<T> {
         // TODO: parse outside this function?
         // TODO: try-catch for bad messages.
         const data: T = rawMessage as T;
@@ -259,9 +265,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         return data;
     }
 
+    @asrt(0)
     private async getAllHeaders(): Promise<IHttpHeaders> {
-        assert.hasLength(arguments, 0);
-
         const overriddenHeaders = await this.getHeaders();
 
         const headers = {
@@ -272,9 +277,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         return headers;
     }
 
+    @asrt(0)
     private async getAllData(): Promise<IHttpData> {
-        assert.hasLength(arguments, 0);
-
         const overriddenData = await this.getData();
 
         const data = {
@@ -283,6 +287,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         };
 
         if (this.dataSerializer) {
+            // TODO: fix return type.
             const serializedData = this.dataSerializer.serialize(data);
 
             return serializedData;
@@ -291,8 +296,8 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         return data;
     }
 
+    @asrt(0)
     private async sendInternal(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.pollingSubject);
 
         const [

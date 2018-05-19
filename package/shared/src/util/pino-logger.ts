@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 
@@ -30,10 +33,11 @@ import {
     assert,
 } from "check-types";
 
+@asrt(1)
 @autoinject
 export default class PinoLogger {
     constructor(
-        private readonly parentPinoLogger: Logger,
+        @asrt() private readonly parentPinoLogger: Logger,
     ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof parentPinoLogger, "object");

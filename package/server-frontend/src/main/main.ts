@@ -25,8 +25,8 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -34,29 +34,24 @@ import FrontendConfig from "../config/frontend-config";
 
 import FrontendManagerMain from "./manager-main";
 
+@asrt(2)
 export default class FrontendMain implements IStartableStoppable {
     constructor(
-        @context(FrontendManagerMain, "FrontendManagerMain")
+        @asrt() @context(FrontendManagerMain, "FrontendManagerMain")
         private readonly frontendManagerMain: () => FrontendManagerMain,
-        @scoped(FrontendConfig)
+        @asrt() @scoped(FrontendConfig)
         private readonly frontendConfig: FrontendConfig,
-    ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof frontendManagerMain, "function");
-        assert.equal(typeof frontendConfig, "object");
-    }
+    ) { }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         this.frontendConfig.validate();
 
         await this.frontendManagerMain().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

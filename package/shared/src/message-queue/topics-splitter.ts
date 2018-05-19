@@ -19,25 +19,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
     assert,
 } from "check-types";
 
+@asrt(0)
 @autoinject
 export default class TopicHelper {
     private readonly topicsStringSeparator: string;
 
     constructor() {
-        assert.hasLength(arguments, 0);
-
         // TODO: configurable.
         this.topicsStringSeparator = ":";
     }
 
-    public async split(topicsString: string): Promise<string[]> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async split(
+        @asrt() topicsString: string,
+    ): Promise<string[]> {
         assert.nonEmptyString(topicsString);
 
         const splitTopics = topicsString.split(this.topicsStringSeparator);

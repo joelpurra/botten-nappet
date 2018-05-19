@@ -19,18 +19,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import {
     EmbeddedDocument,
 } from "camo";
 
+@asrt(0)
 export default class RawTokenEmbeddedDocument extends EmbeddedDocument {
     constructor() {
         super();
-
-        assert.hasLength(arguments, 0);
 
         super.schema({
             access_token: {

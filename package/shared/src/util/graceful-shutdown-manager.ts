@@ -19,11 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
     assert,
 } from "check-types";
+
 import Rx, {
     Subject,
 } from "rxjs";
@@ -39,6 +43,7 @@ import PinoLogger from "./pino-logger";
 
 type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
 
+@asrt(1)
 @autoinject
 export default class GracefulShutdownManager {
     private shutdownObservableInternal: Rx.Observable<void> | null;
@@ -56,10 +61,9 @@ export default class GracefulShutdownManager {
     };
     private logger: PinoLogger;
 
-    constructor(logger: PinoLogger) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof logger, "object");
-
+    constructor(
+        @asrt() logger: PinoLogger,
+    ) {
         this.logger = logger.child(this.constructor.name);
 
         this.handleSignalEvent = this.handleSignalEvent.bind(this);
@@ -83,8 +87,8 @@ export default class GracefulShutdownManager {
         this.shutdownPromise = null;
     }
 
+    @asrt(0)
     public async start() {
-        assert.hasLength(arguments, 0);
         assert.null(this.shutdownSubject);
         assert.null(this.shutdownObservableInternal);
         assert.null(this.shutdownPromise);
@@ -136,8 +140,8 @@ export default class GracefulShutdownManager {
             .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
     }
 
+    @asrt(0)
     public async stop() {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.shutdownSubject);
         assert.not.null(this.shutdownObservableInternal);
         assert.not.null(this.shutdownPromise);
@@ -164,8 +168,8 @@ export default class GracefulShutdownManager {
         this.shutdownSubject = null;
     }
 
+    @asrt(0)
     public async shutdown() {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.shutdownSubject);
 
         // TODO: better null handling.
@@ -173,39 +177,52 @@ export default class GracefulShutdownManager {
     }
 
     public get shutdownObservable(): Rx.Observable<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.shutdownObservableInternal);
 
         // TODO: better null handling.
         return this.shutdownObservableInternal!;
     }
 
+    @asrt(0)
     public async waitForShutdownSignal() {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.shutdownPromise);
 
         return this.shutdownPromise;
     }
 
-    private async handleExitEvent(code: number): Promise<void> {
+    @asrt(1)
+    private async handleExitEvent(
+        @asrt() code: number,
+    ): Promise<void> {
         return this.handleEvent("exit", code);
     }
 
-    private async handleUncaughtExceptionEvent(error: Error): Promise<void> {
+    @asrt(1)
+    private async handleUncaughtExceptionEvent(
+        @asrt() error: Error,
+    ): Promise<void> {
         return this.handleEvent("uncaughtException", error);
     }
 
-    private async handleUnhandledRejectionEvent(reason: any, promise: Promise<any>): Promise<void> {
+    @asrt(2)
+    private async handleUnhandledRejectionEvent(
+        reason: any,
+        promise: Promise<any>,
+    ): Promise<void> {
         return this.handleEvent("unhandledRejection", reason, promise);
     }
 
-    private async handleSignalEvent(signal: NodeJS.Signals): Promise<void> {
+    @asrt(1)
+    private async handleSignalEvent(
+        signal: NodeJS.Signals,
+    ): Promise<void> {
         return this.handleEvent(signal, signal);
     }
 
-    private async handleEvent(shutdownEvent: ShutdownEvent, ...args: any[]): Promise<void> {
-        // TODO: test/ensure that the right number of arguments are passed from each event/signal type.
-        // assert.hasLength(arguments, 1);
+    private async handleEvent(
+        shutdownEvent: ShutdownEvent,
+        ...args: any[],
+    ): Promise<void> {
         assert.equal(typeof shutdownEvent, "string");
 
         const argsAsStrings = args.map((arg) => {

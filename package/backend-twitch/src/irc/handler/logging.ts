@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -28,31 +28,28 @@ import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 import IIRCConnection from "../connection/iirc-connection";
 import IrcManager from "../connection/irc-manager";
 
+@asrt(2)
 export default class LoggingIrcHandler extends IrcManager {
     constructor(
-        logger: PinoLogger,
-        connection: IIRCConnection,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IIRCConnection,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<boolean> {
         return true;
     }
 }

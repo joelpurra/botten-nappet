@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -31,26 +31,22 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(3)
 export default class NewChatterIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<void> {
         const tags = data.tags!;
         const username = tags.login;
 
@@ -73,10 +69,10 @@ export default class NewChatterIrcHandler extends EventSubscriptionManager<IInco
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<boolean> {
         if (data.command !== "USERNOTICE") {
             return false;
         }

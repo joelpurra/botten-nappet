@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -42,38 +45,30 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 
 /* tslint:enable max-line-length */
 
+@asrt(7)
 export default class TwitchPerUserPollingApi {
     private startables: IStartableStoppable[];
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        @scoped(IncomingFollowingCommandEventTranslator)
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() @scoped(IncomingFollowingCommandEventTranslator)
         private readonly twitchIncomingFollowingCommandEventTranslator: IncomingFollowingCommandEventTranslator,
-        @scoped(IncomingStreamingCommandEventTranslator)
+        @asrt() @scoped(IncomingStreamingCommandEventTranslator)
         private readonly twitchIncomingStreamingCommandEventTranslator: IncomingStreamingCommandEventTranslator,
-        @scoped(IncomingCheermotesCommandEventTranslator)
+        @asrt() @scoped(IncomingCheermotesCommandEventTranslator)
         private readonly twitchIncomingCheermotesCommandEventTranslator: IncomingCheermotesCommandEventTranslator,
-        private readonly twitchUserNameProvider: TwitchUserNameProvider,
-        private readonly twitchUserIdProvider: TwitchUserIdProvider,
+        @asrt() private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
-        assert.hasLength(arguments, 7);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof gracefulShutdownManager, "object");
-        assert.equal(typeof twitchIncomingFollowingCommandEventTranslator, "object");
-        assert.equal(typeof twitchIncomingStreamingCommandEventTranslator, "object");
-        assert.equal(typeof twitchIncomingCheermotesCommandEventTranslator, "object");
-        assert.equal(typeof twitchUserNameProvider, "object");
-        assert.equal(typeof twitchUserIdProvider, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.startables, 0);
 
         this.startables.push(this.twitchIncomingFollowingCommandEventTranslator);
@@ -90,9 +85,8 @@ export default class TwitchPerUserPollingApi {
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

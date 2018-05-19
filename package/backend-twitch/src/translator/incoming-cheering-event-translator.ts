@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -37,26 +37,22 @@ import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/se
 
 /* tslint:enable:max-line-length */
 
+@asrt(3)
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
-        private readonly incomingCheeringEventEmitter: IncomingCheeringEventTopicPublisher,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
+        @asrt() private readonly incomingCheeringEventEmitter: IncomingCheeringEventTopicPublisher,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingCheeringEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPubSubResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPubSubResponse,
+    ): Promise<void> {
         // TODO: create type/interface for bits.
         const bitsEvent: any = data.data!.messageParsed.data;
 
@@ -79,10 +75,10 @@ export default class IncomingCheeringCommandEventTranslator extends EventSubscri
         this.incomingCheeringEventEmitter.emit(event);
     }
 
-    protected async filter(data: IPubSubResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPubSubResponse,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

@@ -22,6 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -44,26 +47,20 @@ import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 import WebSocketConnection from "../../websocket/connection/websocket-connection";
 import IIRCConnection from "./iirc-connection";
 
+@asrt(5)
 @autoinject
 export default class IrcConnection
     extends WebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand>
     implements IIRCConnection {
 
     constructor(
-        private readonly ircConfig: IrcConfig,
-        logger: PinoLogger,
-        private readonly userChannelNameProvider: UserChannelNameProvider,
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userAccessTokenProvider: UserAccessTokenProvider,
+        @asrt() ircConfig: IrcConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly userChannelNameProvider: UserChannelNameProvider,
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userAccessTokenProvider: UserAccessTokenProvider,
     ) {
         super(logger, ircConfig.twitchIrcWebSocketUri, "irc");
-
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof ircConfig, "object");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof userChannelNameProvider, "object");
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userAccessTokenProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
@@ -72,6 +69,7 @@ export default class IrcConnection
         return this.userChannelNameProvider.get();
     }
 
+    @asrt(0)
     protected async getSetupConnectionCommands(): Promise<Array<
         IWebSocketCommand<IIncomingIrcCommand, IOutgoingIrcCommand>
         >> {
@@ -144,7 +142,10 @@ export default class IrcConnection
         return setupConnectionCommands;
     }
 
-    protected async parseMessage(rawMessage: string): Promise<IIncomingIrcCommand> {
+    @asrt(1)
+    protected async parseMessage(
+        @asrt() rawMessage: string,
+    ): Promise<IIncomingIrcCommand> {
         // NOTE: parts of the parseMessage function comes from official Twitch example code; see license note.
         // https://github.com/twitchdev/chat-samples/blob/master/javascript/chatbot.js
 
@@ -220,7 +221,10 @@ export default class IrcConnection
         return incomingMessage;
     }
 
-    protected async serializeMessage(data: IOutgoingIrcCommand): Promise<string> {
+    @asrt(1)
+    protected async serializeMessage(
+        @asrt() data: IOutgoingIrcCommand,
+    ): Promise<string> {
         // TODO: serialize data.tags.
         let message = null;
 

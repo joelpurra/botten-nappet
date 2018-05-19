@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import Bluebird from "bluebird";
@@ -43,39 +46,23 @@ import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/u
 import CSRFHelper from "./csrf-helper";
 import RequestHelper from "./request-helper";
 
+@asrt(5)
 @autoinject
 export default class UserTokenHelper {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly csrfHelper: CSRFHelper,
-        private readonly userStorageManager: UserStorageManager,
-        private readonly requestHelper: RequestHelper,
-        private readonly userAuthenticationConfig: UserAuthenticationConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly csrfHelper: CSRFHelper,
+        @asrt() private readonly userStorageManager: UserStorageManager,
+        @asrt() private readonly requestHelper: RequestHelper,
+        @asrt() private readonly userAuthenticationConfig: UserAuthenticationConfig,
     ) {
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof csrfHelper, "object");
-        assert.equal(typeof userStorageManager, "object");
-        assert.equal(typeof requestHelper, "object");
-        assert.equal(typeof userAuthenticationConfig, "object");
-
-        assert.nonEmptyString(userAuthenticationConfig.twitchOAuthAuthorizationUri);
-        assert(userAuthenticationConfig.twitchOAuthAuthorizationUri.startsWith("https://"));
-        assert.nonEmptyString(userAuthenticationConfig.twitchAppOAuthRedirectUrl);
-        assert(userAuthenticationConfig.twitchAppOAuthRedirectUrl.startsWith("https://"));
-        assert.nonEmptyString(userAuthenticationConfig.twitchOAuthTokenUri);
-        assert(userAuthenticationConfig.twitchOAuthTokenUri.startsWith("https://"));
-        assert.nonEmptyString(userAuthenticationConfig.twitchAppClientId);
-        assert.nonEmptyString(userAuthenticationConfig.twitchAppClientSecret);
-
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     public async getUserTokenFromUserTerminalPrompt(): Promise<IRawToken> {
-        assert.hasLength(arguments, 0);
-
         // https://dev.twitch.tv/docs/authentication#oauth-authorization-code-flow-user-access-tokens
         // const sampleResponse = {
         //     "access_token": "0123456789abcdefghijABCDEFGHIJ",
@@ -111,8 +98,10 @@ export default class UserTokenHelper {
         return rawToken;
     }
 
-    public async getUserTokenFromDatabase(username: string): Promise<IAugmentedToken | null> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async getUserTokenFromDatabase(
+        @asrt() username: string,
+    ): Promise<IAugmentedToken | null> {
         assert.nonEmptyString(username);
 
         const user = await this.userStorageManager.getByUsername(username);
@@ -137,12 +126,11 @@ export default class UserTokenHelper {
         return token;
     }
 
-    public async store(username: string, rawToken: IRawToken): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 2);
+    @asrt(2)
+    public async store(
+        @asrt() username: string, rawToken: IRawToken,
+    ): Promise<IAugmentedToken> {
         assert.nonEmptyString(username);
-        assert.not.null(rawToken);
-        assert.equal(typeof rawToken, "object");
-        assert.equal(typeof rawToken.access_token, "string");
 
         const userAfterStoring = await this.userStorageManager.storeToken(username, rawToken);
 
@@ -153,8 +141,10 @@ export default class UserTokenHelper {
         return augmentedToken;
     }
 
-    public async forget(username: string): Promise<IUser> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async forget(
+        @asrt() username: string,
+    ): Promise<IUser> {
         assert.nonEmptyString(username);
 
         const userAfterStoring = await this.userStorageManager.storeToken(username, null);
@@ -164,8 +154,10 @@ export default class UserTokenHelper {
         return userAfterStoring;
     }
 
-    public async get(username: string): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async get(
+        @asrt() username: string,
+    ): Promise<IAugmentedToken> {
         assert.nonEmptyString(username);
 
         let result = null;
@@ -186,13 +178,10 @@ export default class UserTokenHelper {
         return result;
     }
 
-    public async refresh(tokenToRefresh: IAugmentedToken): Promise<IRawToken> {
-        assert.hasLength(arguments, 1);
-        assert.not.null(tokenToRefresh);
-        assert.equal(typeof tokenToRefresh, "object");
-        assert.not.null(tokenToRefresh.token);
-        assert.equal(typeof tokenToRefresh.token, "object");
-
+    @asrt(1)
+    public async refresh(
+        @asrt() tokenToRefresh: IAugmentedToken,
+    ): Promise<IRawToken> {
         const data = {
             client_id: this.userAuthenticationConfig.twitchAppClientId,
             client_secret: this.userAuthenticationConfig.twitchAppClientSecret,
@@ -215,8 +204,10 @@ export default class UserTokenHelper {
         return rawRefreshedToken;
     }
 
-    private async getUserAuthorizationUrl(randomCSRF: string): Promise<string> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    private async getUserAuthorizationUrl(
+        @asrt() randomCSRF: string,
+    ): Promise<string> {
         assert.nonEmptyString(randomCSRF);
 
         // TODO: configure scopes per request or per activity/subclass.
@@ -244,8 +235,11 @@ export default class UserTokenHelper {
         return url;
     }
 
-    private async parseCodeFromAnswer(answer: string, randomCSRF: string): Promise<string> {
-        assert.hasLength(arguments, 2);
+    @asrt(2)
+    private async parseCodeFromAnswer(
+        @asrt() answer: string,
+        @asrt() randomCSRF: string,
+    ): Promise<string> {
         assert.nonEmptyString(answer);
         assert.nonEmptyString(randomCSRF);
 
@@ -278,9 +272,8 @@ export default class UserTokenHelper {
         return code;
     }
 
+    @asrt(0)
     private async promptForCodeOrUrl(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
@@ -301,8 +294,10 @@ export default class UserTokenHelper {
         return answer;
     }
 
-    private async promptToOpenAuthorizationUrl(userAuthorizationUrl: string): Promise<void> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    private async promptToOpenAuthorizationUrl(
+        @asrt() userAuthorizationUrl: string,
+    ): Promise<void> {
         assert.nonEmptyString(userAuthorizationUrl);
         assert(userAuthorizationUrl.startsWith("https://"));
 
@@ -311,9 +306,8 @@ export default class UserTokenHelper {
         /* tslint:enable:no-console */
     }
 
+    @asrt(0)
     private async getUserAuthorizationCode(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         // TODO: replace with an https server.
         const randomCSRF = await this.csrfHelper.getRandomCSRF();
 

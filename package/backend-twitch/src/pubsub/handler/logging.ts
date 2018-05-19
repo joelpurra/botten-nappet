@@ -19,36 +19,36 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IPubSubConnection from "../connection/ipubsub-connection";
 import PubSubManager from "../connection/pubsub-manager";
 
+@asrt(2)
 export default class LoggingPubSubHandler extends PubSubManager {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IPubSubConnection,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: object): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: object,
+    ): Promise<void> {
         // TODO: verify that the data contains both the topic and the actual message data.
         this.logger.trace(data, "dataHandler");
     }
 
-    protected async filter(data: object): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: object,
+    ): Promise<boolean> {
         // TODO: verify that the data contains both the topic and the actual message data.
         return true;
     }

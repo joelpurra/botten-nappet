@@ -19,22 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-dependency-injection";
-import {
-    assert,
-} from "check-types";
 
 import SharedConfig from "./shared-config";
 
+@asrt(1)
 @autoinject
 export default class SharedTopicsConfig {
     constructor(
-        private readonly sharedConfig: SharedConfig,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof sharedConfig, "object");
-    }
+        @asrt() private readonly sharedConfig: SharedConfig,
+    ) { }
 
     public get topicTwitchIncomingFollowingEvent(): string {
         return this.sharedConfig.topicTwitchIncomingFollowingEvent;

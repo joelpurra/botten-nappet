@@ -19,11 +19,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 
+@asrt(0)
 @autoinject
 export default class ExternalRawTopic extends TopicConfig {
     constructor() {

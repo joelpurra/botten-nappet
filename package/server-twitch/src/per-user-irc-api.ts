@@ -21,10 +21,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import Bluebird from "bluebird";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -47,39 +47,30 @@ import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/ser
 
 /* tslint:enable max-line-length */
 
+@asrt(7)
 export default class TwitchPerUserIrcApi implements IStartableStoppable {
     private startables: IStartableStoppable[];
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly twitchIrcConnection: TwitchIrcConnection,
-        private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() private readonly twitchIrcConnection: TwitchIrcConnection,
+        @asrt() private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingIrcCommandTopicPublisher)
+        @asrt() @scoped(IncomingIrcCommandTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingIrcCommand:
             IncomingIrcCommandTopicPublisher,
-        private readonly twitchUserNameProvider: TwitchUserNameProvider,
-        private readonly twitchUserIdProvider: TwitchUserIdProvider,
+        @asrt() private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
-        assert.hasLength(arguments, 7);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof gracefulShutdownManager, "object");
-        assert.equal(typeof twitchIrcConnection, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand, "object");
-        assert.equal(typeof messageQueueTopicPublisherForIIncomingIrcCommand, "object");
-        assert.equal(typeof twitchUserNameProvider, "object");
-        assert.equal(typeof twitchUserIdProvider, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(this.startables, 0);
-
         const twitchIrcReconnectHandler = new TwitchIrcReconnectHandler(
             this.logger,
             this.twitchIrcConnection,
@@ -122,6 +113,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.

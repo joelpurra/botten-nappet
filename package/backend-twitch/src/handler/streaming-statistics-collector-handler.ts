@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import moment from "moment";
 
@@ -35,6 +35,7 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(3)
 export default class StreamingStatisticsCollectorHandler
     extends MultiEventSubscriptionManager<IIncomingStreamingEvent | IIncomingIrcCommand> {
     private commandName: string;
@@ -47,16 +48,11 @@ export default class StreamingStatisticsCollectorHandler
     private collectionCount: number;
 
     constructor(
-        logger: PinoLogger,
-        connections: Array<IEventSubscriptionConnection<IIncomingStreamingEvent | IIncomingIrcCommand>>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() logger: PinoLogger,
+        @asrt() connections: Array<IEventSubscriptionConnection<IIncomingStreamingEvent | IIncomingIrcCommand>>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connections);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connections, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
 
@@ -74,10 +70,10 @@ export default class StreamingStatisticsCollectorHandler
         this.collectionCount = 0;
     }
 
-    protected async dataHandler(data: IIncomingStreamingEvent | IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingStreamingEvent | IIncomingIrcCommand,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         let emitResponse = false;
@@ -170,10 +166,10 @@ export default class StreamingStatisticsCollectorHandler
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingStreamingEvent | IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingStreamingEvent | IIncomingIrcCommand,
+    ): Promise<boolean> {
         if (this.isIIncomingStreamingEvent(data)) {
             return true;
         }

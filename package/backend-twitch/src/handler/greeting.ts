@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -32,21 +32,17 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(4)
 export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomingIrcCommand> {
     private greetings: RegExp[];
 
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        private readonly outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        @asrt() private readonly outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() private readonly twitchUserNameProvider: TwitchUserNameProvider,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
 
@@ -71,10 +67,10 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         ];
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<void> {
         this.logger.trace("Responding to greeting.", data.username, data.message, "dataHandler");
 
         const userIsASubscriber = data.tags!.subscriber === "1";
@@ -100,10 +96,10 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<boolean> {
         if (data.command !== "PRIVMSG") {
             return false;
         }

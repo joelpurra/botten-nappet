@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import {
     Document,
@@ -29,6 +29,7 @@ import {
 import AugmentedTokenEmbeddedDocument from "./embedded-documents/augmented-token-embedded-document";
 import IUserSchema from "./iuser-schema";
 
+@asrt(0)
 export default class UserRepository extends Document<IUserSchema> {
 
     public static collectionName() {
@@ -37,8 +38,6 @@ export default class UserRepository extends Document<IUserSchema> {
 
     constructor() {
         super();
-
-        assert.hasLength(arguments, 0);
 
         super.schema({
             twitchToken: {

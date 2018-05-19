@@ -66,9 +66,12 @@ export default async function main(): Promise<void> {
     const packageJson = await loadPackageJson();
     rootContainer.registerInstance("IPackageJson", packageJson);
 
-    const rootLoggerResolver = rootContainer.get(RootLoggerResolver);
+    // TODO: is this a proper custom resolver?
+    const rootLoggerResolver: RootLoggerResolver = rootContainer.get(RootLoggerResolver);
     const rootLogger = rootLoggerResolver.get();
     rootContainer.registerInstance(PinoLogger, rootLogger);
+    // rootContainer.autoRegister(PinoLogger, RootLoggerResolver);
+    // const rootLogger = rootContainer.get(PinoLogger);
 
     const sharedContainerRoot = rootContainer.get(SharedContainerRoot) as SharedContainerRoot;
 

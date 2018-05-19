@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -33,21 +36,17 @@ import IOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/eve
 
 import AuthenticatedRequest from "../request/authenticated-request";
 
+@asrt(5)
 export default class OutgoingSearchCommandHandler extends EventSubscriptionManager<IOutgoingSearchCommand> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IOutgoingSearchCommand>,
-        private incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>,
-        private readonly authenticatedRequest: AuthenticatedRequest,
-        private readonly vidyRootUrl: string,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IOutgoingSearchCommand>,
+        @asrt() private incomingSearchResultEventEmitter: IEventEmitter<IIncomingSearchResultEvent>,
+        @asrt() private readonly authenticatedRequest: AuthenticatedRequest,
+        @asrt() private readonly vidyRootUrl: string,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingSearchResultEventEmitter, "object");
-        assert.equal(typeof authenticatedRequest, "object");
         assert.nonEmptyString(vidyRootUrl);
         assert(vidyRootUrl.startsWith("https://"));
         assert(vidyRootUrl.endsWith("/"));
@@ -55,10 +54,10 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IOutgoingSearchCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IOutgoingSearchCommand,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         // NOTE: starts without a forward slash.
@@ -75,10 +74,10 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
         this.incomingSearchResultEventEmitter.emit(event);
     }
 
-    protected async filter(data: IOutgoingSearchCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IOutgoingSearchCommand,
+    ): Promise<boolean> {
         return true;
     }
 }

@@ -37,6 +37,9 @@ import {
 import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-event";
 import IIncomingCheeringWithCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheering-with-cheermotes-event";
 import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-cheermotes-event";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import {
     CheermoteBackground,
@@ -45,22 +48,18 @@ import {
 
 /* tslint:enable max-line-length */
 
+@asrt(3)
 export default class CheeringWithCheermotesHandler
     extends MultiEventSubscriptionManager<IIncomingCheeringEvent | IIncomingCheermotesEvent> {
     public cheerTokenPrefixAmountRx: RegExp;
     public currentCheermotes: IIncomingCheermotesEvent | null;
 
     constructor(
-        logger: PinoLogger,
-        connections: Array<IEventSubscriptionConnection<IIncomingCheeringEvent | IIncomingCheermotesEvent>>,
-        private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>,
+        @asrt() logger: PinoLogger,
+        @asrt() connections: Array<IEventSubscriptionConnection<IIncomingCheeringEvent | IIncomingCheermotesEvent>>,
+        @asrt() private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>,
     ) {
         super(logger, connections);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connections, "object");
-        assert.equal(typeof incomingCheeringWithCheermotesEvent, "object");
 
         this.logger = logger.child(this.constructor.name);
 
@@ -71,12 +70,10 @@ export default class CheeringWithCheermotesHandler
         this.cheerTokenPrefixAmountRx = /(\w+?)(\d+)/;
     }
 
-    protected async dataHandler(data: IIncomingCheeringEvent | IIncomingCheermotesEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
-        // this.logger.trace(data, "dataHandler");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingCheeringEvent | IIncomingCheermotesEvent,
+    ): Promise<void> {
         if (this.isIIncomingCheermotesEvent(data)) {
             this.currentCheermotes = data;
 
@@ -114,10 +111,10 @@ export default class CheeringWithCheermotesHandler
         throw new Error(`Unknown data object: ${Object.keys(data)}`);
     }
 
-    protected async filter(data: IIncomingCheeringEvent | IIncomingCheermotesEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingCheeringEvent | IIncomingCheermotesEvent,
+    ): Promise<boolean> {
         if (this.isIIncomingCheermotesEvent(data)) {
             return true;
         }
@@ -129,7 +126,10 @@ export default class CheeringWithCheermotesHandler
         throw new Error("Unknown event type");
     }
 
-    private getMatchingCheermotes(incomingCheeringEvent: IIncomingCheeringEvent): ICheerToken[] {
+    @asrt(1)
+    private getMatchingCheermotes(
+        @asrt() incomingCheeringEvent: IIncomingCheeringEvent,
+    ): ICheerToken[] {
         // TODO: use asserts.
         if (!this.currentCheermotes) {
             throw new Error("this.currentCheermotes");
@@ -171,10 +171,11 @@ export default class CheeringWithCheermotesHandler
         return matchingCheerTokens;
     }
 
+    @asrt(3)
     private addCheermoteUrls(
-        cheerTokens: ICheerToken[],
-        cheermoteBackground: CheermoteBackground,
-        cheermoteImageType: CheermoteImageType,
+        @asrt() cheerTokens: ICheerToken[],
+        @asrt() cheermoteBackground: CheermoteBackground,
+        @asrt() cheermoteImageType: CheermoteImageType,
     ): ICheerTokenWithCheermoteUrl[] {
         // TODO: use asserts.
         if (!this.currentCheermotes) {
@@ -225,8 +226,9 @@ export default class CheeringWithCheermotesHandler
         return cheerTokensWithCheermoteUrl;
     }
 
+    @asrt(1)
     private isIIncomingCheermotesEvent(
-        data: any,
+        @asrt() data: any,
     ): data is IIncomingCheermotesEvent {
         const isMatch = (
             data
@@ -238,8 +240,9 @@ export default class CheeringWithCheermotesHandler
         return isMatch;
     }
 
+    @asrt(1)
     private isIIncomingCheeringEvent(
-        data: any,
+        @asrt() data: any,
     ): data is IIncomingCheeringEvent {
         const isMatch = (
             data

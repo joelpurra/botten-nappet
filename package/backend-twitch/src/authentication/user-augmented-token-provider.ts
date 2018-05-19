@@ -19,31 +19,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
 import UserNameProvider from "./user-name-provider";
 import UserTokenManager from "./user-token-manager";
 
+@asrt(2)
 @autoinject
 export default class UserAugmentedTokenProvider {
     constructor(
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userTokenManager: UserTokenManager,
-    ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userTokenManager, "object");
-    }
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userTokenManager: UserTokenManager,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 0);
-
         const username = await this.userNameProvider.get();
         const userAugmentedToken = await this.userTokenManager.get(username);
 

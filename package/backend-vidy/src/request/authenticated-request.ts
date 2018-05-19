@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -36,25 +39,24 @@ import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 
 import IClientContext from "./iclient-context";
 
+@asrt(2)
 @autoinject
 export default class AuthenticatedRequest {
     constructor(
-        private readonly backendConfig: BackendConfig,
-        private readonly sharedConfig: SharedConfig,
-    ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof backendConfig, "object");
-        assert.equal(typeof sharedConfig, "object");
-    }
+        @asrt() private readonly backendConfig: BackendConfig,
+        @asrt() private readonly sharedConfig: SharedConfig,
+    ) { }
 
-    public async request<T>(method: string, url: string, params: object): Promise<T> {
-        assert.hasLength(arguments, 3);
+    @asrt(3)
+    public async request<T>(
+        @asrt() method: string,
+        @asrt() url: string,
+        @asrt() params: object,
+    ): Promise<T> {
         assert.nonEmptyString(method);
         assert.nonEmptyString(url);
         assert(url.startsWith("https://"));
         assert(url.startsWith(this.backendConfig.vidyRootUrl));
-        assert.not.null(params);
-        assert.equal(typeof params, "object");
 
         const headers = await this.getHeaders(method, url);
 
@@ -73,21 +75,35 @@ export default class AuthenticatedRequest {
         return data as T;
     }
 
-    public async get<T>(url: string, params: object): Promise<T> {
+    @asrt(2)
+    public async get<T>(
+        @asrt() url: string,
+        @asrt() params: object,
+    ): Promise<T> {
         return this.request<T>("get", url, params);
     }
 
-    public async post<T>(url: string, params: object): Promise<T> {
+    @asrt(2)
+    public async post<T>(
+        @asrt() url: string,
+        @asrt() params: object,
+    ): Promise<T> {
         return this.request<T>("post", url, params);
     }
 
-    private stringToBase64(str: string): string {
+    @asrt(1)
+    private stringToBase64(
+        @asrt() str: string,
+    ): string {
         // TODO: use library.
         return Buffer.from(str, "utf8").toString("base64");
     }
 
-    private async getHeaders(method: string, url: string): Promise<object> {
-        assert.hasLength(arguments, 2);
+    @asrt(2)
+    private async getHeaders(
+        @asrt() method: string,
+        @asrt() url: string,
+    ): Promise<object> {
         assert.nonEmptyString(method);
         assert.nonEmptyString(url);
         assert(url.startsWith("https://"));
@@ -135,6 +151,7 @@ export default class AuthenticatedRequest {
         return headers;
     }
 
+    @asrt(0)
     private async getClientContext(): Promise<IClientContext> {
         // TODO: figure out better values for servers.
         const clientContext: IClientContext = {

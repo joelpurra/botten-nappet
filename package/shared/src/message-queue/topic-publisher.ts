@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -32,47 +32,41 @@ import ISendingConnection from "../connection/isending-connection";
 import IEventEmitter from "../event/ievent-emitter";
 import Publisher from "./publisher";
 
+@asrt(3)
 export default abstract class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly publisher: Publisher,
-        private readonly topicConfig: TopicConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly publisher: Publisher,
+        @asrt() private readonly topicConfig: TopicConfig,
     ) {
-        // NOTE: not checking arguments length due to inheritance.
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof publisher, "object");
-        assert.equal(typeof topicConfig, "object");
-
         this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }
 
+    @asrt(0)
     public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.publisher.connect();
 
         this.logger.debug("connected");
     }
 
+    @asrt(0)
     public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.publisher.disconnect();
 
         this.logger.debug("disconnected");
     }
 
+    @asrt(0)
     public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.publisher.reconnect();
     }
 
-    public async send(data: T): Promise<void> {
-        assert.hasLength(arguments, 1);
-
+    @asrt(1)
+    public async send(
+        @asrt() data: T,
+    ): Promise<void> {
         let message = null;
 
         if (typeof data === "string") {

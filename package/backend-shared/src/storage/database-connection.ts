@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import Bluebird from "bluebird";
@@ -34,6 +37,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import DatabaseConfig from "../config/database-config";
 import ICamoDatabaseConnection from "./icamo-database-connection";
 
+@asrt(2)
 @autoinject
 export default class DatabaseConnection {
     public autocompactionInterval: number;
@@ -41,17 +45,9 @@ export default class DatabaseConnection {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly databaseConfig: DatabaseConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly databaseConfig: DatabaseConfig,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof databaseConfig, "object");
-
-        assert.equal(typeof databaseConfig.databaseUri, "string");
-        assert(databaseConfig.databaseUri.length > 0);
-        assert(databaseConfig.databaseUri.startsWith("nedb://"));
-
         this.logger = logger.child(this.constructor.name);
 
         this.database = null;
@@ -60,8 +56,8 @@ export default class DatabaseConnection {
         this.autocompactionInterval = 63912;
     }
 
+    @asrt(0)
     public async connect() {
-        assert.hasLength(arguments, 0);
         assert.equal(this.database, null);
 
         const db = await connect(this.databaseConfig.databaseUri);
@@ -70,8 +66,8 @@ export default class DatabaseConnection {
         return undefined;
     }
 
+    @asrt(0)
     public async disconnect() {
-        assert.hasLength(arguments, 0);
         assert.not.equal(this.database, null);
 
         // NOTE: hack to reach NeDB through Camo.

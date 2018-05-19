@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -36,19 +36,15 @@ import DistributedEventStorageManager from "@botten-nappet/backend-shared/src/st
 
 import ExternalRawTopicsSubscriber from "../message-queue/external-raw-topics-subscriber";
 
+@asrt()
 @autoinject
 export default class ExternalDistributedEventManager extends DistributedEventManager {
     constructor(
-        logger: PinoLogger,
-        connection: ExternalRawTopicsSubscriber,
-        distributedEventStorageManager: DistributedEventStorageManager,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: ExternalRawTopicsSubscriber,
+        @asrt() distributedEventStorageManager: DistributedEventStorageManager,
     ) {
         super(logger, connection, distributedEventStorageManager);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof distributedEventStorageManager, "object");
 
         this.logger = logger.child(this.constructor.name);
     }

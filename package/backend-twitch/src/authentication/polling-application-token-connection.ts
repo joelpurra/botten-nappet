@@ -22,8 +22,8 @@ import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -34,11 +34,12 @@ import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-help
 import PollingApplicationTokenConnectionConfig from "../config/polling-application-token-connection-config";
 import PollingConnection from "../polling/connection/polling-connection";
 
+@asrt(3)
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {
     constructor(
-        logger: PinoLogger,
-        requestHelper: RequestHelper,
-        @scoped(PollingApplicationTokenConnectionConfig)
+        @asrt() logger: PinoLogger,
+        @asrt() requestHelper: RequestHelper,
+        @asrt() @scoped(PollingApplicationTokenConnectionConfig)
         private readonly pollingApplicationTokenConnectionConfig: PollingApplicationTokenConnectionConfig,
     ) {
         super(
@@ -49,42 +50,23 @@ export default class PollingApplicationTokenConnection extends PollingConnection
             requestHelper,
         );
 
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof requestHelper, "object");
-        assert.equal(typeof pollingApplicationTokenConnectionConfig, "object");
-
-        assert.equal(typeof pollingApplicationTokenConnectionConfig.appClientId, "string");
-        assert.greater(pollingApplicationTokenConnectionConfig.appClientId.length, 0);
-        assert.equal(typeof pollingApplicationTokenConnectionConfig.appClientSecret, "string");
-        assert.greater(pollingApplicationTokenConnectionConfig.appClientSecret.length, 0);
-        assert(!isNaN(pollingApplicationTokenConnectionConfig.appTokenRefreshInterval));
-        assert.greater(pollingApplicationTokenConnectionConfig.appTokenRefreshInterval, 0);
-        assert.equal(typeof pollingApplicationTokenConnectionConfig.oauthTokenUri, "string");
-        assert.greater(pollingApplicationTokenConnectionConfig.oauthTokenUri.length, 0);
-        assert(pollingApplicationTokenConnectionConfig.oauthTokenUri.startsWith("https://"));
-        assert(Array.isArray(pollingApplicationTokenConnectionConfig.appScopes));
-
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     protected async getUri(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         return this.pollingApplicationTokenConnectionConfig.oauthTokenUri;
     }
 
+    @asrt(0)
     protected async getHeaders() {
-        assert.hasLength(arguments, 0);
-
         const headers = {};
 
         return headers;
     }
 
+    @asrt(0)
     protected async getData() {
-        assert.hasLength(arguments, 0);
-
         const data = {
             client_id: this.pollingApplicationTokenConnectionConfig.appClientId,
             client_secret: this.pollingApplicationTokenConnectionConfig.appClientSecret,

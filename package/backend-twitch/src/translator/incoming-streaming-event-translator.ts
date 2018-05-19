@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -40,31 +43,25 @@ import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
+@asrt(5)
 @autoinject
 export default class IncomingStreamingCommandEventTranslator extends PollingManager<IPollingStreamingResponse> {
     constructor(
-        logger: PinoLogger,
-        connection: StreamingResponsePollingClientIdConnection,
-        private readonly incomingStreamingEventEmitter: IncomingStreamingEventTopicPublisher,
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userIdProvider: UserIdProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: StreamingResponsePollingClientIdConnection,
+        @asrt() private readonly incomingStreamingEventEmitter: IncomingStreamingEventTopicPublisher,
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingStreamingEventEmitter, "object");
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPollingStreamingResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPollingStreamingResponse,
+    ): Promise<void> {
         data.data.forEach(async (streamEvent) => {
             const userId = parseInt(streamEvent.user_id, 10);
 
@@ -90,10 +87,10 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         });
     }
 
-    protected async filter(data: IPollingStreamingResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPollingStreamingResponse,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }

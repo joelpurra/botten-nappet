@@ -19,22 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-dependency-injection";
-import {
-    assert,
-} from "check-types";
 
 import BackendConfig from "./backend-config";
 
+@asrt(1)
 @autoinject
 export default class DatabaseConfig {
     constructor(
-        private readonly backendConfig: BackendConfig,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof backendConfig, "object");
-    }
+        @asrt() private readonly backendConfig: BackendConfig,
+    ) { }
 
     public get databaseUri(): string {
         return this.backendConfig.databaseUri;

@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     inject,
 } from "aurelia-dependency-injection";
 import {
@@ -31,21 +34,19 @@ import {
 
 import PackageJsonProvider from "@botten-nappet/shared/src/util/package-json-provider";
 
+@asrt(2)
 @inject("IConfig", PackageJsonProvider)
 export default class SharedConfig {
     public prefix: string;
 
     constructor(
-        private readonly config: IConfig,
-        private readonly packageJsonProvider: PackageJsonProvider,
+        @asrt() private readonly config: IConfig,
+        @asrt() private readonly packageJsonProvider: PackageJsonProvider,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof config, "object");
-        assert.equal(typeof packageJsonProvider, "object");
-
         this.prefix = "shared";
     }
 
+    @asrt(0)
     public validate(): any {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.

@@ -24,6 +24,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -38,29 +41,25 @@ import TwitchPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/con
 
 import TwitchPerUserPubSubApi from "./per-user-pubsub-api";
 
+@asrt(3)
 export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        @context(TwitchPerUserPubSubApi, "TwitchPerUserPubSubApi")
+        @asrt() @context(TwitchPerUserPubSubApi, "TwitchPerUserPubSubApi")
         private readonly twitchPerUserPubSubApi: () => TwitchPerUserPubSubApi,
-        logger: PinoLogger,
-        @scoped(TwitchPubSubConnection)
+        @asrt() logger: PinoLogger,
+        @asrt() @scoped(TwitchPubSubConnection)
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
     ) {
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof twitchPerUserPubSubApi, "function");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof twitchAllPubSubTopicsForTwitchUserIdConnection, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.connectables, 0);
 
         this.connectables.push(this.twitchAllPubSubTopicsForTwitchUserIdConnection);
@@ -72,9 +71,8 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
         await this.twitchPerUserPubSubApi().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

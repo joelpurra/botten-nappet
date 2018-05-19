@@ -22,8 +22,8 @@ import {
     context,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -34,25 +34,19 @@ import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publi
 import BackendMain from "@botten-nappet/server-backend/src/main/main";
 import FrontendMain from "@botten-nappet/server-frontend/src/main/main";
 
+@asrt(4)
 export default class SharedContainerRoot implements IStartableStoppable {
     constructor(
-        @context(BackendMain, "BackendMain")
+        @asrt() @context(BackendMain, "BackendMain")
         private readonly backendMain: () => BackendMain,
-        @context(FrontendMain, "FrontendMain")
+        @asrt() @context(FrontendMain, "FrontendMain")
         private readonly frontendMain: () => FrontendMain,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly messageQueuePublisher: MessageQueuePublisher,
-    ) {
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof backendMain, "function");
-        assert.equal(typeof frontendMain, "function");
-        assert.equal(typeof gracefulShutdownManager, "object");
-        assert.equal(typeof messageQueuePublisher, "object");
-    }
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() private readonly messageQueuePublisher: MessageQueuePublisher,
+    ) { }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.gracefulShutdownManager.start();
         await this.messageQueuePublisher.connect();
 
@@ -62,9 +56,8 @@ export default class SharedContainerRoot implements IStartableStoppable {
         ]);
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import {
     Document,
@@ -28,6 +28,7 @@ import {
 
 import IDistributedEventSchema from "./idistributed-event-schema";
 
+@asrt(0)
 export default class DistributedEventRepository extends Document<IDistributedEventSchema> {
 
     public static collectionName() {
@@ -36,8 +37,6 @@ export default class DistributedEventRepository extends Document<IDistributedEve
 
     constructor() {
         super();
-
-        assert.hasLength(arguments, 0);
 
         super.schema({
             messages: {

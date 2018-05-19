@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -29,16 +29,13 @@ import ConnectionManager from "@botten-nappet/shared/src/connection/connection-m
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IIRCConnection from "./iirc-connection";
 
+@asrt(2)
 export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {
     constructor(
-        logger: PinoLogger,
-        protected readonly connection: IIRCConnection,
+        @asrt() logger: PinoLogger,
+        @asrt() protected readonly connection: IIRCConnection,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }

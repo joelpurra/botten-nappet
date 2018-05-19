@@ -19,26 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import UserRawTokenProvider from "./user-raw-token-provider";
 
+@asrt(1)
 @autoinject
 export default class UserAccessTokenProvider {
     constructor(
-        private readonly userRawTokenProvider: UserRawTokenProvider,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof userRawTokenProvider, "object");
-    }
+        @asrt() private readonly userRawTokenProvider: UserRawTokenProvider,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         const userRawToken = await this.userRawTokenProvider.get();
 
         // TODO: better null handling.

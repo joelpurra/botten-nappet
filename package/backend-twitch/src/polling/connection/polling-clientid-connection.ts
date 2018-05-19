@@ -19,29 +19,35 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 import IHttpData from "@botten-nappet/interface-backend-twitch/src/event/ihttp-data";
 import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihttp-header";
 
 import PollingConnection from "./polling-connection";
 
+@asrt()
 export default abstract class PollingClientIdConnection<T> extends PollingConnection<T> {
     constructor(
-        logger: PinoLogger,
-        private readonly applicationClientId: string,
-        interval: number,
-        atBegin: boolean,
-        method: string,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly applicationClientId: string,
+        @asrt() interval: number,
+        @asrt() atBegin: boolean,
+        @asrt() method: string,
+        dataSerializer?: RequestHelper,
         defaultHeaders?: IHttpHeaders,
         defaultData?: IHttpData,
     ) {
-        super(logger, interval, atBegin, method, defaultHeaders, defaultData);
+        super(logger, interval, atBegin, method, dataSerializer, defaultHeaders, defaultData);
 
-        assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7);
+        assert(arguments.length === 5 || arguments.length === 6 || arguments.length === 7 || arguments.length === 8);
         assert.equal(typeof logger, "object");
         assert.equal(typeof applicationClientId, "string");
         assert.greater(applicationClientId.length, 0);
@@ -56,9 +62,8 @@ export default abstract class PollingClientIdConnection<T> extends PollingConnec
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     protected async getHeaders(): Promise<IHttpHeaders> {
-        assert.hasLength(arguments, 0);
-
         const headers = {
             "Accept": "application/vnd.twitchtv.v5+json",
             "Client-ID": `${this.applicationClientId}`,
@@ -70,9 +75,8 @@ export default abstract class PollingClientIdConnection<T> extends PollingConnec
         return headers;
     }
 
+    @asrt(0)
     protected async getData(): Promise<IHttpData> {
-        assert.hasLength(arguments, 0);
-
         const data = {};
 
         return data;

@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -35,19 +38,17 @@ import IUserCamo from "../iuser-camo";
 import IUserSchema from "../repository/iuser-schema";
 import UserRepositoryClass from "../repository/user-repository";
 
+@asrt(1)
 @autoinject
 export default class UserStorageManager {
     private UserRepository: typeof UserRepositoryClass;
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
+        @asrt() logger: PinoLogger,
         // TODO: inject the static UserRepositoryClass.
         // private UserRepository: typeof UserRepositoryClass,
     ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof logger, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         // TODO: inject the static (and uninstantiated) UserRepositoryClass.
@@ -55,8 +56,10 @@ export default class UserStorageManager {
         this.UserRepository = UserRepositoryClass;
     }
 
-    public async getByUsername(username: string): Promise<IUser> {
-        assert.hasLength(arguments, 1);
+    @asrt(1)
+    public async getByUsername(
+        @asrt() username: string,
+    ): Promise<IUser> {
         assert.nonEmptyString(username);
 
         const findUser = {
@@ -70,9 +73,10 @@ export default class UserStorageManager {
         return user as IUser[];
     }
 
-    public async store(user: IUser) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof user, "object");
+    @asrt(1)
+    public async store(
+        @asrt() user: IUser,
+    ) {
         assert.nonEmptyString(user.username);
 
         const findUser = {
@@ -107,11 +111,15 @@ export default class UserStorageManager {
         return userAfterStoring;
     }
 
-    public async storeToken(username: string, rawToken: IRawToken | null): Promise<IUser> {
-        assert.hasLength(arguments, 2);
+    @asrt(2)
+    public async storeToken(
+        @asrt() username: string,
+        rawToken: IRawToken | null,
+    ): Promise<IUser> {
         assert.nonEmptyString(username);
         // NOTE: rawToken can be null, to "forget" it.
         assert.equal(typeof rawToken, "object");
+
         // TODO: type system.
         assert(rawToken === null || typeof rawToken.access_token === "string");
         assert(rawToken === null || rawToken.access_token.length > 0);
@@ -119,6 +127,7 @@ export default class UserStorageManager {
         assert(rawToken === null || rawToken.refresh_token.length > 0);
         assert(rawToken === null || typeof rawToken.expires_in === "number");
         assert(rawToken === null || typeof rawToken.scope === "string" || Array.isArray(rawToken.scope));
+
         // NOTE: could be empty if the token has no scopes.
         assert(rawToken === null || rawToken.scope.length > 0);
 

@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -32,29 +35,26 @@ import IIncomingWhisperEvent from "@botten-nappet/interface-shared-twitch/src/ev
 
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(4)
 export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIncomingWhisperEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingWhisperEvent>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private readonly channelName: string,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingWhisperEvent>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() private readonly channelName: string,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
         assert.nonEmptyString(channelName);
         assert(channelName.startsWith("#"));
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingWhisperEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingWhisperEvent,
+    ): Promise<void> {
         // NOTE: hide sender/recipient.
         const username = "anonymous";
 
@@ -81,10 +81,10 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingWhisperEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingWhisperEvent,
+    ): Promise<boolean> {
         return true;
     }
 }

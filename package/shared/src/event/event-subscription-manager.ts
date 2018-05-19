@@ -19,21 +19,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import ConnectionManager from "../connection/connection-manager";
 import IEventSubscriptionConnection from "./ievent-subscription-connection";
 
+@asrt(2)
 export default abstract class EventSubscriptionManager<T> extends ConnectionManager<T> {
-    constructor(logger: PinoLogger, connection: IEventSubscriptionConnection<T>) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<T>,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }

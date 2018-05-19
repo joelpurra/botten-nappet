@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -37,6 +40,7 @@ import ApplicationTokenManagerConfig from "../config/application-token-manager-c
 import IPollingConnection from "../polling/connection/ipolling-connection";
 import PollingApplicationTokenConnection from "./polling-application-token-connection";
 
+@asrt(3)
 @autoinject
 export default class ApplicationTokenManager extends ConnectionManager<IRawToken> {
     private waitForFirstTokenPromise: Promise<undefined>;
@@ -47,22 +51,11 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     private oauthTokenRevocationMethod: string;
 
     constructor(
-        logger: PinoLogger,
-        connection: PollingApplicationTokenConnection,
-        private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: PollingApplicationTokenConnection,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof applicationTokenManagerConfig, "object");
-
-        assert.equal(typeof applicationTokenManagerConfig.appClientId, "string");
-        assert.greater(applicationTokenManagerConfig.appClientId.length, 0);
-        assert.equal(typeof applicationTokenManagerConfig.oauthTokenRevocationUri, "string");
-        assert.greater(applicationTokenManagerConfig.oauthTokenRevocationUri.length, 0);
-        assert(applicationTokenManagerConfig.oauthTokenRevocationUri.startsWith("https://"));
 
         this.logger = logger.child(this.constructor.name);
 
@@ -89,9 +82,8 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
             });
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await super.start();
 
         const pollingConnection = this.connection as IPollingConnection<IRawToken>;
@@ -99,17 +91,17 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return pollingConnection.send(undefined);
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.revokeTokenIfSet(this.applicationAccessToken);
         return super.stop();
     }
 
-    public async revokeToken(token: string): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof token, "string");
-        assert.greater(token.length, 0);
+    @asrt(1)
+    public async revokeToken(
+        @asrt() token: string,
+    ): Promise<void> {
+        assert.nonEmptyString(token);
 
         const data = {
             client_id: this.applicationTokenManagerConfig.appClientId,
@@ -121,15 +113,13 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         await this.sendRevocation(data);
     }
 
+    @asrt(0)
     public async get(): Promise<string | null> {
-        assert.hasLength(arguments, 0);
-
         return this.applicationAccessToken;
     }
 
+    @asrt(0)
     public async getOrWait(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         await this.waitForFirstTokenPromise;
 
         const token = await this.get();
@@ -137,10 +127,10 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return token!;
     }
 
-    protected async dataHandler(data: IRawToken): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IRawToken,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         await Promise.all([
@@ -149,10 +139,10 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         ]);
     }
 
-    protected async filter(data: IRawToken): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IRawToken,
+    ): Promise<boolean> {
         if (typeof data !== "object") {
             return false;
         }
@@ -164,10 +154,10 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return true;
     }
 
-    private async setToken(data: IRawToken) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    private async setToken(
+        @asrt() data: IRawToken,
+    ) {
         this.rawOAuthToken = data;
         this.applicationAccessToken = data.access_token;
 
@@ -176,10 +166,10 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return undefined;
     }
 
-    private async sendRevocation(params: object): Promise<object> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof params, "object");
-
+    @asrt(1)
+    private async sendRevocation(
+        @asrt() params: object,
+    ): Promise<object> {
         // TODO: use TokenHelper.revoke().
         const axiosInstanceConfig = {
             baseURL: this.applicationTokenManagerConfig.oauthTokenRevocationUri,
@@ -206,9 +196,8 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         return data;
     }
 
+    @asrt(1)
     private async revokeTokenIfSet(token: string | null): Promise<void> {
-        assert.hasLength(arguments, 1);
-
         if (typeof token === "string") {
             return this.revokeToken(token);
         }

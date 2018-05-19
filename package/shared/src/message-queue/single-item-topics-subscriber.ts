@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "../util/pino-logger";
 
@@ -30,30 +30,23 @@ import ZmqConfig from "../config/zmq-config";
 import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
 import IZeroMqTopicMessages from "./izeromq-topic-message";
 
+@asrt(4)
 export default abstract class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {
     constructor(
-        logger: PinoLogger,
-        topicHelper: TopicHelper,
-        zmqConfig: ZmqConfig,
-        topicConfig: TopicConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() topicHelper: TopicHelper,
+        @asrt() zmqConfig: ZmqConfig,
+        @asrt() topicConfig: TopicConfig,
     ) {
         super(logger, topicHelper, zmqConfig, topicConfig);
-
-        // NOTE: not checking arguments length due to inheritance.
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof topicHelper, "object");
-        assert.equal(typeof zmqConfig, "object");
-        assert.equal(typeof topicConfig, "object");
 
         this.logger = logger.child(`${this.constructor.name} (${(this.topicConfig.topic)})`);
     }
 
-    protected async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof topicMessages, "object");
-        assert.nonEmptyArray(topicMessages.messages);
-        assert.hasLength(topicMessages.messages, 1);
-
+    @asrt(1)
+    protected async parseMessages(
+        @asrt() topicMessages: IZeroMqTopicMessages,
+    ): Promise<T> {
         const jsonMessage: T = JSON.parse(topicMessages.messages[0].toString());
 
         return jsonMessage;

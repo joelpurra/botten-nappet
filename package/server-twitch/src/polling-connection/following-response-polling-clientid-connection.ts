@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
@@ -38,13 +38,14 @@ import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/use
 
 /* tslint:enable:max-line-length */
 
+@asrt(3)
 @autoinject
 export default class FollowingResponsePollingClientIdConnection
     extends PollingClientIdConnection<IPollingFollowingResponse> {
     constructor(
-        private readonly backendConfig: BackendConfig,
-        logger: PinoLogger,
-        private readonly userIdProvider: UserIdProvider,
+        @asrt() private readonly backendConfig: BackendConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly userIdProvider: UserIdProvider,
     ) {
         super(
             logger,
@@ -54,17 +55,11 @@ export default class FollowingResponsePollingClientIdConnection
             "get",
         );
 
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof backendConfig, "object");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof userIdProvider, "object");
-
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     protected async getUri(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         const userId = await this.userIdProvider.get();
 
         // TODO: externalize/configure base url.

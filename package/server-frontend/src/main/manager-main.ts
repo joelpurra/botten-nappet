@@ -24,6 +24,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -65,6 +68,7 @@ interface ICustomWebSocketEventData {
     customData: object;
 }
 
+@asrt(8)
 export default class FrontendManagerMain {
     private io: SocketIo.Server | null;
     private server: http.Server | null;
@@ -72,38 +76,26 @@ export default class FrontendManagerMain {
     private logger: PinoLogger;
 
     constructor(
-        @context(FrontendManagedMain, "FrontendManagedMain")
+        @asrt() @context(FrontendManagedMain, "FrontendManagedMain")
         private readonly frontendManagedMain: () => FrontendManagedMain,
-        private readonly frontendConfig: FrontendConfig,
-        logger: PinoLogger,
-        @scoped(IncomingIrcCommandSingleItemJsonTopicsSubscriber)
+        @asrt() private readonly frontendConfig: FrontendConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() @scoped(IncomingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
             IncomingIrcCommandSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingFollowingEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingFollowingEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
             IncomingFollowingEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent:
             IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
             IncomingSubscriptionEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
         private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
     ) {
-        assert.hasLength(arguments, 8);
-        assert.equal(typeof frontendManagedMain, "function");
-        assert.equal(typeof frontendConfig, "object");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent, "object");
-        assert.equal(
-            typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringWithCheermotesEvent, "object",
-        );
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent, "object");
-        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.server = null;
@@ -111,8 +103,8 @@ export default class FrontendManagerMain {
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.connectables, 0);
 
         const app = new Koa();
@@ -309,9 +301,8 @@ export default class FrontendManagerMain {
         await this.frontendManagedMain().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
@@ -358,7 +349,10 @@ export default class FrontendManagerMain {
         this.server = null;
     }
 
-    private getIrcPrivMsgWebsocketEventData(data: IIncomingIrcCommand): ICustomWebSocketEventData | null {
+    @asrt(1)
+    private getIrcPrivMsgWebsocketEventData(
+        @asrt() data: IIncomingIrcCommand,
+    ): ICustomWebSocketEventData | null {
         if (data.message === null) {
             throw new Error("data.message");
         }

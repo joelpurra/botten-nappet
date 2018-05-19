@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 import Rx, {
@@ -40,6 +43,7 @@ import {
     ZeroMqMessages,
 } from "./zeromq-types";
 
+@asrt(4)
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
     protected logger: PinoLogger;
     protected topics: string[] | null;
@@ -49,17 +53,11 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     private zmqSubcription: Subscription | null;
 
     constructor(
-        logger: PinoLogger,
-        protected readonly topicHelper: TopicHelper,
-        private readonly zmqConfig: ZmqConfig,
-        protected readonly topicConfig: TopicConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() protected readonly topicHelper: TopicHelper,
+        @asrt() private readonly zmqConfig: ZmqConfig,
+        @asrt() protected readonly topicConfig: TopicConfig,
     ) {
-        // NOTE: not checking arguments length due to inheritance.
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof topicHelper, "object");
-        assert.equal(typeof zmqConfig, "object");
-        assert.equal(typeof topicConfig, "object");
-
         this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
 
         this.topics = null;
@@ -69,8 +67,8 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         this.socket = null;
     }
 
+    @asrt(0)
     public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.equal(this.socket, null);
         assert.null(this.zmqSubject);
         assert.null(this.zmqSubcription);
@@ -116,8 +114,8 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         this.logger.debug("connected");
     }
 
+    @asrt(0)
     public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.equal(this.topics, null);
         assert.not.equal(this.socket, null);
         assert.not.null(this.zmqSubject);
@@ -136,15 +134,13 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         this.logger.debug("disconnected");
     }
 
+    @asrt(0)
     public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.disconnect();
         await this.connect();
     }
 
     public get dataObservable(): Rx.Observable<T> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.sharedzmqObservable);
 
         // TODO: better null handling.
@@ -154,6 +150,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     protected abstract async filterMessages(topicMessages: IZeroMqTopicMessages): Promise<boolean>;
     protected abstract async parseMessages(topicMessages: IZeroMqTopicMessages): Promise<T>;
 
+    @asrt(0)
     private async listen(): Promise<void> {
         assert.not.null(this.socket);
         assert.not.null(this.zmqSubject);

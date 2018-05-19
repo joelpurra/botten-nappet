@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -38,31 +38,24 @@ import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/ser
 
 /* tslint:enable:max-line-length */
 
+@asrt(5)
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(
-        logger: PinoLogger,
-        connection: IncomingIrcCommandSingleItemJsonTopicsSubscriber,
-        private readonly incomingSubscriptionEventEmitter: IncomingSubscriptionEventTopicPublisher,
-        private readonly userNameProvider: UserNameProvider,
-        private readonly userIdProvider: UserIdProvider,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        @asrt() private readonly incomingSubscriptionEventEmitter: IncomingSubscriptionEventTopicPublisher,
+        @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userIdProvider: UserIdProvider,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingSubscriptionEventEmitter, "object");
-        assert.equal(typeof userNameProvider, "object");
-        assert.equal(typeof userIdProvider, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-        assert.equal(typeof data.tags, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<void> {
         const tags = data.tags!;
         const username = tags.login;
         // NOTE: contains sub/resub.
@@ -88,10 +81,10 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         this.incomingSubscriptionEventEmitter.emit(event);
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<boolean> {
         if (data.command !== "USERNOTICE") {
             return false;
         }

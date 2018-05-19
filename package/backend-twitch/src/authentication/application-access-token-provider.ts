@@ -19,26 +19,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import ApplicationTokenManager from "./application-token-manager";
 
+@asrt(1)
 @autoinject
 export default class ApplicationAccessTokenProvider {
     constructor(
-        private readonly twitchApplicationTokenManager: ApplicationTokenManager,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof twitchApplicationTokenManager, "object");
-    }
+        @asrt() private readonly twitchApplicationTokenManager: ApplicationTokenManager,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<string> {
-        assert.hasLength(arguments, 0);
-
         return this.twitchApplicationTokenManager.getOrWait();
     }
 }

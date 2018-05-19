@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -29,17 +32,17 @@ import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/i
 import IPubSubConnection from "../connection/ipubsub-connection";
 import PubSubManager from "../connection/pubsub-manager";
 
+@asrt(2)
 export default class PingPubSubHandler extends PubSubManager {
     public pubSubConnection: IPubSubConnection;
     private pingIntervalMilliseconds: number;
     private pingIntervalId: (number | NodeJS.Timer | null);
 
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IPubSubConnection,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
         this.pingIntervalId = null;
@@ -50,8 +53,8 @@ export default class PingPubSubHandler extends PubSubManager {
         this.pingIntervalMilliseconds = 4 * 60 * 1000;
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.equal(this.pingIntervalId, null);
 
         await super.start();
@@ -63,8 +66,8 @@ export default class PingPubSubHandler extends PubSubManager {
         this.pingIntervalId = setInterval(() => this.ping(), this.pingIntervalMilliseconds);
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.equal(this.pingIntervalId, null);
 
         clearInterval(this.pingIntervalId as NodeJS.Timer);
@@ -73,28 +76,27 @@ export default class PingPubSubHandler extends PubSubManager {
         return super.stop();
     }
 
-    protected async dataHandler(data: IPubSubResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPubSubResponse,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         throw new Error("Unexpected call to dataHandler.");
     }
 
-    protected async filter(data: IPubSubResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPubSubResponse,
+    ): Promise<boolean> {
         // TODO: check if the most recent ping was sent within 15 seconds, otherwise delay and reconnect.
         // TODO: backoff doubling for reconnects.
         // https://dev.twitch.tv/docs/pubsub#connection-management
         return false;
     }
 
+    @asrt(0)
     private async ping(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         this.logger.trace("Sending ping", "ping");
 
         const message = {

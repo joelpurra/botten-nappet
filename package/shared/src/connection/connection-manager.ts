@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 import Rx, {
@@ -32,26 +35,23 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
 import IReceivingConnection from "./ireceiving-connection";
 
+@asrt(2)
 export default abstract class ConnectionManager<T> implements IStartableStoppable {
     protected logger: PinoLogger;
     private dataHandlerSubscription: Subscription | null;
 
     constructor(
-        logger: PinoLogger,
+        @asrt() logger: PinoLogger,
         // TODO: make connection private.
-        protected connection: IReceivingConnection<T>,
+        @asrt() protected connection: IReceivingConnection<T>,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.dataHandlerSubscription = null;
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.null(this.dataHandlerSubscription);
 
         const filter: ((data: T) => Promise<boolean>) = this.filter.bind(this);
@@ -67,8 +67,8 @@ export default abstract class ConnectionManager<T> implements IStartableStoppabl
         this.dataHandlerSubscription = filteredDataObservable.subscribe(dataHandlerObserver);
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.dataHandlerSubscription);
 
         // TODO: better null handling.

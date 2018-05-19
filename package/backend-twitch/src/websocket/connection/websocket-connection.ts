@@ -18,6 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -42,6 +45,7 @@ import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event
 
 import IWebSocketConnection from "./iwebsocket-connection";
 
+@asrt()
 export default abstract class WebSocketConnection<T, V> implements IWebSocketConnection<T, V> {
     protected logger: PinoLogger;
     private sharedWebSocketObservable: Rx.Observable<any> | null;
@@ -49,8 +53,8 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
     private websocketSubject: WebSocketSubject<any> | null;
 
     constructor(
-        logger: PinoLogger,
-        private readonly uri: string,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly uri: string,
         private protocol?: string,
     ) {
         assert(arguments.length === 2 || arguments.length === 3);
@@ -67,8 +71,8 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         this.sharedWebSocketObservable = null;
     }
 
+    @asrt(0)
     public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.null(this.websocketSubject);
         assert.null(this.websocketSubcription);
 
@@ -133,8 +137,8 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
             });
     }
 
+    @asrt(0)
     public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.websocketSubject);
         assert.not.null(this.websocketSubcription);
 
@@ -152,19 +156,18 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         this.websocketSubject.complete();
     }
 
+    @asrt(0)
     public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.disconnect();
         await this.connect();
     }
 
+    @asrt(1)
     public async send(data: V): Promise<void> {
         return this.sendInternal(data);
     }
 
     public get dataObservable(): Rx.Observable<any> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.sharedWebSocketObservable);
 
         // TODO: better null handling.
@@ -177,9 +180,10 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
 
     protected abstract async serializeMessage(data: V): Promise<string>;
 
-    private async sendInternal(data: V): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert(data !== undefined && data !== null);
+    @asrt(1)
+    private async sendInternal(
+        @asrt() data: V,
+    ): Promise<void> {
         assert.not.null(this.websocketSubject);
 
         if (!(this.websocketSubject instanceof WebSocketSubject)) {
@@ -193,6 +197,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         this.websocketSubject.next(message);
     }
 
+    @asrt(0)
     private sendLoginCommands(): Rx.Observable<void> {
         const commandObservables = Rx.Observable.from(this.getSetupConnectionCommands())
             .concatMap((setupConnectionCommands) => Rx.Observable.from(setupConnectionCommands)
@@ -205,11 +210,11 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         return allLoginCommandsObservable;
     }
 
+    @asrt(2)
     private sendCommandsAndVerifyResponse(
-        cmds: V[],
-        verifier: (message: T) => boolean,
+        @asrt() cmds: V[],
+        @asrt() verifier: (message: T) => boolean,
     ): Rx.Observable<void> {
-        assert.hasLength(arguments, 2);
         assert.nonEmptyArray(cmds);
         assert.equal(typeof verifier, "function");
 

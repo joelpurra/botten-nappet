@@ -24,6 +24,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -50,62 +53,50 @@ import PerUserHandlersMain from "./per-user-handlers-main";
 
 /* tslint:enable:max-line-length */
 
+@asrt(11)
 export default class BackendAuthenticatedApplicationMain implements IStartableStoppable {
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        @context(PerUserHandlersMain, "PerUserHandlersMain")
-        private readonly perUserHandlersMain: () => PerUserHandlersMain,
-        logger: PinoLogger,
-        @scoped(IncomingPubSubEventSingleItemJsonTopicsSubscriber)
+        @asrt() @context(PerUserHandlersMain, "PerUserHandlersMain")
+        @asrt() private readonly perUserHandlersMain: () => PerUserHandlersMain,
+        @asrt() logger: PinoLogger,
+        @asrt() @scoped(IncomingPubSubEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
             IncomingPubSubEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingIrcCommandSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
             IncomingIrcCommandSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingFollowingEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingFollowingEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent:
             IncomingFollowingEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingStreamingEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingStreamingEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent:
             IncomingStreamingEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingCheermotesEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingCheermotesEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent:
             IncomingCheermotesEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingCheeringEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingCheeringEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent:
             IncomingCheeringEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingWhisperEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingWhisperEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent:
             IncomingWhisperEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingSubscriptionEventSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent:
             IncomingSubscriptionEventSingleItemJsonTopicsSubscriber,
-        @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(IncomingSearchResultEventSingleItemJsonTopicsSubscriber)
         private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent:
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
     ) {
-        assert.hasLength(arguments, 11);
-        assert.equal(typeof perUserHandlersMain, "function");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent, "object");
-        assert.equal(typeof vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.connectables, 0);
 
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
@@ -125,9 +116,8 @@ export default class BackendAuthenticatedApplicationMain implements IStartableSt
         await this.perUserHandlersMain().start();
     }
 
+    @asrt(0)
     public async  stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

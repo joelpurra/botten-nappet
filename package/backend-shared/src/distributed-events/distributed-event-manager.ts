@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
@@ -28,35 +28,31 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IDistributedEvent from "../storage/idistributed-event";
 import DistributedEventStorageManager from "../storage/manager/distributed-event-storage-manager";
 
+@asrt(3)
 export default abstract class DistributedEventManager extends EventSubscriptionManager<IDistributedEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IDistributedEvent>,
-        private readonly distributedEventStorageManager: DistributedEventStorageManager,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IDistributedEvent>,
+        @asrt() private readonly distributedEventStorageManager: DistributedEventStorageManager,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof distributedEventStorageManager, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IDistributedEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IDistributedEvent,
+    ): Promise<void> {
         // this.logger.trace(data, "dataHandler");
 
         this.distributedEventStorageManager.store(data);
     }
 
-    protected async filter(data: IDistributedEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IDistributedEvent,
+    ): Promise<boolean> {
         return true;
     }
 }

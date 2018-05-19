@@ -21,6 +21,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -47,35 +50,28 @@ import PubSubReconnectHandler from "@botten-nappet/backend-twitch/src/pubsub/han
 
 /* tslint:enable max-line-length */
 
+@asrt(6)
 export default class TwitchPerUserPubSubApi {
     private startables: IStartableStoppable[];
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
-        private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
-        @scoped(IncomingPubSubEventTopicPublisher)
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
+        @asrt() @scoped(IncomingPubSubEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingPubSubEvent:
             IncomingPubSubEventTopicPublisher,
-        private readonly twitchUserNameProvider: TwitchUserNameProvider,
-        private readonly twitchUserIdProvider: TwitchUserIdProvider,
+        @asrt() private readonly twitchUserNameProvider: TwitchUserNameProvider,
+        @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
-        assert.hasLength(arguments, 6);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof gracefulShutdownManager, "object");
-        assert.equal(typeof twitchAllPubSubTopicsForTwitchUserIdConnection, "object");
-        assert.equal(typeof messageQueueTopicPublisherForIIncomingPubSubEvent, "object");
-        assert.equal(typeof twitchUserNameProvider, "object");
-        assert.equal(typeof twitchUserIdProvider, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.startables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.startables, 0);
 
         const twitchPubSubPingHandler = new PubSubPingHandler(
@@ -112,9 +108,8 @@ export default class TwitchPerUserPubSubApi {
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

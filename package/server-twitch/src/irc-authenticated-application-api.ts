@@ -24,10 +24,10 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import Bluebird from "bluebird";
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import Bluebird from "bluebird";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -38,44 +38,36 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 
-import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
-import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
 import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
 
 import TwitchPerUserIrcApi from "./per-user-irc-api";
 
 /* tslint:enable:max-line-length */
 
+@asrt(4)
 export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
+        @asrt() @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
         private readonly twitchPerUserIrcApi: () => TwitchPerUserIrcApi,
-        logger: PinoLogger,
-        @scoped(TwitchIrcConnection)
+        @asrt() logger: PinoLogger,
+        @asrt() @scoped(TwitchIrcConnection)
         private readonly twitchIrcConnection: TwitchIrcConnection,
-        // private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        // @asrt() private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
         //     IncomingIrcCommandSingleItemJsonTopicsSubscriber,
-        @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
+        @asrt() @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
     ) {
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof twitchPerUserIrcApi, "function");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof twitchIrcConnection, "object");
-        assert.equal(typeof twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(this.connectables, 0);
-
         this.connectables.push(this.twitchIrcConnection);
         this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
 
@@ -89,6 +81,7 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         await this.twitchPerUserIrcApi().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.

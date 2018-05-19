@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -36,26 +39,23 @@ import {
     ZeroMqMessage,
 } from "./zeromq-types";
 
+@asrt(2)
 @autoinject
 export default class Publisher implements IConnectable {
     private socket: any | null;
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly zmqConfig: ZmqConfig,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly zmqConfig: ZmqConfig,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof zmqConfig, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.socket = null;
     }
 
+    @asrt(0)
     public async connect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.null(this.socket);
 
         const zmqPublisherOptions = {
@@ -68,8 +68,8 @@ export default class Publisher implements IConnectable {
         this.logger.debug("connected");
     }
 
+    @asrt(0)
     public async disconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.not.null(this.socket);
 
         await this.socket.unbind(this.zmqConfig.zmqAddress);
@@ -80,14 +80,17 @@ export default class Publisher implements IConnectable {
         this.logger.debug("disconnected");
     }
 
+    @asrt(0)
     public async reconnect(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         await this.disconnect();
         await this.connect();
     }
 
-    public async send(topic: string, msg: ZeroMqMessage): Promise<void> {
+    @asrt(2)
+    public async send(
+        @asrt() topic: string,
+        @asrt() msg: ZeroMqMessage,
+    ): Promise<void> {
         assert.not.null(this.socket);
         // TODO: better null handling.
         assert(!this.socket!.closed);

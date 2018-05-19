@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -32,33 +32,29 @@ import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/i
 import PubSubConnection from "../../pubsub/connection/pubsub-connection";
 import PubSubManager from "../../pubsub/connection/pubsub-manager";
 
+@asrt(3)
 export default class IncomingPubSubEventTranslator extends PubSubManager {
     constructor(
-        logger: PinoLogger,
-        connection: PubSubConnection,
-        private incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: PubSubConnection,
+        @asrt() private incomingPubSubEventEmitter: IEventEmitter<IIncomingPubSubEvent>,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof incomingPubSubEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IPubSubResponse): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IPubSubResponse,
+    ): Promise<void> {
         this.incomingPubSubEventEmitter.emit(data);
     }
 
-    protected async filter(data: IPubSubResponse): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IPubSubResponse,
+    ): Promise<boolean> {
         return true;
     }
 }

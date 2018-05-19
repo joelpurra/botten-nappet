@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -32,26 +32,22 @@ import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/
 
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(3)
 export default class FollowingIrcReplyHandler extends EventSubscriptionManager<IIncomingFollowingEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingFollowingEvent>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingFollowingEvent>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    protected async dataHandler(data: IIncomingFollowingEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingFollowingEvent,
+    ): Promise<void> {
         this.logger.trace("Responding to follower.", data.triggerer.name, "dataHandler");
 
         // TODO: use a string templating system.
@@ -71,10 +67,10 @@ export default class FollowingIrcReplyHandler extends EventSubscriptionManager<I
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    protected async filter(data: IIncomingFollowingEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingFollowingEvent,
+    ): Promise<boolean> {
         return true;
     }
 }

@@ -19,27 +19,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 import UserAugmentedTokenProvider from "./user-augmented-token-provider";
 
+@asrt(1)
 @autoinject
 export default class UserRawTokenProvider {
     constructor(
-        private readonly userAugmentedTokenProvider: UserAugmentedTokenProvider,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof userAugmentedTokenProvider, "object");
-    }
+        @asrt() private readonly userAugmentedTokenProvider: UserAugmentedTokenProvider,
+    ) { }
 
+    @asrt(0)
     public async get(): Promise<IRawToken> {
-        assert.hasLength(arguments, 0);
-
         const userAugmentedToken = await this.userAugmentedTokenProvider.get();
 
         // TODO: better null handling.

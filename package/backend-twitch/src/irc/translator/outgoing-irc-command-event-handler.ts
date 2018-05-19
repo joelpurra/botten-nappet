@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -30,35 +30,31 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 import IIRCConnection from "../connection/iirc-connection";
 
+@asrt(3)
 export default class OutgoingIrcCommandEventHandler extends EventSubscriptionManager<IOutgoingIrcCommand> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IOutgoingIrcCommand>,
-        private readonly ircConnection: IIRCConnection,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IOutgoingIrcCommand>,
+        @asrt() private readonly ircConnection: IIRCConnection,
     ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 3);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof ircConnection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }
 
-    public async dataHandler(data: IOutgoingIrcCommand): Promise<void> {
-        assert.equal(typeof data, "object");
-        assert.not.null(data);
-
+    @asrt(1)
+    public async dataHandler(
+        @asrt() data: IOutgoingIrcCommand
+    ): Promise<void> {
         this.logger.trace(data, "handle");
 
         return this.ircConnection.send(data);
     }
 
-    public async filter(data: IOutgoingIrcCommand): Promise<boolean> {
-        assert.equal(typeof data, "object");
-        assert.not.null(data);
-
+    @asrt(1)
+    public async filter(
+        @asrt() data: IOutgoingIrcCommand
+    ): Promise<boolean> {
         this.logger.trace(data, "filter");
 
         return true;

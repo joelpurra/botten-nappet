@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
-    Container,
     Resolver,
 } from "aurelia-dependency-injection";
 import {
@@ -34,16 +36,19 @@ import pino from "pino";
 import LoggingConfig from "@botten-nappet/shared/src/config/logging-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+@asrt(1)
 @autoinject
 export default class RootLoggerResolver implements Resolver {
     constructor(
-        private readonly loggingConfig: LoggingConfig,
+        @asrt() private readonly loggingConfig: LoggingConfig,
     ) {
         assert.hasLength(arguments, 1);
         assert.equal(typeof loggingConfig, "object");
     }
 
-    public get(container: Container, key: any) {
+    @asrt(0)
+    public get(/*container: Container, key: any*/) {
+        // TODO: properly implement resolver? Not using container/key seems wrong.
         const logFileStream = fs.createWriteStream(this.loggingConfig.file);
 
         const rootPinoLogger = pino({

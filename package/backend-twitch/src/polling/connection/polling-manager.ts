@@ -19,20 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import ConnectionManager from "@botten-nappet/shared/src/connection/connection-manager";
 import IReceivingConnection from "@botten-nappet/shared/src/connection/ireceiving-connection";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+@asrt(2)
 export default abstract class PollingManager<T> extends ConnectionManager<T> {
-    constructor(logger: PinoLogger, connection: IReceivingConnection<T>) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IReceivingConnection<T>,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }

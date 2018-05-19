@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -32,20 +35,17 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(5)
 export default class VidyResultEventHandler extends EventSubscriptionManager<IIncomingSearchResultEvent> {
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingSearchResultEvent>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private readonly channelName: string,
-        private readonly vidyVideoLinkBaseUrl: string,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingSearchResultEvent>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() private readonly channelName: string,
+        @asrt() private readonly vidyVideoLinkBaseUrl: string,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
         assert.nonEmptyString(channelName);
         assert(channelName.startsWith("#"));
         assert.nonEmptyString(vidyVideoLinkBaseUrl);
@@ -55,10 +55,10 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         this.logger = logger.child(this.constructor.name);
     }
 
-    public async dataHandler(data: IIncomingSearchResultEvent): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    public async dataHandler(
+        @asrt() data: IIncomingSearchResultEvent,
+    ): Promise<void> {
         this.logger.trace(data, "dataHandler");
 
         this.logger.warn(data, "functionality disabled", "dataHandler");
@@ -86,10 +86,10 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
         this.outgoingIrcCommandEventEmitter.emit(command);
     }
 
-    public async filter(data: IIncomingSearchResultEvent): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    public async filter(
+        @asrt() data: IIncomingSearchResultEvent,
+    ): Promise<boolean> {
         // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer
         // username, search query-response validity checks.
         return true;

@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -31,23 +34,20 @@ import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+@asrt(4)
 export default class FollowReminderIrcHandler extends ConnectionManager<IIncomingIrcCommand> {
     private reminderMessages: string[];
     private reminderIntervalMilliseconds: number;
     private reminderIntervalId: (number | NodeJS.Timer | null);
 
     constructor(
-        logger: PinoLogger,
-        connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
-        private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
-        private readonly channelName: string,
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IEventSubscriptionConnection<IIncomingIrcCommand>,
+        @asrt() private outgoingIrcCommandEventEmitter: IEventEmitter<IOutgoingIrcCommand>,
+        @asrt() private readonly channelName: string,
     ) {
         super(logger, connection);
 
-        assert.hasLength(arguments, 4);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
-        assert.equal(typeof outgoingIrcCommandEventEmitter, "object");
         assert.nonEmptyString(channelName);
         assert(channelName.startsWith("#"));
 
@@ -70,43 +70,38 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         /* tslint:enable:max-line-length */
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-        assert.equal(this.reminderIntervalId, null);
-
         await super.start();
 
         // TODO: use an observable interval?
         this.reminderIntervalId = setInterval(() => this.remind(), this.reminderIntervalMilliseconds);
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-        assert.not.equal(this.reminderIntervalId, null);
-
         clearInterval(this.reminderIntervalId as NodeJS.Timer);
         this.reminderIntervalId = null;
 
         return super.stop();
     }
 
-    protected async dataHandler(data: IIncomingIrcCommand): Promise<void> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async dataHandler(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<void> {
         throw new Error("Unexpected call to dataHandler.");
     }
 
-    protected async filter(data: IIncomingIrcCommand): Promise<boolean> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof data, "object");
-
+    @asrt(1)
+    protected async filter(
+        @asrt() data: IIncomingIrcCommand,
+    ): Promise<boolean> {
         return false;
     }
 
+    @asrt(0)
     private getReminder() {
-        assert.hasLength(arguments, 0);
-
         // TODO: get library for random integers.
         const randomReminderMessageIndex = Math.floor(Math.random() * this.reminderMessages.length);
 
@@ -115,9 +110,8 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         return randomReminderMessage;
     }
 
+    @asrt(0)
     private remind() {
-        assert.hasLength(arguments, 0);
-
         this.logger.trace("Sending reminder", "remind");
 
         // TODO: use a string templating system.

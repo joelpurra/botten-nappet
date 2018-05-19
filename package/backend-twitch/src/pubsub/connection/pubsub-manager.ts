@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    assert,
-} from "check-types";
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -30,13 +30,13 @@ import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/i
 
 import IPubSubConnection from "./ipubsub-connection";
 
+@asrt(2)
 export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse> {
-    constructor(logger: PinoLogger, connection: IPubSubConnection) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connection: IPubSubConnection,
+    ) {
         super(logger, connection);
-
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof connection, "object");
 
         this.logger = logger.child(this.constructor.name);
     }

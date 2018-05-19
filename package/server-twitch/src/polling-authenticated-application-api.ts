@@ -24,6 +24,9 @@ import {
 import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 import {
     assert,
@@ -44,35 +47,29 @@ import TwitchPerUserPollingApi from "./per-user-polling-api";
 
 /* tslint:enable:max-line-length */
 
+@asrt(5)
 export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[];
     private logger: PinoLogger;
 
     constructor(
-        @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
+        @asrt() @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
         private readonly twitchPerUserPollingApi: () => TwitchPerUserPollingApi,
-        logger: PinoLogger,
-        @scoped(CheermotesResponsePollingClientIdConnection)
+        @asrt() logger: PinoLogger,
+        @asrt() @scoped(CheermotesResponsePollingClientIdConnection)
         private readonly twitchPollingCheermotesConnection: CheermotesResponsePollingClientIdConnection,
-        @scoped(StreamingResponsePollingClientIdConnection)
+        @asrt() @scoped(StreamingResponsePollingClientIdConnection)
         private readonly twitchPollingStreamingConnection: StreamingResponsePollingClientIdConnection,
-        @scoped(FollowingResponsePollingClientIdConnection)
+        @asrt() @scoped(FollowingResponsePollingClientIdConnection)
         private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
     ) {
-        assert.hasLength(arguments, 5);
-        assert.equal(typeof twitchPerUserPollingApi, "function");
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof twitchPollingCheermotesConnection, "object");
-        assert.equal(typeof twitchPollingStreamingConnection, "object");
-        assert.equal(typeof twitchPollingFollowingConnection, "object");
-
         this.logger = logger.child(this.constructor.name);
 
         this.connectables = [];
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
         assert.hasLength(this.connectables, 0);
 
         this.connectables.push(this.twitchPollingFollowingConnection);
@@ -86,9 +83,8 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         await this.twitchPerUserPollingApi().start();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

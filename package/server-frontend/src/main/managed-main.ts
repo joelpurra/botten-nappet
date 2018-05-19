@@ -19,41 +19,36 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+@asrt(2)
 @autoinject
 export default class FrontendManagedMain {
     private logger: PinoLogger;
 
     constructor(
-        logger: PinoLogger,
-        private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() logger: PinoLogger,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
     ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof gracefulShutdownManager, "object");
-
         this.logger = logger.child(this.constructor.name);
     }
 
+    @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         this.logger.info("Managed.");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
+    @asrt(0)
     public async stop(): Promise<void> {
-        assert.hasLength(arguments, 0);
-
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

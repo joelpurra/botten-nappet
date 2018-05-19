@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     assert,
 } from "check-types";
 
@@ -28,11 +31,12 @@ import MultiConnectionManager from "../connection/multi-connection-manager";
 import IEventSubscriptionConnection from "./ievent-subscription-connection";
 
 export default abstract class MultiEventSubscriptionManager<T> extends MultiConnectionManager<T> {
-    constructor(logger: PinoLogger, connections: Array<IEventSubscriptionConnection<T>>) {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() connections: Array<IEventSubscriptionConnection<T>>,
+    ) {
         super(logger, connections);
 
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof logger, "object");
         assert.nonEmptyArray(connections);
 
         this.logger = logger.child(this.constructor.name);

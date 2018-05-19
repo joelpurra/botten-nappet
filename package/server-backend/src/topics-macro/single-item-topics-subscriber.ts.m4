@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
-import {
-    assert,
-} from "check-types";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -40,23 +40,18 @@ import `'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___TOPIC_NAME_PARA
 
 /* tslint:enable max-line-length */
 
+@asrt(4)
 @autoinject
 export default class `'___TOPIC_NAME_PASCAL_CASE___()SingleItemJsonTopicsSubscriber
     extends SingleItemJsonTopicsSubscriber<I`'___TOPIC_NAME_PASCAL_CASE___()> {
 
     // NOTE: this file is auto-generated. Changes will be overwritten.
     constructor(
-        logger: PinoLogger,
-        topicHelper: TopicHelper,
-        zmqConfig: ZmqConfig,
-        topicConfig: `'___TOPIC_NAME_PASCAL_CASE___()Topic,
+        @asrt() logger: PinoLogger,
+        @asrt() topicHelper: TopicHelper,
+        @asrt() zmqConfig: ZmqConfig,
+        @asrt() topicConfig: `'___TOPIC_NAME_PASCAL_CASE___()Topic,
     ) {
         super(logger, topicHelper, zmqConfig, topicConfig);
-
-        // NOTE: not checking arguments length due to inheritance.
-        assert.equal(typeof logger, "object");
-        assert.equal(typeof topicHelper, "object");
-        assert.equal(typeof zmqConfig, "object");
-        assert.equal(typeof topicConfig, "object");
     }
 }

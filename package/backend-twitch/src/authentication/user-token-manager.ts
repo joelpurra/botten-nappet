@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-framework";
 import {
@@ -30,21 +33,19 @@ import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authenti
 import TokenHelper from "../helper/token-helper";
 import UserTokenHelper from "../helper/user-token-helper";
 
+@asrt()
 @autoinject
 export default class UserTokenManager {
     constructor(
-        private readonly tokenHelper: TokenHelper,
-        private readonly userTokenHelper: UserTokenHelper,
-    ) {
-        assert.hasLength(arguments, 2);
-        assert.equal(typeof tokenHelper, "object");
-        assert.equal(typeof userTokenHelper, "object");
-    }
+        @asrt() private readonly tokenHelper: TokenHelper,
+        @asrt() private readonly userTokenHelper: UserTokenHelper,
+    ) { }
 
-    public async get(username: string): Promise<IAugmentedToken> {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof username, "string");
-        assert(username.length > 0);
+    @asrt(1)
+    public async get(
+        @asrt() username: string,
+    ): Promise<IAugmentedToken> {
+        assert.nonEmptyString(username);
 
         const augmentedToken: IAugmentedToken = await this.userTokenHelper.get(username);
         let isValid = false;

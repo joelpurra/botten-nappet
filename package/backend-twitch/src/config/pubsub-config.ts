@@ -19,22 +19,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     autoinject,
 } from "aurelia-dependency-injection";
-import {
-    assert,
-} from "check-types";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 
+@asrt(1)
 @autoinject
 export default class PubSubConfig {
     constructor(
-        private readonly backendConfig: BackendConfig,
-    ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof backendConfig, "object");
-    }
+        @asrt() private readonly backendConfig: BackendConfig,
+    ) { }
 
     public get twitchPubSubWebSocketUri(): string {
         return this.backendConfig.twitchPubSubWebSocketUri;

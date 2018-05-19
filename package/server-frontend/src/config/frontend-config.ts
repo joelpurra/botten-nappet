@@ -19,6 +19,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
+import {
     inject,
 } from "aurelia-dependency-injection";
 import {
@@ -29,19 +32,18 @@ import {
     IConfig,
 } from "config";
 
+@asrt(1)
 @inject("IConfig")
 export default class FrontendConfig {
     private prefix: string;
 
     constructor(
-        private readonly config: IConfig,
+        @asrt() private readonly config: IConfig,
     ) {
-        assert.hasLength(arguments, 1);
-        assert.equal(typeof config, "object");
-
         this.prefix = "frontend";
     }
 
+    @asrt(0)
     public validate(): any {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.
