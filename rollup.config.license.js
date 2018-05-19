@@ -30,6 +30,6 @@ export default (name) =>
         },
 
         thirdParty: {
-            output: path.join(__dirname, "dist", `${name}.dependencies.txt`),
+            output: path.join(__dirname, `${name}.dependencies.txt`),
         },
     });

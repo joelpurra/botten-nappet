@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "@botten-nappet/backend-shared",
+  "version": "1.0.0",
+  "author": {
+    "name": "Joel Purra",
+    "email": "mig@joelpurra.se",
+    "url": "https://joelpurra.com/"
+  }
+}
