@@ -103,7 +103,7 @@
     "socket.io-client": "^2.1.0",
     "soundjs": "^1.0.1",
     "then-read-json": "^1.0.3",
-    "ws": "^5.1.1",
+    "ws": "^5.2.0",
     "zeromq-ng": "^5.0.0-beta.9"
   },
   "devDependencies": {
@@ -114,7 +114,7 @@
     "@types/node": "^10.1.2",
     "@types/pino": "^4.16.0",
     "@types/qs": "^6.5.1",
-    "@types/ws": "^4.0.2",
+    "@types/ws": "^5.1.1",
     "m4": "^0.1.4",
     "pre-commit": "^1.2.2",
     "reflect-metadata": "^0.1.12",
