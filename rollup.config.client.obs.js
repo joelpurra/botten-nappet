@@ -18,41 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import json from "rollup-plugin-json";
+import client from "./rollup.config.client";
 
-import typescript from "./rollup.config.typescript.js";
-// TODO: enable for production builds?
-// import uglify from "./rollup.config.uglify.js";
-import filesize from "./rollup.config.filesize.js";
-import license from "./rollup.config.license.js";
+const inputName = "./package/client-obs/index.js";
+const outputName = "./package/server-frontend/public/dist/client/obs/index.iife.js";
 
-const inputName = "client.obs.ts";
-const outputName = "./src/frontend/public/dist/client.obs.js";
-
-export default {
-    external: [
-        "animejs",
-        "rxjs",
-        "socket.io-client",
-    ],
-    input: inputName,
-    output: {
-        file: outputName,
-        format: "iife",
-        globals: {
-            "animejs": "anime",
-            "rxjs": "Rx",
-            "socket.io-client": "io",
-        },
-        name: inputName,
-        sourcemap: true,
-    },
-    plugins: [
-        json(),
-        typescript(),
-        // TODO: enable for production builds?
-        // uglify(),
-        license(inputName),
-        filesize(),
-    ],
-};
+export default client(inputName, outputName);

@@ -37,7 +37,7 @@ backend:
 frontend:
     port: 3000
     static:
-        publicRootDirectory: "./src/frontend/public"
+        publicRootDirectory: "../server-frontend/public"
 shared:
     applicationName: botten-nappet
     logging:
@@ -56,3 +56,67 @@ shared:
             incomingSearchResultEvent: "external:shared:vidy:incoming:search:result:event"
             outgoingSearchCommand: "external:shared:vidy:outgoing:search:command"
     zmqAddress: "tcp://127.0.0.1:54859"
+templates:
+    topics-subscriber:
+        templatePaths:
+            topic:
+                fileName: ${topicNameParamCase}-topic.ts
+                outputDirectory: ../topic/
+                template: ./topic.ts.m4
+            topicsPublisher:
+                fileName: ${topicNameParamCase}-topic-publisher.ts
+                outputDirectory: ../topic-publisher/
+                template: ./topic-publisher.ts.m4
+            topicsSubscriber:
+                fileName: ${topicNameParamCase}-single-item-json-topics-subscriber.ts
+                outputDirectory: ../topics-subscriber/
+                template: ./single-item-topics-subscriber.ts.m4
+        sections:
+            backend:
+                configClassPath: "@botten-nappet/backend-shared/src/config/backend-config"
+                groups:
+                    twitch:
+                        topicConfigObjectPath: backend.topic.twitch
+            shared:
+                configClassPath: "@botten-nappet/shared/src/config/shared-topics-config"
+                groups:
+                    twitch:
+                        topicConfigObjectPath: shared.topic.twitch
+                    vidy:
+                        topicConfigObjectPath: shared.topic.vidy
+graphs:
+    enabled: false
+    dependencies:
+        server:
+            shared:
+                ignoredDependencyNames:
+                    - BackendConfig
+                    - Container
+                    - GracefulShutdownManager
+                    - PinoLogger
+                    - Publisher
+                    - SharedTopicsConfig
+                    - TopicHelper
+                    - ZmqConfig
+                suffixes:
+                    - Config
+                    - PollingClientIdConnection
+                    - SingleItemJsonTopicsSubscriber
+                    - Topic
+                    - TopicPublisher
+                manual:
+                    TwitchApplicationAuthentication:
+                        - ApplicationAccessTokenProvider
+                        - ApplicationTokenManager
+                        - PollingApplicationTokenConnection
+                    TwitchUserAuthentication:
+                        - UserAccessTokenProvider
+                        - UserAugmentedTokenProvider
+                        - UserChannelNameProvider
+                        - UserIdProvider
+                        - UserNameProvider
+                        - UserRawTokenProvider
+                        - UserStorageManager
+                        - UserTokenHelper
+                        - UserTokenManager
+                graphvizOutputFilenameTemplate: "dependency-graph.${Date.now()}.gv"
