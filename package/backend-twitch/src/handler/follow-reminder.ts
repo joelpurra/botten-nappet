@@ -38,7 +38,7 @@ import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 export default class FollowReminderIrcHandler extends ConnectionManager<IIncomingIrcCommand> {
     private reminderMessages: string[];
     private reminderIntervalMilliseconds: number;
-    private reminderIntervalId: (number | NodeJS.Timer | null);
+    private reminderIntervalId: (number | NodeJS.Timer | null) = null;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -52,8 +52,6 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
         assert(channelName.startsWith("#"));
 
         this.logger = logger.child(this.constructor.name);
-
-        this.reminderIntervalId = null;
 
         this.reminderIntervalMilliseconds = 15 * 60 * 1000;
 

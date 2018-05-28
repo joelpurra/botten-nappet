@@ -21,6 +21,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IUserChannelEvent from "./iuser-channel-event";
 
 /* tslint:disable:no-empty-interface */
-export default interface IIncomingFollowingEvent extends IUserChannelEvent {
-}
+export default interface IIncomingFollowingEvent extends IUserChannelEvent<null> { }
 /* tslint:enable:no-empty-interface */

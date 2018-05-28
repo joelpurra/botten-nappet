@@ -47,7 +47,7 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 
 @asrt(7)
 export default class TwitchPerUserPollingApi {
-    private startables: IStartableStoppable[];
+    private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -63,8 +63,6 @@ export default class TwitchPerUserPollingApi {
         @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.startables = [];
     }
 
     @asrt(0)
@@ -82,7 +80,7 @@ export default class TwitchPerUserPollingApi {
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

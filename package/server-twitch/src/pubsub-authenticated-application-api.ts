@@ -43,7 +43,7 @@ import TwitchPerUserPubSubApi from "./per-user-pubsub-api";
 
 @asrt(3)
 export default class BackendTwitchPubSubAuthenticatedApplicationApi implements IStartableStoppable {
-    private connectables: IConnectable[];
+    private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -54,8 +54,6 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
         private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: TwitchPubSubConnection,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.connectables = [];
     }
 
     @asrt(0)

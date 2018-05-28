@@ -18,9 +18,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import IUserNameId from "@botten-nappet/interface-shared/src/data/iuser-name-id";
 import IChannelEvent from "./ichannel-event";
-import IUserNameId from "./iuser-name-id";
 
-export default interface IUserChannelEvent extends IChannelEvent {
+export default interface IUserChannelEvent<T> extends IChannelEvent<T> {
     triggerer: IUserNameId;
 }

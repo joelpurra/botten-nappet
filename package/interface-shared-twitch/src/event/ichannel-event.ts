@@ -18,9 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserNameId from "./iuser-name-id";
+import INamedInterface from "@botten-nappet/interface-shared/src/data/inamed-interface";
+import IUserNameId from "@botten-nappet/interface-shared/src/data/iuser-name-id";
+import IApplicationEvent from "@botten-nappet/interface-shared/src/event/iapplication-event";
 
-export default interface IChannelEvent {
+export default interface IChannelEvent<T>
+    extends IApplicationEvent<T>, INamedInterface {
     channel: IUserNameId;
     timestamp: Date;
 }

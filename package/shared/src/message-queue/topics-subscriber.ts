@@ -36,7 +36,6 @@ import Rx, {
 import {
     concatMap,
     share,
-    tap,
 } from "rxjs/operators";
 
 import zmq from "zeromq-ng";

@@ -30,19 +30,21 @@ import IIncomingCheeringEvent from "@botten-nappet/interface-shared-twitch/src/e
 
 /* tslint:disable:max-line-length */
 
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
-import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheering-event-topic-publisher";
-import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
+import IncomingCheeringEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-cheering-event-topic-publisher";
+import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-pub-sub-event-single-item-json-topics-subscriber";
 
 /* tslint:enable:max-line-length */
 
-@asrt(3)
+@asrt(4)
 export default class IncomingCheeringCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
         @asrt() private readonly incomingCheeringEventEmitter: IncomingCheeringEventTopicPublisher,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -57,15 +59,23 @@ export default class IncomingCheeringCommandEventTranslator extends EventSubscri
         const bitsEvent: any = data.data!.messageParsed.data;
 
         const event: IIncomingCheeringEvent = {
-            badge: bitsEvent.badge_entitlement,
-            bits: bitsEvent.bits_used,
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
             channel: {
                 id: bitsEvent.channel_id,
                 name: bitsEvent.channel_name,
             },
-            message: bitsEvent.chat_message,
-            timestamp: data.timestamp,
-            total: bitsEvent.total_bits_used,
+            data: {
+                badge: bitsEvent.badge_entitlement,
+                bits: bitsEvent.bits_used,
+                message: bitsEvent.chat_message,
+                total: bitsEvent.total_bits_used,
+            },
+            interfaceName: "IIncomingCheeringEvent",
+            timestamp: new Date(),
             triggerer: {
                 id: bitsEvent.user_id,
                 name: bitsEvent.user_name,

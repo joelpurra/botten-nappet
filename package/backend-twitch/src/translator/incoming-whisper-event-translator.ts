@@ -33,19 +33,21 @@ import IIncomingWhisperEvent,
 
 /* tslint:disable:max-line-length */
 
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
-import IncomingWhisperEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-whisper-event-topic-publisher";
-import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-pub-sub-event-single-item-json-topics-subscriber";
+import IncomingWhisperEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-whisper-event-topic-publisher";
+import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-pub-sub-event-single-item-json-topics-subscriber";
 
 /* tslint:enable:max-line-length */
 
-@asrt(3)
+@asrt(4)
 export default class IncomingWhisperCommandEventTranslator extends EventSubscriptionManager<IIncomingPubSubEvent> {
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() connection: IncomingPubSubEventSingleItemJsonTopicsSubscriber,
         @asrt() private readonly incomingWhisperEventEmitter: IncomingWhisperEventTopicPublisher,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -61,8 +63,17 @@ export default class IncomingWhisperCommandEventTranslator extends EventSubscrip
         const whisperType = this.getWhisperType(whisperEventOwner, whisperEvent.from_id, whisperEvent.recipient.id);
 
         const event: IIncomingWhisperEvent = {
-            id: whisperEvent.id,
-            message: whisperEvent.body,
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
+            data: {
+                id: whisperEvent.id,
+                message: whisperEvent.body,
+                timestamp: new Date(whisperEvent.sent_ts),
+                type: whisperType,
+            },
             recipient: {
                 id: whisperEvent.recipient.id,
                 name: whisperEvent.recipient.username,
@@ -71,8 +82,7 @@ export default class IncomingWhisperCommandEventTranslator extends EventSubscrip
                 id: whisperEvent.from_id,
                 name: whisperEvent.tags.login,
             },
-            timestamp: new Date(whisperEvent.sent_ts),
-            type: whisperType,
+            timestamp: new Date(),
         };
 
         this.incomingWhisperEventEmitter.emit(event);

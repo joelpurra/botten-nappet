@@ -50,6 +50,9 @@
       "@botten-nappet/interface-backend-twitch/*": [
         "./package/interface-backend-twitch/*",
       ],
+      "@botten-nappet/interface-shared/*": [
+        "./package/interface-shared/*",
+      ],
       "@botten-nappet/interface-shared-twitch/*": [
         "./package/interface-shared-twitch/*",
       ],

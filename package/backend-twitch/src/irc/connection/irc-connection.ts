@@ -35,6 +35,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IrcConfig from "../../config/irc-config";
 
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import UserAccessTokenProvider from "../../authentication/user-access-token-provider";
 import UserChannelNameProvider from "../../authentication/user-channel-provider";
 import UserNameProvider from "../../authentication/user-name-provider";
@@ -44,10 +45,11 @@ import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
+import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import WebSocketConnection from "../../websocket/connection/websocket-connection";
 import IIRCConnection from "./iirc-connection";
 
-@asrt(5)
+@asrt(7)
 @autoinject
 export default class IrcConnection
     extends WebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand>
@@ -58,7 +60,9 @@ export default class IrcConnection
         @asrt() logger: PinoLogger,
         @asrt() private readonly userChannelNameProvider: UserChannelNameProvider,
         @asrt() private readonly userNameProvider: UserNameProvider,
+        @asrt() private readonly userIdProvider: UserIdProvider,
         @asrt() private readonly userAccessTokenProvider: UserAccessTokenProvider,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, ircConfig.twitchIrcWebSocketUri, "irc");
 
@@ -67,6 +71,10 @@ export default class IrcConnection
 
     public get channel(): Promise<string> {
         return this.userChannelNameProvider.get();
+    }
+
+    public get channelId(): Promise<number> {
+        return this.userIdProvider.get();
     }
 
     @asrt(0)
@@ -99,7 +107,7 @@ export default class IrcConnection
                             timestamp: new Date(),
                         },
                     ],
-                    verifier: (message) => message.original.includes("CAP * ACK"),
+                    verifier: (message) => message.data.original.includes("CAP * ACK"),
                 },
 
                 {
@@ -122,7 +130,7 @@ export default class IrcConnection
                     ],
                     // NOTE: the "001" message might change, but for now it's a hardcoded return value.
                     // https://dev.twitch.tv/docs/irc#connecting-to-twitch-irc
-                    verifier: (message) => message.original.includes("001"),
+                    verifier: (message) => message.data.original.includes("001"),
                 },
 
                 {
@@ -135,7 +143,7 @@ export default class IrcConnection
                             timestamp: new Date(),
                         },
                     ],
-                    verifier: (message) => message.original.includes(`JOIN ${userChannelName}`),
+                    verifier: (message) => message.data.original.includes(`JOIN ${userChannelName}`),
                 },
             ];
 
@@ -170,15 +178,31 @@ export default class IrcConnection
         // :Kappa Keepo Kappa
         /* tslint:enable:max-line-length */
 
+        const userChannelName = await this.channel;
+        const channelId = await this.channelId;
+
         const incomingMessage: IIncomingIrcCommand = {
-            channel: null,
-            command: null,
-            message: null,
-            original: rawMessage,
-            originalTags: null,
-            tags: null,
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
+            channel: {
+                id: channelId,
+                name: userChannelName,
+            },
+            data: {
+                channel: null,
+                command: null,
+                message: null,
+                original: rawMessage,
+                originalTags: null,
+                tags: null,
+                timestamp: new Date(),
+                username: null,
+            },
+            interfaceName: "IIncomingIrcCommand",
             timestamp: new Date(),
-            username: null,
         };
 
         if (rawMessage[0] === "@") {
@@ -188,13 +212,13 @@ export default class IrcConnection
             const channelIndex = rawMessage.indexOf(" ", commandIndex + 1);
             const messageIndex = rawMessage.indexOf(":", channelIndex + 1);
 
-            incomingMessage.originalTags = rawMessage.slice(1, tagIndex);
-            incomingMessage.username = rawMessage.slice(tagIndex + 2, rawMessage.indexOf("!"));
-            incomingMessage.command = rawMessage.slice(userIndex + 1, commandIndex);
-            incomingMessage.channel = rawMessage.slice(commandIndex + 1, channelIndex);
-            incomingMessage.message = rawMessage.slice(messageIndex + 1);
+            incomingMessage.data.originalTags = rawMessage.slice(1, tagIndex);
+            incomingMessage.data.username = rawMessage.slice(tagIndex + 2, rawMessage.indexOf("!"));
+            incomingMessage.data.command = rawMessage.slice(userIndex + 1, commandIndex);
+            incomingMessage.data.channel = rawMessage.slice(commandIndex + 1, channelIndex);
+            incomingMessage.data.message = rawMessage.slice(messageIndex + 1);
 
-            incomingMessage.tags = incomingMessage.originalTags
+            incomingMessage.data.tags = incomingMessage.data.originalTags
                 .split(";")
                 .reduce(
                     (obj: any, tag) => {
@@ -214,8 +238,8 @@ export default class IrcConnection
                     {},
             );
         } else if (rawMessage.startsWith("PING")) {
-            incomingMessage.command = "PING";
-            incomingMessage.message = rawMessage.split(":")[1];
+            incomingMessage.data.command = "PING";
+            incomingMessage.data.message = rawMessage.split(":")[1];
         }
 
         return incomingMessage;

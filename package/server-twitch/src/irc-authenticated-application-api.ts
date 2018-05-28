@@ -38,7 +38,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 
-import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
+import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-irc-command-single-item-json-topics-subscriber";
 
 import TwitchPerUserIrcApi from "./per-user-irc-api";
 
@@ -46,7 +46,7 @@ import TwitchPerUserIrcApi from "./per-user-irc-api";
 
 @asrt(4)
 export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
-    private connectables: IConnectable[];
+    private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -62,8 +62,6 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.connectables = [];
     }
 
     @asrt(0)

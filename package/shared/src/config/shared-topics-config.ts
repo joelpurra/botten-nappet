@@ -34,6 +34,46 @@ export default class SharedTopicsConfig {
         @asrt() private readonly sharedConfig: SharedConfig,
     ) { }
 
+    public get topicApplicationAuthenticationEvent(): string {
+        return this.sharedConfig.topicApplicationAuthenticationEvent;
+    }
+
+    public get topicApplicationUnauthenticationEvent(): string {
+        return this.sharedConfig.topicApplicationUnauthenticationEvent;
+    }
+
+    public get topicApplicationAuthenticatedEvent(): string {
+        return this.sharedConfig.topicApplicationAuthenticatedEvent;
+    }
+
+    public get topicApplicationUnauthenticatedEvent(): string {
+        return this.sharedConfig.topicApplicationUnauthenticatedEvent;
+    }
+
+    public get topicUserAuthenticationEvent(): string {
+        return this.sharedConfig.topicUserAuthenticationEvent;
+    }
+
+    public get topicUserUnauthenticationEvent(): string {
+        return this.sharedConfig.topicUserUnauthenticationEvent;
+    }
+
+    public get topicUserAuthenticatedEvent(): string {
+        return this.sharedConfig.topicUserAuthenticatedEvent;
+    }
+
+    public get topicUserUnauthenticatedEvent(): string {
+        return this.sharedConfig.topicUserUnauthenticatedEvent;
+    }
+
+    public get topicTwitchIncomingApplicationAuthenticatedEvent(): string {
+        return this.sharedConfig.topicTwitchIncomingApplicationAuthenticatedEvent;
+    }
+
+    public get topicTwitchIncomingApplicationUnauthenticatedEvent(): string {
+        return this.sharedConfig.topicTwitchIncomingApplicationUnauthenticatedEvent;
+    }
+
     public get topicTwitchIncomingFollowingEvent(): string {
         return this.sharedConfig.topicTwitchIncomingFollowingEvent;
     }

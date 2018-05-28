@@ -36,7 +36,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
 
-import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
+import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-outgoing-search-command-single-item-json-topics-subscriber";
 import VidyApi from "./api";
 
 /* tslint:enable:max-line-length */
@@ -45,7 +45,7 @@ import VidyApi from "./api";
 @autoinject
 export default class BackendVidyApplicationApi implements IStartableStoppable {
     private logger: any;
-    private connectables: IConnectable[];
+    private connectables: IConnectable[] = [];
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -54,8 +54,6 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         @asrt() private readonly vidyApi: VidyApi,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.connectables = [];
     }
 
     @asrt(0)
@@ -69,10 +67,14 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         this.logger.info("Connected.");
 
         await this.vidyApi.start();
+
+        this.logger.info("Started.");
     }
 
     @asrt(0)
     public async stop(): Promise<void> {
+        this.logger.info("Stopping.");
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

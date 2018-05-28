@@ -20,7 +20,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import IUserChannelEvent from "./iuser-channel-event";
 
-export default interface IIncomingSubscriptionEvent extends IUserChannelEvent {
+interface IIncomingSubscriptionEventData {
     message: string | null;
     months: number;
+}
+
+export default interface IIncomingSubscriptionEvent extends IUserChannelEvent<IIncomingSubscriptionEventData> {
 }

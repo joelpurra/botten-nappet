@@ -36,14 +36,15 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
-import IncomingStreamingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-streaming-event-topic-publisher";
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+import IncomingStreamingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-streaming-event-topic-publisher";
 import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
 import IPollingStreamingResponse from "../interface/response/polling/istreaming-polling-response";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
-@asrt(5)
+@asrt(6)
 @autoinject
 export default class IncomingStreamingCommandEventTranslator extends PollingManager<IPollingStreamingResponse> {
     constructor(
@@ -52,6 +53,7 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
         @asrt() private readonly incomingStreamingEventEmitter: IncomingStreamingEventTopicPublisher,
         @asrt() private readonly userNameProvider: UserNameProvider,
         @asrt() private readonly userIdProvider: UserIdProvider,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -71,16 +73,24 @@ export default class IncomingStreamingCommandEventTranslator extends PollingMana
             const username = await this.userNameProvider.get();
 
             const event: IIncomingStreamingEvent = {
+                application: {
+                    // TODO: create a class/builder for the twitch application object.
+                    id: this.applicationTokenManagerConfig.appClientId,
+                    name: "twitch",
+                },
                 channel: {
                     id: userId,
                     name: username,
                 },
-                startedAt: streamEvent.started_at,
-                // TODO: move upwards in the object creation chain?
+                data: {
+                    startedAt: streamEvent.started_at,
+                    // TODO: move upwards in the object creation chain?
+                    title: streamEvent.title,
+                    type: streamEvent.type,
+                    viewers: streamEvent.viewer_count,
+                },
+                interfaceName: "IIncomingStreamingEvent",
                 timestamp: new Date(),
-                title: streamEvent.title,
-                type: streamEvent.type,
-                viewers: streamEvent.viewer_count,
             };
 
             this.incomingStreamingEventEmitter.emit(event);

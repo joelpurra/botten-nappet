@@ -18,9 +18,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserNameId from "./iuser-name-id";
+import INamedInterface from "@botten-nappet/interface-shared/src/data/inamed-interface";
+import IUserEvent from "@botten-nappet/interface-shared/src/event/iuser-event";
 
-export default interface IUserEvent {
-    recipient: IUserNameId;
-    timestamp: Date;
+export default interface IUserUnauthenticatedEvent
+    extends IUserEvent<null>, INamedInterface {
+    interfaceName: "IUserUnauthenticatedEvent";
 }

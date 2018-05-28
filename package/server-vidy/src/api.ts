@@ -39,15 +39,15 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import VidyAuthenticatedRequest from "@botten-nappet/backend-vidy/src/request/authenticated-request";
 import VidyOutgoingSearchCommandHandler from "@botten-nappet/backend-vidy/src/translator/outgoing-search-command-handler";
-import IncomingSearchResultEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-search-result-event-topic-publisher";
-import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-search-command-single-item-json-topics-subscriber";
+import IncomingSearchResultEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/vidy-incoming-search-result-event-topic-publisher";
+import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-outgoing-search-command-single-item-json-topics-subscriber";
 
 /* tslint:enable max-line-length */
 
 @asrt(6)
 @autoinject
 export default class BackendVidyApi implements IStartableStoppable {
-    private startables: IStartableStoppable[];
+    private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -61,8 +61,6 @@ export default class BackendVidyApi implements IStartableStoppable {
         @asrt() private readonly vidyAuthenticatedRequest: VidyAuthenticatedRequest,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.startables = [];
     }
 
     @asrt(0)
@@ -85,7 +83,7 @@ export default class BackendVidyApi implements IStartableStoppable {
             vidyKeyId: this.backendConfig.vidyKeyId,
         }, "Started listening to events");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

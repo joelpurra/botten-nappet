@@ -47,11 +47,11 @@ import FrontendConfig from "../config/frontend-config";
 
 /* tslint:disable max-line-length */
 
-import IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-cheering-with-cheermotes-event-single-item-json-topics-subscriber";
-import IncomingFollowingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-following-event-single-item-json-topics-subscriber";
-import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
-import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-search-result-event-single-item-json-topics-subscriber";
-import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-subscription-event-single-item-json-topics-subscriber";
+import IncomingCheeringWithCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-cheering-with-cheermotes-event-single-item-json-topics-subscriber";
+import IncomingFollowingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-following-event-single-item-json-topics-subscriber";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-irc-command-single-item-json-topics-subscriber";
+import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-subscription-event-single-item-json-topics-subscriber";
+import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-incoming-search-result-event-single-item-json-topics-subscriber";
 
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
@@ -70,9 +70,9 @@ interface ICustomWebSocketEventData {
 
 @asrt(8)
 export default class FrontendManagerMain {
-    private io: SocketIo.Server | null;
-    private server: http.Server | null;
-    private connectables: IConnectable[];
+    private io: SocketIo.Server | null = null;
+    private server: http.Server | null = null;
+    private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -97,10 +97,6 @@ export default class FrontendManagerMain {
             IncomingSearchResultEventSingleItemJsonTopicsSubscriber,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.server = null;
-        this.io = null;
-        this.connectables = [];
     }
 
     @asrt(0)
@@ -153,7 +149,7 @@ export default class FrontendManagerMain {
 
                 let customWebSocketEventData: ICustomWebSocketEventData | null = null;
 
-                switch (data.command) {
+                switch (data.data.command) {
                     case "PRIVMSG":
                         customWebSocketEventData = this.getIrcPrivMsgWebsocketEventData(data);
                         break;
@@ -174,8 +170,8 @@ export default class FrontendManagerMain {
 
                         // NOTE: always keep default data, no overrides.
                         {
-                            timestamp: data.timestamp,
-                            username: data.username,
+                            timestamp: data.data.timestamp,
+                            username: data.data.username,
                         },
                     ),
                     event: customWebSocketEventData.eventName,
@@ -216,11 +212,11 @@ export default class FrontendManagerMain {
                 const msg = {
                     data: {
                         // args: commandArguments,
-                        bits: data.bits,
-                        cheermotes: data.cheermotes,
-                        message: data.message,
+                        bits: data.data.bits,
+                        cheermotes: data.data.cheermotes,
+                        message: data.data.message,
                         timestamp: data.timestamp,
-                        total: data.total,
+                        total: data.data.total,
                         username: data.triggerer.name,
                     },
                     event: "cheering-with-cheermotes",
@@ -353,21 +349,21 @@ export default class FrontendManagerMain {
     private getIrcPrivMsgWebsocketEventData(
         @asrt() data: IIncomingIrcCommand,
     ): ICustomWebSocketEventData | null {
-        if (data.message === null) {
-            throw new Error("data.message");
+        if (data.data.message === null) {
+            throw new Error("data.data.message");
         }
 
         let handled = false;
         let eventName: string | null = null;
         let customData: object | null = null;
 
-        const isSubscriber = (data.tags && data.tags.subscriber === "1") || false;
+        const isSubscriber = (data.data.tags && data.data.tags.subscriber === "1") || false;
 
         const exampleCheermote1 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/1/4.gif";
         const exampleCheermote100 = "https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif";
 
         const commandPrefix = "!";
-        const messageParts = data.message.trim().split(/\s+/);
+        const messageParts = data.data.message.trim().split(/\s+/);
         const isCommandMessage = messageParts[0].startsWith(commandPrefix);
 
         if (isCommandMessage) {
@@ -445,7 +441,7 @@ export default class FrontendManagerMain {
 
             customData = {
                 isSubscriber,
-                message: data.message,
+                message: data.data.message,
             };
 
             handled = true;

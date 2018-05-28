@@ -18,11 +18,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserToUserEvent from "./iuser-to-user-event";
+import IUserToUserEvent from "@botten-nappet/interface-shared/src/event/iuser-to-user-event";
 
 export type WhisperType = "sent" | "received";
 
-export default interface IIncomingWhisperEvent extends IUserToUserEvent {
+export interface IWhisperEventData {
     // TODO: tags.
     // TODO: colors.
     // TODO: emotes.
@@ -32,3 +32,5 @@ export default interface IIncomingWhisperEvent extends IUserToUserEvent {
     message: string | null;
     timestamp: Date;
 }
+
+export default interface IIncomingWhisperEvent extends IUserToUserEvent<IWhisperEventData> { }

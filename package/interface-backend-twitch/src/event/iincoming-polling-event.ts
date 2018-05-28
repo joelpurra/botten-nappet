@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
 
-export default interface IIncomingPollingEvent extends IChannelEvent {
+export default interface IIncomingPollingEvent extends IChannelEvent<any> {
+    interfaceName: "IIncomingPollingEvent",
     data: any;
 }

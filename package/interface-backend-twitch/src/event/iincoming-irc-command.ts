@@ -17,7 +17,11 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-export default interface IIncomingIrcCommand {
+
+import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
+import INamedInterface from "@botten-nappet/interface-shared/src/data/inamed-interface";
+
+interface IIncomingIrcCommandData {
     channel: (string | null);
     command: (string | null);
     message: (string | null);
@@ -28,4 +32,9 @@ export default interface IIncomingIrcCommand {
     } | null);
     timestamp: Date;
     username: (string | null);
+}
+
+export default interface IIncomingIrcCommand
+    extends IChannelEvent<IIncomingIrcCommandData>, INamedInterface {
+    interfaceName: "IIncomingIrcCommand";
 }

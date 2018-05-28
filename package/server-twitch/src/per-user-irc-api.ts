@@ -42,14 +42,14 @@ import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authenticati
 import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import TwitchIncomingIrcCommandEventTranslator from "@botten-nappet/backend-twitch/src/irc/translator/incoming-irc-command-event-translator";
 import TwitchOutgoingIrcCommandEventHandler from "@botten-nappet/backend-twitch/src/irc/translator/outgoing-irc-command-event-handler";
-import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-irc-command-topic-publisher";
-import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/outgoing-irc-command-single-item-json-topics-subscriber";
+import IncomingIrcCommandTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-irc-command-topic-publisher";
+import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-irc-command-single-item-json-topics-subscriber";
 
 /* tslint:enable max-line-length */
 
 @asrt(7)
 export default class TwitchPerUserIrcApi implements IStartableStoppable {
-    private startables: IStartableStoppable[];
+    private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -65,8 +65,6 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
         @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.startables = [];
     }
 
     @asrt(0)
@@ -110,7 +108,7 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

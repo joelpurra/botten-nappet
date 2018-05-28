@@ -20,9 +20,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import IChannelEvent from "./ichannel-event";
 
-export default interface IIncomingStreamingEvent extends IChannelEvent {
-    type: "live" | "vodcast" | "";
+// NOTE: same as TwitchApiV6StreamingEventType.
+type IncomingStreamingEventType = "live" | "vodcast" | "";
+
+interface IIncomingStreamingEventData {
+    type: IncomingStreamingEventType;
     title: string;
     viewers: number;
     startedAt: string;
+}
+
+export default interface IIncomingStreamingEvent extends IChannelEvent<IIncomingStreamingEventData> {
 }

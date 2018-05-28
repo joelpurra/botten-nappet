@@ -47,10 +47,10 @@ export default class NewChatterIrcHandler extends EventSubscriptionManager<IInco
     protected async dataHandler(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
-        const tags = data.tags!;
+        const tags = data.data.tags!;
         const username = tags.login;
 
-        this.logger.trace("Responding to new chatter.", username, data.message, "dataHandler");
+        this.logger.trace("Responding to new chatter.", username, data.data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure response.
@@ -59,7 +59,7 @@ export default class NewChatterIrcHandler extends EventSubscriptionManager<IInco
         /* tslint:enable:max-line-length */
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: data.data.channel,
             command: "PRIVMSG",
             message: response,
             tags: {},
@@ -73,27 +73,27 @@ export default class NewChatterIrcHandler extends EventSubscriptionManager<IInco
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        if (data.command !== "USERNOTICE") {
+        if (data.data.command !== "USERNOTICE") {
             return false;
         }
 
-        if (data.tags === null) {
+        if (data.data.tags === null) {
             return false;
         }
 
-        if (typeof data.tags !== "object") {
+        if (typeof data.data.tags !== "object") {
             return false;
         }
 
-        if (typeof data.tags["msg-id"] !== "string") {
+        if (typeof data.data.tags["msg-id"] !== "string") {
             return false;
         }
 
-        if (data.tags["msg-id"] !== "ritual") {
+        if (data.data.tags["msg-id"] !== "ritual") {
             return false;
         }
 
-        if (data.tags["msg-param-ritual-name"] !== "new_chatter") {
+        if (data.data.tags["msg-param-ritual-name"] !== "new_chatter") {
             return false;
         }
 

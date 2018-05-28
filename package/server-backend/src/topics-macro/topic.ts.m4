@@ -30,7 +30,7 @@ import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 
 @asrt(1)
 @autoinject
-export default class `'___TOPIC_NAME_PASCAL_CASE___()Topic extends TopicConfig {
+export default class `'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___()Topic extends TopicConfig {
     // NOTE: this file is auto-generated. Changes will be overwritten.
     constructor(
         @asrt() topicsConfig: TopicsConfig,

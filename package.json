@@ -61,6 +61,7 @@
     "@botten-nappet/client-obs": "file:./package/client-obs",
     "@botten-nappet/client-shared": "file:./package/client-shared",
     "@botten-nappet/interface-backend-twitch": "file:./package/interface-backend-twitch",
+    "@botten-nappet/interface-shared": "file:./package/interface-shared",
     "@botten-nappet/interface-shared-twitch": "file:./package/interface-shared-twitch",
     "@botten-nappet/interface-shared-vidy": "file:./package/interface-shared-vidy",
     "@botten-nappet/server-backend": "file:./package/server-backend",

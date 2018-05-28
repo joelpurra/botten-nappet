@@ -37,13 +37,14 @@ import ITwitchApiV5ChannelFollowingEvent from "../interface/response/polling/itw
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
-import IncomingFollowingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-following-event-topic-publisher";
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+import IncomingFollowingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-following-event-topic-publisher";
 import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
-@asrt(5)
+@asrt(6)
 @autoinject
 export default class IncomingFollowingCommandEventTranslator extends PollingManager<IPollingFollowingResponse> {
     private lastFollowingMessageTimestamp: number;
@@ -54,6 +55,7 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
         @asrt() private readonly incomingFollowingEventEmitter: IncomingFollowingEventTopicPublisher,
         @asrt() private readonly userNameProvider: UserNameProvider,
         @asrt() private readonly userIdProvider: UserIdProvider,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -76,10 +78,17 @@ export default class IncomingFollowingCommandEventTranslator extends PollingMana
             const timestamp = moment(follow.created_at).toDate();
 
             const event: IIncomingFollowingEvent = {
+                application: {
+                    // TODO: create a class/builder for the twitch application object.
+                    id: this.applicationTokenManagerConfig.appClientId,
+                    name: "twitch",
+                },
                 channel: {
                     id: await this.userIdProvider.get(),
                     name: await this.userNameProvider.get(),
                 },
+                data: null,
+                interfaceName: "IIncomingFollowingEvent",
                 timestamp,
                 triggerer: {
                     id: userId,

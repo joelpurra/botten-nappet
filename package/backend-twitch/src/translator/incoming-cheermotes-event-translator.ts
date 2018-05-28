@@ -33,14 +33,15 @@ import IIncomingCheermotesEvent from "@botten-nappet/interface-shared-twitch/src
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
-import IncomingCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-cheermotes-event-topic-publisher";
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+import IncomingCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-cheermotes-event-topic-publisher";
 import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
 import IPollingCheermotesResponse from "../interface/response/polling/icheermotes-polling-response";
 import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 
-@asrt(5)
+@asrt(6)
 @autoinject
 export default class IncomingCheermotesCommandEventTranslator extends PollingManager<IPollingCheermotesResponse> {
     constructor(
@@ -49,6 +50,7 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         @asrt() private readonly incomingCheermotesEventEmitter: IncomingCheermotesEventTopicPublisher,
         @asrt() private readonly userNameProvider: UserNameProvider,
         @asrt() private readonly userIdProvider: UserIdProvider,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -60,11 +62,19 @@ export default class IncomingCheermotesCommandEventTranslator extends PollingMan
         @asrt() data: IPollingCheermotesResponse,
     ): Promise<void> {
         const event: IIncomingCheermotesEvent = {
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
             channel: {
                 id: await this.userIdProvider.get(),
                 name: await this.userNameProvider.get(),
             },
-            cheermotes: data,
+            data: {
+                cheermotes: data,
+            },
+            interfaceName: "IIncomingCheermotesEvent",
             // TODO: move upwards in the object creation chain?
             timestamp: new Date(),
         };

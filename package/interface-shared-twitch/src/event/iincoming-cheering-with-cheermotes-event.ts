@@ -23,7 +23,7 @@ import {
 } from "./icheertoken-with-cheermotes-url";
 import IUserChannelEvent from "./iuser-channel-event";
 
-export default interface IIncomingCheeringWithCheermotesEvent extends IUserChannelEvent {
+interface IIncomingCheeringWithCheermotesEventData {
     message: string | null;
     bits: number;
     cheermotes: ICheerTokenWithCheermoteUrl[];
@@ -32,4 +32,8 @@ export default interface IIncomingCheeringWithCheermotesEvent extends IUserChann
         new_version: number;
         previous_version: number;
     } | null;
+}
+
+export default interface IIncomingCheeringWithCheermotesEvent
+    extends IUserChannelEvent<IIncomingCheeringWithCheermotesEventData> {
 }

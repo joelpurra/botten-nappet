@@ -30,10 +30,11 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IIncomingPollingEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-polling-event";
 
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IPollingConnection from "../connection/ipolling-connection";
 import PollingManager from "../connection/polling-manager";
 
-@asrt(5)
+@asrt(6)
 export default class IncomingPollingEventTranslator extends PollingManager<any> {
     constructor(
         @asrt() logger: PinoLogger,
@@ -41,6 +42,7 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         @asrt() private incomingPollingEventEmitter: IEventEmitter<IIncomingPollingEvent>,
         @asrt() private readonly username: string,
         @asrt() private readonly userid: number,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -56,11 +58,17 @@ export default class IncomingPollingEventTranslator extends PollingManager<any> 
         @asrt() data: any,
     ): Promise<void> {
         const event: IIncomingPollingEvent = {
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
             channel: {
                 id: this.userid,
                 name: this.username,
             },
             data,
+            interfaceName: "IIncomingPollingEvent",
             // TODO: move upwards in the object creation chain?
             timestamp: new Date(),
         };

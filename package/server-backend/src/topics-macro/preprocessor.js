@@ -66,15 +66,21 @@ const createDefaultTransformer = async (
     sectionNameLowerCase,
     groupNameLowerCase,
     groupNamePascalCase,
+    groupNameParamCase,
     topicNameParamCase,
     topicNamePascalCase,
     configClassPath,
+    hasSeparatePackage,
 ) => {
     const transformer = new M4();
+
+    transformer.define("___INTERFACE_PACKAGE_NAME___", hasSeparatePackage ? `-${groupNameLowerCase}` : "");
+    transformer.define("___INTERFACE_FILE_NAME___", hasSeparatePackage ? "" : `${groupNameLowerCase}-`);
 
     transformer.define("___SECTION_NAME_LOWER_CASE___", sectionNameLowerCase);
     transformer.define("___GROUP_NAME_LOWER_CASE___", groupNameLowerCase);
     transformer.define("___GROUP_NAME_PASCAL_CASE___", groupNamePascalCase);
+    transformer.define("___GROUP_NAME_PARAM_CASE___", groupNameParamCase);
     transformer.define("___TOPIC_NAME_PARAM_CASE___", topicNameParamCase);
     transformer.define("___TOPIC_NAME_PASCAL_CASE___", topicNamePascalCase);
     transformer.define("___TOPIC_CONFIG_PATH___", configClassPath);
@@ -86,9 +92,11 @@ const transform = async (
     sectionNameLowerCase,
     groupNameLowerCase,
     groupNamePascalCase,
+    groupNameParamCase,
     topicNameParamCase,
     topicNamePascalCase,
     configClassPath,
+    hasSeparatePackage,
     relativeTemplatePath,
     relativeOutputDirectoryPath,
     outputFileName,
@@ -97,9 +105,11 @@ const transform = async (
         sectionNameLowerCase,
         groupNameLowerCase,
         groupNamePascalCase,
+        groupNameParamCase,
         topicNameParamCase,
         topicNamePascalCase,
         configClassPath,
+        hasSeparatePackage,
     );
 
     const templateReadStream = await getReadStream(relativeTemplatePath);
@@ -110,10 +120,11 @@ const transform = async (
         .pipe(outputWriteStream);
 };
 
-const processSectionGroupTopic = async (sectionName, groupName, topicName, configClassPath) => {
+const processSectionGroupTopic = async (sectionName, groupName, topicName, configClassPath, hasSeparatePackage) => {
     const sectionNameLowerCase = changeCase.lowerCase(sectionName);
     const groupNameLowerCase = changeCase.lowerCase(groupName);
     const groupNamePascalCase = changeCase.pascalCase(groupName);
+    const groupNameParamCase = changeCase.paramCase(groupName);
     const topicNameParamCase = changeCase.paramCase(topicName);
     const topicNamePascalCase = changeCase.pascalCase(topicName);
 
@@ -122,15 +133,18 @@ const processSectionGroupTopic = async (sectionName, groupName, topicName, confi
         async (templatePath) => {
             // TODO: string templating system?
             const topicFileName = templatePath.fileName
+                .replace("${groupNameParamCase}", groupNameParamCase)
                 .replace("${topicNameParamCase}", topicNameParamCase);
 
             await transform(
                 sectionNameLowerCase,
                 groupNameLowerCase,
                 groupNamePascalCase,
+                groupNameParamCase,
                 topicNameParamCase,
                 topicNamePascalCase,
                 configClassPath,
+                hasSeparatePackage,
                 templatePath.template,
                 templatePath.outputDirectory,
                 topicFileName,
@@ -148,6 +162,7 @@ const processSectionGroupTopics = async (topicSections, sectionName, groupName) 
             groupName,
             topicName,
             topicSections[sectionName].configClassPath,
+            topicSections[sectionName].groups[groupName].hasSeparatePackage,
         ),
 );
 

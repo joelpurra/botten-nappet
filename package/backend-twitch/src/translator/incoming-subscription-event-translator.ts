@@ -32,13 +32,14 @@ import IIncomingSubscriptionEvent from "@botten-nappet/interface-shared-twitch/s
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-subscription-event-topic-publisher";
-import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/incoming-irc-command-single-item-json-topics-subscriber";
+import IncomingSubscriptionEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-subscription-event-topic-publisher";
+import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-irc-command-single-item-json-topics-subscriber";
 
 /* tslint:enable:max-line-length */
 
-@asrt(5)
+@asrt(6)
 export default class IncomingSubscriptionCommandEventTranslator extends EventSubscriptionManager<IIncomingIrcCommand> {
     constructor(
         @asrt() logger: PinoLogger,
@@ -46,6 +47,7 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
         @asrt() private readonly incomingSubscriptionEventEmitter: IncomingSubscriptionEventTopicPublisher,
         @asrt() private readonly userNameProvider: UserNameProvider,
         @asrt() private readonly userIdProvider: UserIdProvider,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connection);
 
@@ -56,22 +58,30 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
     protected async dataHandler(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
-        const tags = data.tags!;
+        const tags = data.data.tags!;
         const username = tags.login;
         // NOTE: contains sub/resub.
         // const msgId = tags["msg-id"];
         const msgParamMonths = parseInt(tags["msg-param-months"], 10);
         const months = !isNaN(msgParamMonths) && msgParamMonths >= 0 ? msgParamMonths : 0;
-        const userId = parseInt(data.tags!["user-id"], 10);
+        const userId = parseInt(data.data.tags!["user-id"], 10);
 
         const event: IIncomingSubscriptionEvent = {
+            application: {
+                // TODO: create a class/builder for the twitch application object.
+                id: this.applicationTokenManagerConfig.appClientId,
+                name: "twitch",
+            },
             channel: {
                 id: await this.userIdProvider.get(),
                 name: await this.userNameProvider.get(),
             },
-            message: data.message,
-            months,
-            timestamp: data.timestamp,
+            data: {
+                message: data.data.message,
+                months,
+            },
+            interfaceName: "IIncomingSubscriptionEvent",
+            timestamp: new Date(),
             triggerer: {
                 id: userId,
                 name: username,
@@ -85,11 +95,11 @@ export default class IncomingSubscriptionCommandEventTranslator extends EventSub
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        if (data.command !== "USERNOTICE") {
+        if (data.data.command !== "USERNOTICE") {
             return false;
         }
 
-        const tags = data.tags;
+        const tags = data.data.tags;
 
         if (tags === null) {
             return false;

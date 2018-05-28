@@ -62,11 +62,11 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
     public async dataHandler(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
-        this.logger.trace("Responding to command.", data.username, data.message, "dataHandler");
+        this.logger.trace("Responding to command.", data.data.username, data.data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure message.
-        const tokenizedMessageParts = data.message!
+        const tokenizedMessageParts = data.data.message!
             .toLowerCase()
             .split(/[^a-z]+/)
             .map((tokenizedPart) => tokenizedPart.trim())
@@ -80,9 +80,9 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
         const response = this.commandsAndResponses[incomingCommand];
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: data.data.channel,
             command: "PRIVMSG",
-            message: `@${data.username}: ${response}`,
+            message: `@${data.data.username}: ${response}`,
             tags: {},
             timestamp: new Date(),
         };
@@ -92,21 +92,21 @@ export default class TextResponseCommandIrcHandler extends EventSubscriptionMana
 
     @asrt(1)
     public async filter(
-        @asrt() data: IIncomingIrcCommand
+        @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        if (data.command !== "PRIVMSG") {
+        if (data.data.command !== "PRIVMSG") {
             return false;
         }
 
-        if (typeof data.message !== "string") {
+        if (typeof data.data.message !== "string") {
             return false;
         }
 
-        if (!data.message.startsWith(this.commandPrefix)) {
+        if (!data.data.message.startsWith(this.commandPrefix)) {
             return false;
         }
 
-        const tokenizedMessageParts = data.message
+        const tokenizedMessageParts = data.data.message
             .toLowerCase()
             .split(/[^a-z]+/)
             .map((tokenizedPart) => tokenizedPart.trim())

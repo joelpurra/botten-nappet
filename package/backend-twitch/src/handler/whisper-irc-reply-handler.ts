@@ -64,7 +64,7 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
         // TODO: configure response.
         let response = null;
 
-        if (data.type === "received") {
+        if (data.data.type === "received") {
             response = `Hey, ${username}, I'll have a look at your whisper soon 😀`;
         } else {
             response = `Hey, ${username}, I just sent a reply whisper 😀`;

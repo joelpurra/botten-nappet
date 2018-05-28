@@ -71,22 +71,22 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
     protected async dataHandler(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
-        this.logger.trace("Responding to greeting.", data.username, data.message, "dataHandler");
+        this.logger.trace("Responding to greeting.", data.data.username, data.data.message, "dataHandler");
 
-        const userIsASubscriber = data.tags!.subscriber === "1";
+        const userIsASubscriber = data.data.tags!.subscriber === "1";
 
         // TODO: use a string templating system.
         // TODO: configure response.
         let response = null;
 
         if (userIsASubscriber) {
-            response = `Hiya @${data.username}, loyal rubber ducky, how are you?`;
+            response = `Hiya @${data.data.username}, loyal rubber ducky, how are you?`;
         } else {
-            response = `Hiya @${data.username}, how are you?`;
+            response = `Hiya @${data.data.username}, how are you?`;
         }
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: data.data.channel,
             command: "PRIVMSG",
             message: response,
             tags: {},
@@ -100,19 +100,19 @@ export default class GreetingIrcHandler extends EventSubscriptionManager<IIncomi
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        if (data.command !== "PRIVMSG") {
+        if (data.data.command !== "PRIVMSG") {
             return false;
         }
 
-        if (typeof data.message !== "string") {
+        if (typeof data.data.message !== "string") {
             return false;
         }
 
-        if (data.username === await this.twitchUserNameProvider.get()) {
+        if (data.data.username === await this.twitchUserNameProvider.get()) {
             return false;
         }
 
-        const tokenizedMessage = data.message
+        const tokenizedMessage = data.data.message
             .toLowerCase()
             .split(/[^a-z]+/)
             .map((tokenizedPart) => tokenizedPart.trim())

@@ -56,6 +56,16 @@ export default class SharedConfig {
         assert.nonEmptyString(this.loggingFile);
         assert.nonEmptyString(this.zmqAddress);
 
+        assert.nonEmptyString(this.topicApplicationAuthenticationEvent);
+        assert.nonEmptyString(this.topicApplicationUnauthenticationEvent);
+        assert.nonEmptyString(this.topicApplicationAuthenticatedEvent);
+        assert.nonEmptyString(this.topicApplicationUnauthenticatedEvent);
+        assert.nonEmptyString(this.topicUserAuthenticationEvent);
+        assert.nonEmptyString(this.topicUserUnauthenticationEvent);
+        assert.nonEmptyString(this.topicUserAuthenticatedEvent);
+        assert.nonEmptyString(this.topicUserUnauthenticatedEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingApplicationAuthenticatedEvent);
+        assert.nonEmptyString(this.topicTwitchIncomingApplicationUnauthenticatedEvent);
         assert.nonEmptyString(this.topicTwitchIncomingFollowingEvent);
         assert.nonEmptyString(this.topicTwitchIncomingCheeringWithCheermotesEvent);
         assert.nonEmptyString(this.topicVidyOutgoingSearchCommand);
@@ -104,6 +114,86 @@ export default class SharedConfig {
 
         assert.nonEmptyString(value);
         assert(value.startsWith("tcp://"));
+
+        return value;
+    }
+
+    public get topicApplicationAuthenticationEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.application.authenticationEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicApplicationUnauthenticationEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.application.unauthenticationEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicApplicationAuthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.application.authenticatedEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicApplicationUnauthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.application.unauthenticatedEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicUserAuthenticationEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.user.authenticationEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicUserUnauthenticationEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.user.unauthenticationEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicUserAuthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.user.authenticatedEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicUserUnauthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.user.unauthenticatedEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingApplicationAuthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingApplicationAuthenticatedEvent`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchIncomingApplicationUnauthenticatedEvent(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.incomingApplicationUnauthenticatedEvent`);
+
+        assert.nonEmptyString(value);
 
         return value;
     }

@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import IUserChannelEvent from "./iuser-channel-event";
 
-export default interface IIncomingCheeringEvent extends IUserChannelEvent {
+interface IIncomingCheeringEventData {
     message: string | null;
     bits: number;
     total: number;
@@ -28,4 +28,7 @@ export default interface IIncomingCheeringEvent extends IUserChannelEvent {
         new_version: number;
         previous_version: number;
     } | null;
+}
+
+export default interface IIncomingCheeringEvent extends IUserChannelEvent<IIncomingCheeringEventData> {
 }

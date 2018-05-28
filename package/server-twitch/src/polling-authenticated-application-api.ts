@@ -49,7 +49,7 @@ import TwitchPerUserPollingApi from "./per-user-polling-api";
 
 @asrt(5)
 export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
-    private connectables: IConnectable[];
+    private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -64,8 +64,6 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.connectables = [];
     }
 
     @asrt(0)

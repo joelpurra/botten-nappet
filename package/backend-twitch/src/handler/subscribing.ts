@@ -47,10 +47,10 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
     protected async dataHandler(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
-        const tags = data.tags!;
+        const tags = data.data.tags!;
         const username = tags.login;
 
-        this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
+        this.logger.trace("Responding to subscriber.", username, data.data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure response.
@@ -68,7 +68,7 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
         }
 
         const command: IOutgoingIrcCommand = {
-            channel: data.channel,
+            channel: data.data.channel,
             command: "PRIVMSG",
             message: `${response}`,
             tags: {},
@@ -82,11 +82,11 @@ export default class SubscribingIrcHandler extends EventSubscriptionManager<IInc
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        if (data.command !== "USERNOTICE") {
+        if (data.data.command !== "USERNOTICE") {
             return false;
         }
 
-        const tags = data.tags;
+        const tags = data.data.tags;
 
         if (tags === null) {
             return false;

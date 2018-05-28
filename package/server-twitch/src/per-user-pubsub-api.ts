@@ -39,7 +39,7 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 
 /* tslint:disable max-line-length */
 
-import IncomingPubSubEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/incoming-pub-sub-event-topic-publisher";
+import IncomingPubSubEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-pub-sub-event-topic-publisher";
 
 import IncomingPubSubEventTranslator from "@botten-nappet/backend-twitch/src/pubsub/translator/incoming-pubsub-event-translator";
 
@@ -52,7 +52,7 @@ import PubSubReconnectHandler from "@botten-nappet/backend-twitch/src/pubsub/han
 
 @asrt(6)
 export default class TwitchPerUserPubSubApi {
-    private startables: IStartableStoppable[];
+    private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
@@ -66,8 +66,6 @@ export default class TwitchPerUserPubSubApi {
         @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
         this.logger = logger.child(this.constructor.name);
-
-        this.startables = [];
     }
 
     @asrt(0)
@@ -105,7 +103,7 @@ export default class TwitchPerUserPubSubApi {
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

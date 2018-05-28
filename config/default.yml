@@ -10,6 +10,10 @@ backend:
         level: error
     topic:
         twitch:
+            outgoingApplicationAuthenticationCommand: "external:backend:twitch:outgoing:application:authentication:command"
+            outgoingApplicationUnauthenticationCommand: "external:backend:twitch:outgoing:application:unauthentication:command"
+            outgoingUserAuthenticationCommand: "external:backend:twitch:outgoing:user:authentication:command"
+            outgoingUserUnauthenticationCommand: "external:backend:twitch:outgoing:user:unauthentication:command"
             incomingIrcCommand: "external:backend:twitch:incoming:irc:command"
             outgoingIrcCommand: "external:backend:twitch:outgoing:irc:command"
             incomingPubSubEvent: "external:backend:twitch:incoming:pubsub:event"
@@ -44,6 +48,16 @@ shared:
         file: null
         level: error
     topic:
+        application:
+            authenticationEvent: "internal:shared:application:authentication:event"
+            unauthenticationEvent: "internal:shared:application:unauthentication:event"
+            authenticatedEvent: "internal:shared:incoming:application:authenticated:event"
+            unauthenticatedEvent: "internal:shared:incoming:application:unauthenticated:event"
+        user:
+            authenticationEvent: "internal:shared:user:authentication:event"
+            unauthenticationEvent: "internal:shared:user:unauthentication:event"
+            authenticatedEvent: "internal:shared:incoming:user:authenticated:event"
+            unauthenticatedEvent: "internal:shared:incoming:user:unauthenticated:event"
         twitch:
             incomingCheeringEvent: "internal:shared:twitch:incoming:cheering:event"
             incomingWhisperEvent: "internal:shared:twitch:incoming:whisper:event"
@@ -60,15 +74,15 @@ templates:
     topics-subscriber:
         templatePaths:
             topic:
-                fileName: ${topicNameParamCase}-topic.ts
+                fileName: ${groupNameParamCase}-${topicNameParamCase}-topic.ts
                 outputDirectory: ../topic/
                 template: ./topic.ts.m4
             topicsPublisher:
-                fileName: ${topicNameParamCase}-topic-publisher.ts
+                fileName: ${groupNameParamCase}-${topicNameParamCase}-topic-publisher.ts
                 outputDirectory: ../topic-publisher/
                 template: ./topic-publisher.ts.m4
             topicsSubscriber:
-                fileName: ${topicNameParamCase}-single-item-json-topics-subscriber.ts
+                fileName: ${groupNameParamCase}-${topicNameParamCase}-single-item-json-topics-subscriber.ts
                 outputDirectory: ../topics-subscriber/
                 template: ./single-item-topics-subscriber.ts.m4
         sections:
@@ -77,13 +91,22 @@ templates:
                 groups:
                     twitch:
                         topicConfigObjectPath: backend.topic.twitch
+                        hasSeparatePackage: true
             shared:
                 configClassPath: "@botten-nappet/shared/src/config/shared-topics-config"
                 groups:
+                    application:
+                        topicConfigObjectPath: shared.topic.application
+                        hasSeparatePackage: false
+                    user:
+                        topicConfigObjectPath: shared.topic.user
+                        hasSeparatePackage: false
                     twitch:
                         topicConfigObjectPath: shared.topic.twitch
+                        hasSeparatePackage: true
                     vidy:
                         topicConfigObjectPath: shared.topic.vidy
+                        hasSeparatePackage: true
 graphs:
     enabled: false
     dependencies:

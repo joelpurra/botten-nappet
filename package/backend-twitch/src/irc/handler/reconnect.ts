@@ -54,6 +54,6 @@ export default class ReconnectIrcHandler extends IrcManager {
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        return data.command === "RECONNECT";
+        return data.data.command === "RECONNECT";
     }
 }

@@ -72,7 +72,7 @@ function asrtMethodDecorator(
     asrtMethodDecoratorArguments: any[],
     target: Object,
     propertyKey: string | symbol,
-    descriptor: TypedPropertyDescriptor<Function>
+    descriptor: TypedPropertyDescriptor<Function>,
 ) {
     const method = descriptor.value;
     const decoratedClassConstructorOrInstance = target;
@@ -84,9 +84,19 @@ function asrtMethodDecorator(
         assert.greaterOrEqual(numberOfMethodArguments, 0);
     }
 
-    descriptor.value = function (...methodCallArgs: any[]) {
+    descriptor.value = function(...methodCallArgs: any[]) {
         if (!isNaN(numberOfMethodArguments)) {
-            assert.hasLength(methodCallArgs, numberOfMethodArguments);
+            assert(
+                methodCallArgs.length === numberOfMethodArguments,
+                `Expected ${
+                numberOfMethodArguments
+                } method arguments for ${
+                propertyKey.toString()
+                }, got ${
+                methodCallArgs.length
+                }`,
+            );
+            // assert.hasLength(methodCallArgs, numberOfMethodArguments);
         }
 
         assertAsrtAssignedMetadata(decoratedClassConstructorOrInstance, propertyKey, methodCallArgs);
@@ -118,7 +128,17 @@ function asrtClassDecorator<T extends {
     return class extends decoratedClassConstructor {
         constructor(...constructorArgs: any[]) {
             if (!isNaN(numberOfConstructorArguments)) {
-                assert.hasLength(constructorArgs, numberOfConstructorArguments);
+                assert(
+                    constructorArgs.length === numberOfConstructorArguments,
+                    `Expected ${
+                    numberOfConstructorArguments
+                    } constructor arguments for ${
+                    decoratedClassConstructor.name
+                    }, got ${
+                    constructorArgs.length
+                    }`,
+                );
+                // assert.hasLength(constructorArgs, numberOfConstructorArguments);
             }
 
             assertAsrtAssignedMetadata(target, asrtAssignedMetadataConstructorSymbol, constructorArgs);

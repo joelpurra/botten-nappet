@@ -27,6 +27,9 @@ import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/src/int
 
 import IChannelEvent from "./ichannel-event";
 
-export default interface IIncomingCheermotesEvent extends IChannelEvent {
+interface IIncomingCheermotesEventData {
     cheermotes: ITwitchApiV5ChannelCheermotes;
+}
+
+export default interface IIncomingCheermotesEvent extends IChannelEvent<IIncomingCheermotesEventData> {
 }

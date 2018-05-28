@@ -18,9 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserEvent from "./iuser-event";
-import IUserNameId from "./iuser-name-id";
-
-export default interface IUserToUserEvent extends IUserEvent {
-    sender: IUserNameId;
+export default interface IApplicationNameId {
+    id: string;
+    name: string;
 }

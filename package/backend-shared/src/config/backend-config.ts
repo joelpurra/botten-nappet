@@ -49,6 +49,10 @@ export default class BackendConfig {
         // TODO: add validation error messages.
         assert.nonEmptyString(this.databaseUri);
         assert.match(this.databaseUri, /^nedb:\/\//);
+        assert.nonEmptyString(this.topicTwitchOutgoingApplicationAuthenticationCommand);
+        assert.nonEmptyString(this.topicTwitchOutgoingApplicationUnauthenticationCommand);
+        assert.nonEmptyString(this.topicTwitchOutgoingUserAuthenticationCommand);
+        assert.nonEmptyString(this.topicTwitchOutgoingUserUnauthenticationCommand);
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
@@ -74,6 +78,38 @@ export default class BackendConfig {
 
         assert.nonEmptyString(value);
         assert(value.startsWith, "nedb://");
+
+        return value;
+    }
+
+    public get topicTwitchOutgoingApplicationAuthenticationCommand(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingApplicationAuthenticationCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchOutgoingApplicationUnauthenticationCommand(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingApplicationUnauthenticationCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchOutgoingUserAuthenticationCommand(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingUserAuthenticationCommand`);
+
+        assert.nonEmptyString(value);
+
+        return value;
+    }
+
+    public get topicTwitchOutgoingUserUnauthenticationCommand(): string {
+        const value = this.config.get<string>(`${this.prefix}.topic.twitch.outgoingUserUnauthenticationCommand`);
+
+        assert.nonEmptyString(value);
 
         return value;
     }

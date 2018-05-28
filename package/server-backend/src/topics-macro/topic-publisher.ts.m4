@@ -32,21 +32,21 @@ import TopicPublisher from "@botten-nappet/shared/src/message-queue/topic-publis
 
 /* tslint:disable max-line-length */
 
-import I`'___TOPIC_NAME_PASCAL_CASE___() from "@botten-nappet/interface-`'___SECTION_NAME_LOWER_CASE___()-`'___GROUP_NAME_LOWER_CASE___()/src/event/i`'___TOPIC_NAME_PARAM_CASE___()";
-import `'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___TOPIC_NAME_PARAM_CASE___()-topic";
+import I`'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___() from "@botten-nappet/interface-`'___SECTION_NAME_LOWER_CASE___()`'___INTERFACE_PACKAGE_NAME___()/src/event/i`'___INTERFACE_FILE_NAME___()`'___TOPIC_NAME_PARAM_CASE___()";
+import `'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___()Topic from "../topic/`'___GROUP_NAME_PARAM_CASE___()-`'___TOPIC_NAME_PARAM_CASE___()-topic";
 
 /* tslint:enable max-line-length */
 
 @asrt(3)
 @autoinject
-export default class `'___TOPIC_NAME_PASCAL_CASE___()TopicPublisher
-    extends TopicPublisher<I`'___TOPIC_NAME_PASCAL_CASE___()> {
+export default class `'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___()TopicPublisher
+    extends TopicPublisher<I`'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___()> {
 
     // NOTE: this file is auto-generated. Changes will be overwritten.
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() publisher: Publisher,
-        @asrt() topicConfig: `'___TOPIC_NAME_PASCAL_CASE___()Topic,
+        @asrt() topicConfig: `'___GROUP_NAME_PASCAL_CASE___()`'___TOPIC_NAME_PASCAL_CASE___()Topic,
     ) {
         super(logger, publisher, topicConfig);
     }

@@ -50,7 +50,7 @@ export default class PingIrcHandler extends IrcManager {
         const command: IOutgoingIrcCommand = {
             channel: null,
             command: "PONG",
-            message: data.message,
+            message: data.data.message,
             tags: {},
             timestamp: new Date(),
         };
@@ -62,6 +62,6 @@ export default class PingIrcHandler extends IrcManager {
     protected async filter(
         @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
-        return data.command === "PING";
+        return data.data.command === "PING";
     }
 }

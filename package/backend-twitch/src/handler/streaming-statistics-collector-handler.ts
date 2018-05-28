@@ -104,7 +104,7 @@ export default class StreamingStatisticsCollectorHandler
 
         if (!this.currentData) {
             if (this.isIIncomingIrcCommand(data)) {
-                channelName = data.channel;
+                channelName = data.channel.name;
 
                 /* tslint:disable max-line-length */
                 response = "Hmm. What? Not sure if I'm live or not! Let's wait another minute for some fresh data 😀";
@@ -116,24 +116,24 @@ export default class StreamingStatisticsCollectorHandler
             let viewersDiff = 0;
 
             if (this.oldData) {
-                viewersDiff = this.currentData.viewers - this.oldData.viewers;
+                viewersDiff = this.currentData.data.viewers - this.oldData.data.viewers;
             }
 
             const diffSign = viewersDiff >= 0 ? "up" : "down";
             const diffMood = viewersDiff >= 1 ? "😀" : "😐";
 
-            switch (this.currentData.type) {
+            switch (this.currentData.data.type) {
                 case "live":
-                    const startedAt = moment(this.currentData.startedAt);
+                    const startedAt = moment(this.currentData.data.startedAt);
                     const relativeTime = startedAt.fromNow(true);
 
                     /* tslint:disable max-line-length */
-                    response = `Live for ${relativeTime} currently with ${this.currentData.viewers} viewers, ${diffSign} by ${Math.abs(viewersDiff)} ${diffMood}`;
+                    response = `Live for ${relativeTime} currently with ${this.currentData.data.viewers} viewers, ${diffSign} by ${Math.abs(viewersDiff)} ${diffMood}`;
                     /* tslint:enable max-line-length */
                     break;
 
                 case "vodcast":
-                    response = `Broadcasting a rerun for ${this.currentData.viewers} viewers 😀`;
+                    response = `Broadcasting a rerun for ${this.currentData.data.viewers} viewers 😀`;
                     break;
 
                 case "":
@@ -175,20 +175,20 @@ export default class StreamingStatisticsCollectorHandler
         }
 
         if (this.isIIncomingIrcCommand(data)) {
-            if (data.command !== "PRIVMSG") {
+            if (data.data.command !== "PRIVMSG") {
                 return false;
             }
 
-            if (typeof data.message !== "string") {
+            if (typeof data.data.message !== "string") {
                 return false;
             }
 
-            if (!data.message.startsWith(this.commandPrefix)) {
+            if (!data.data.message.startsWith(this.commandPrefix)) {
                 return false;
             }
 
             // TODO: simplify tokenizer for single command.
-            const tokenizedMessageParts = data.message
+            const tokenizedMessageParts = data.data.message
                 .toLowerCase()
                 .split(/[^a-z]+/)
                 .map((tokenizedPart) => tokenizedPart.trim())
@@ -208,7 +208,8 @@ export default class StreamingStatisticsCollectorHandler
     ): data is IIncomingIrcCommand {
         const isMatch = (
             data
-            && typeof data.original === "string"
+            && data.interfaceName === "IIncomingIrcCommand"
+            && typeof data.data.original === "string"
         );
 
         return isMatch;
@@ -219,14 +220,15 @@ export default class StreamingStatisticsCollectorHandler
     ): data is IIncomingStreamingEvent {
         const isMatch = (
             data
+            && data.interfaceName === "IIncomingStreamingEvent"
             && data.channel
             && typeof data.channel === "object"
             && typeof data.channel.name === "string"
             && typeof data.channel.id === "number"
-            && typeof data.title === "string"
-            && typeof data.type === "string"
-            && typeof data.viewers === "number"
-            && typeof data.startedAt === "string"
+            && typeof data.data.title === "string"
+            && typeof data.data.type === "string"
+            && typeof data.data.viewers === "number"
+            && typeof data.data.startedAt === "string"
         );
 
         return isMatch;

@@ -30,6 +30,7 @@ import MultiEventSubscriptionManager from "@botten-nappet/shared/src/event/multi
 
 /* tslint:disable max-line-length */
 
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import {
     ICheerToken,
     ICheerTokenWithCheermoteUrl,
@@ -48,7 +49,7 @@ import {
 
 /* tslint:enable max-line-length */
 
-@asrt(3)
+@asrt(4)
 export default class CheeringWithCheermotesHandler
     extends MultiEventSubscriptionManager<IIncomingCheeringEvent | IIncomingCheermotesEvent> {
     public cheerTokenPrefixAmountRx: RegExp;
@@ -58,6 +59,7 @@ export default class CheeringWithCheermotesHandler
         @asrt() logger: PinoLogger,
         @asrt() connections: Array<IEventSubscriptionConnection<IIncomingCheeringEvent | IIncomingCheermotesEvent>>,
         @asrt() private incomingCheeringWithCheermotesEvent: IEventEmitter<IIncomingCheeringWithCheermotesEvent>,
+        @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(logger, connections);
 
@@ -93,13 +95,21 @@ export default class CheeringWithCheermotesHandler
             const matchingCheermotesWithImageUrls = this.addCheermoteUrls(matchingCheermotes, background, imageType);
 
             const event: IIncomingCheeringWithCheermotesEvent = {
-                badge: data.badge,
-                bits: data.bits,
+                application: {
+                    // TODO: create a class/builder for the twitch application object.
+                    id: this.applicationTokenManagerConfig.appClientId,
+                    name: "twitch",
+                },
                 channel: data.channel,
-                cheermotes: matchingCheermotesWithImageUrls,
-                message: data.message,
-                timestamp: data.timestamp,
-                total: data.total,
+                data: {
+                    badge: data.data.badge,
+                    bits: data.data.bits,
+                    cheermotes: matchingCheermotesWithImageUrls,
+                    message: data.data.message,
+                    total: data.data.total,
+                },
+                interfaceName: "IIncomingCheeringWithCheermotesEvent",
+                timestamp: new Date(),
                 triggerer: data.triggerer,
             };
 
@@ -136,11 +146,11 @@ export default class CheeringWithCheermotesHandler
         }
 
         // TODO: use asserts.
-        if (!incomingCheeringEvent.message) {
+        if (!incomingCheeringEvent.data.message) {
             throw new Error("this.currentCheermotes");
         }
 
-        const messageTokens = incomingCheeringEvent.message.split(/\s+/);
+        const messageTokens = incomingCheeringEvent.data.message.split(/\s+/);
         const possibleCheerTokens = messageTokens
             .filter((messageToken) => this.cheerTokenPrefixAmountRx.test(messageToken))
             .map((cheerToken) => {
@@ -158,7 +168,7 @@ export default class CheeringWithCheermotesHandler
                 return result;
             });
 
-        const currentCheermotesPrefixes = this.currentCheermotes.cheermotes.actions
+        const currentCheermotesPrefixes = this.currentCheermotes.data.cheermotes.actions
             .map((action) => action.prefix)
             .map((prefix) => prefix.toLowerCase());
 
@@ -188,7 +198,7 @@ export default class CheeringWithCheermotesHandler
                 throw new Error("this.currentCheermotes");
             }
 
-            const actionsWithPrefix = this.currentCheermotes.cheermotes.actions
+            const actionsWithPrefix = this.currentCheermotes.data.cheermotes.actions
                 .filter((action) => action.prefix.toLowerCase() === cheerToken.prefix.toLowerCase());
 
             const actionWithPrefix = actionsWithPrefix[0];
@@ -232,9 +242,10 @@ export default class CheeringWithCheermotesHandler
     ): data is IIncomingCheermotesEvent {
         const isMatch = (
             data
-            && data.cheermotes
-            && typeof data.cheermotes === "object"
-            && Array.isArray(data.cheermotes.actions)
+            && data.interfaceName === "IIncomingCheermotesEvent"
+            && data.data.cheermotes
+            && typeof data.data.cheermotes === "object"
+            && Array.isArray(data.data.cheermotes.actions)
         );
 
         return isMatch;
@@ -246,9 +257,10 @@ export default class CheeringWithCheermotesHandler
     ): data is IIncomingCheeringEvent {
         const isMatch = (
             data
-            && typeof data.message === "string"
-            && typeof data.bits === "number"
-            && typeof data.total === "number"
+            && data.interfaceName === "IIncomingCheeringEvent"
+            && typeof data.data.message === "string"
+            && typeof data.data.bits === "number"
+            && typeof data.data.total === "number"
         );
 
         return isMatch;
