@@ -218,15 +218,29 @@ export default class GracefulShutdownManager {
 
     @asrt(1)
     private async handleSignalEvent(
-        @asrt() signalAndCode: NodeJS.Signals,
+        @asrt() signalAndCode: any,
     ): Promise<void> {
-        const [
-            signal,
-            code,
-        ] = signalAndCode as [
-            NodeJS.Signals,
-            number
-        ];
+        // NOTE: there seems to have been a change in signal event
+        // arguments sometime between nodejs v10.0.0 and v10.2.1.
+        // Attempting to handle the two cases.
+        // TODO: remove workaround once settled in on a version.
+        let signal: (NodeJS.Signals | null) = null;
+        let code = null;
+
+        if (Array.isArray(signalAndCode)) {
+            [
+                signal,
+                code,
+            ] = signalAndCode as [
+                NodeJS.Signals,
+                number
+            ];
+        } else if (typeof signalAndCode === "string") {
+            signal = signalAndCode as NodeJS.Signals;
+            code = signal;
+        } else {
+            throw new Error("signalAndCode");
+        }
 
         return this.handleEvent(signal, code);
     }
