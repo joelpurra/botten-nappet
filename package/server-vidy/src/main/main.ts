@@ -18,23 +18,21 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// NOTE: single-import adding reflection metadata globally.
+import "reflect-metadata";
+
 import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
-import {
-    autoinject,
-} from "aurelia-dependency-injection";
+    assert,
+} from "check-types";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
 
-@asrt(1)
-@autoinject
-export default class DatabaseConfig {
-    constructor(
-        @asrt() private readonly backendConfig: BackendConfig,
-    ) { }
+import BackendVidyApplicationApi from "../application-api";
 
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
-    }
+export default async function main(): Promise<void> {
+    assert.hasLength(arguments, 0);
+
+    await createRootResolver<BackendVidyApplicationApi>(
+        async (resolver) => resolver(BackendVidyApplicationApi),
+    );
 }

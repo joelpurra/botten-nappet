@@ -18,23 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
-import {
-    autoinject,
-} from "aurelia-dependency-injection";
+import { IRealRoot } from "@botten-nappet/backend-shared/src/main/ireal-root";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-
-@asrt(1)
-@autoinject
-export default class DatabaseConfig {
-    constructor(
-        @asrt() private readonly backendConfig: BackendConfig,
-    ) { }
-
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
-    }
-}
+// TODO: remove any.
+export type IRealRootFactory<T extends IRealRoot> = (resolver: (key: T | string | any) => T) => Promise<T>;

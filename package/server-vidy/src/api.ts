@@ -32,7 +32,6 @@ import {
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
@@ -44,7 +43,7 @@ import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/
 
 /* tslint:enable max-line-length */
 
-@asrt(6)
+@asrt(5)
 @autoinject
 export default class BackendVidyApi implements IStartableStoppable {
     private startables: IStartableStoppable[] = [];
@@ -53,7 +52,6 @@ export default class BackendVidyApi implements IStartableStoppable {
     constructor(
         @asrt() private readonly backendConfig: BackendConfig,
         @asrt() logger: PinoLogger,
-        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
             OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
         @asrt() private readonly messageQueueTopicPublisherForIIncomingSearchResultEvent:
@@ -82,8 +80,6 @@ export default class BackendVidyApi implements IStartableStoppable {
         this.logger.info({
             vidyKeyId: this.backendConfig.vidyKeyId,
         }, "Started listening to events");
-
-        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

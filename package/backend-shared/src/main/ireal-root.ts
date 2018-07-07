@@ -18,23 +18,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
-import {
-    autoinject,
-} from "aurelia-dependency-injection";
+import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
-
-@asrt(1)
-@autoinject
-export default class DatabaseConfig {
-    constructor(
-        @asrt() private readonly backendConfig: BackendConfig,
-    ) { }
-
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
-    }
-}
+export interface IRealRoot extends IStartableStoppable { }

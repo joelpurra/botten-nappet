@@ -350,5 +350,17 @@ export default class PerUserHandlersMain implements IStartableStoppable {
                 }
             },
         );
+
+        await Bluebird.map(
+            this.connectables,
+            async (connectable) => {
+                try {
+                    await connectable.disconnect();
+                } catch (error) {
+                    this.logger
+                        .error(error, connectable, "Swallowed error while disconnecting.");
+                }
+            },
+        );
     }
 }

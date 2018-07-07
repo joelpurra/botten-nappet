@@ -49,7 +49,10 @@ export default class RootLoggerResolver implements Resolver {
     @asrt(0)
     public get(/*container: Container, key: any*/) {
         // TODO: properly implement resolver? Not using container/key seems wrong.
-        const logFileStream = fs.createWriteStream(this.loggingConfig.file);
+        // const logPath = `${this.loggingConfig.file}.${process.pid}`;
+        // const logFileStream = fs.createWriteStream(logPath);
+        // TODO: fix pino's stdout problems or switch logging library.
+        const logFileStream = process.stdout;
 
         const rootPinoLogger = pino({
             extreme: true,

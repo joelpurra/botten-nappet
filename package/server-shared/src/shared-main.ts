@@ -25,16 +25,29 @@ import {
     autoinject,
 } from "aurelia-dependency-injection";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+
+import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
 @asrt(1)
 @autoinject
-export default class DatabaseConfig {
+export default class SharedMain implements IStartableStoppable {
     constructor(
-        @asrt() private readonly backendConfig: BackendConfig,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
     ) { }
 
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
+    @asrt(0)
+    public async start(): Promise<void> {
+        // await this.something.start();
+
+        await this.gracefulShutdownManager.waitForShutdownSignal();
+    }
+
+    @asrt(0)
+    public async stop(): Promise<void> {
+        // TODO: better cleanup handling.
+        // TODO: check if each of these have been started successfully.
+        // TODO: better null handling.
+        // await this.something.stop();
     }
 }

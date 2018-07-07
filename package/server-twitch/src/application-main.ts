@@ -34,17 +34,9 @@ import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/i
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-/* tslint:disable:max-line-length */
+import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
-import IncomingCheeringEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-cheering-event-single-item-json-topics-subscriber";
-import IncomingCheermotesEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-cheermotes-event-single-item-json-topics-subscriber";
-import IncomingFollowingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-following-event-single-item-json-topics-subscriber";
-import IncomingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-irc-command-single-item-json-topics-subscriber";
-import IncomingPubSubEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-pub-sub-event-single-item-json-topics-subscriber";
-import IncomingStreamingEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-streaming-event-single-item-json-topics-subscriber";
-import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-subscription-event-single-item-json-topics-subscriber";
-import IncomingWhisperEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-whisper-event-single-item-json-topics-subscriber";
-import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-incoming-search-result-event-single-item-json-topics-subscriber";
+/* tslint:disable:max-line-length */
 
 import ApplicationAuthenticationEventTranslator from "@botten-nappet/backend-twitch/src/translator/application-authentication-event-translator";
 import ApplicationUnauthenticationEventTranslator from "@botten-nappet/backend-twitch/src/translator/application-unauthentication-event-translator";
@@ -71,13 +63,14 @@ import UserAuthenticationHandler from "@botten-nappet/server-twitch/src/handler/
 
 /* tslint:enable:max-line-length */
 
-@asrt(30)
+@asrt(22)
 export default class TwitchAuthenticatedApplicationMain implements IStartableStoppable {
     private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
+        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() @scoped(ApplicationAuthenticationEventTranslator)
         private readonly applicationAuthenticationEventTranslator:
             ApplicationAuthenticationEventTranslator,
@@ -201,6 +194,8 @@ export default class TwitchAuthenticatedApplicationMain implements IStartableSto
         await this.userAuthenticationHandler.start();
 
         this.logger.info("Started.");
+
+        await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

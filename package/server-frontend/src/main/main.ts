@@ -18,45 +18,19 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// NOTE: single-import adding reflection metadata globally.
+import "reflect-metadata";
+
 import {
-    context,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
-import {
-    scoped,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
+    assert,
+} from "check-types";
 
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
 
-import FrontendConfig from "../config/frontend-config";
+import FrontendMain from "./frontend-main";
 
-import FrontendManagerMain from "./manager-main";
+export default async function main(): Promise<void> {
+    assert.hasLength(arguments, 0);
 
-@asrt(2)
-export default class FrontendMain implements IStartableStoppable {
-    constructor(
-        @asrt() @context(FrontendManagerMain, "FrontendManagerMain")
-        private readonly frontendManagerMain: () => FrontendManagerMain,
-        @asrt() @scoped(FrontendConfig)
-        private readonly frontendConfig: FrontendConfig,
-    ) { }
-
-    @asrt(0)
-    public async start(): Promise<void> {
-        this.frontendConfig.validate();
-
-        await this.frontendManagerMain().start();
-    }
-
-    @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        if (this.frontendManagerMain) {
-            await this.frontendManagerMain().stop();
-        }
-    }
+    await createRootResolver<FrontendMain>(async (resolver) => resolver(FrontendMain));
 }

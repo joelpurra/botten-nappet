@@ -19,11 +19,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    context,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
-import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
+import {
+    inject,
+} from "aurelia-dependency-injection";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
@@ -31,16 +31,15 @@ import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shu
 
 import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
 
-import BackendMain from "@botten-nappet/server-backend/src/main/main";
-import FrontendMain from "@botten-nappet/server-frontend/src/main/main";
+import {
+    IRealRoot,
+} from "@botten-nappet/backend-shared/src/main/ireal-root";
 
-@asrt(4)
+@asrt(3)
 export default class SharedContainerRoot implements IStartableStoppable {
     constructor(
-        @asrt() @context(BackendMain, "BackendMain")
-        private readonly backendMain: () => BackendMain,
-        @asrt() @context(FrontendMain, "FrontendMain")
-        private readonly frontendMain: () => FrontendMain,
+        @asrt() @inject("IRealRoot")
+        private readonly realRoot: IRealRoot,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly messageQueuePublisher: MessageQueuePublisher,
     ) { }
@@ -50,10 +49,7 @@ export default class SharedContainerRoot implements IStartableStoppable {
         await this.gracefulShutdownManager.start();
         await this.messageQueuePublisher.connect();
 
-        await Promise.all([
-            this.backendMain().start(),
-            this.frontendMain().start(),
-        ]);
+        await this.realRoot.start();
     }
 
     @asrt(0)
@@ -61,10 +57,7 @@ export default class SharedContainerRoot implements IStartableStoppable {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await Promise.all([
-            this.backendMain().stop(),
-            this.frontendMain().stop(),
-        ]);
+        await this.realRoot.stop();
 
         await this.messageQueuePublisher.disconnect();
         await this.gracefulShutdownManager.stop();

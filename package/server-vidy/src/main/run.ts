@@ -18,23 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
-import {
-    autoinject,
-} from "aurelia-dependency-injection";
+import main from "./main";
 
-import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
+const run = async (): Promise<void> => {
+    try {
+        await main();
 
-@asrt(1)
-@autoinject
-export default class DatabaseConfig {
-    constructor(
-        @asrt() private readonly backendConfig: BackendConfig,
-    ) { }
+        process.exitCode = 0;
+    } catch (error) {
+        /* tslint:disable:no-console */
+        console.error("Error.", error);
+        /* tslint:enable:no-console */
 
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
+        process.exitCode = 1;
     }
-}
+};
+
+export default run;

@@ -4,7 +4,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Node",
+      "name": "debug",
       "port": 9229,
       "protocol": "inspector",
       "runtimeExecutable": "npm",
@@ -18,7 +18,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "NodeBreak",
+      "name": "debug:break",
       "port": 9229,
       "protocol": "inspector",
       "runtimeExecutable": "npm",
@@ -29,10 +29,150 @@
       ],
       "console": "integratedTerminal"
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:shared",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:shared"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:shared:break",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:shared:break"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:backend",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:backend"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:backend:break",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:backend:break"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:twitch",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:twitch"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:twitch:break",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:twitch:break"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:vidy",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:vidy"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:vidy:break",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:vidy:break"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:frontend",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:frontend"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug:frontend:break",
+      "port": 9229,
+      "protocol": "inspector",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "--silent",
+        "debug:frontend:break"
+      ],
+      "console": "integratedTerminal"
+    },
     // {
     //   "type": "chrome",
     //   "request": "attach",
-    //   "name": "Chrome",
+    //   "name"//   "type": "chrome",,
     //   "port": 9222,
     //   "url": "http://localhost:3000",
     //   "webRoot": "${workspaceRoot}/client",
@@ -40,7 +180,7 @@
     // },
     // {
     //   "type": "chrome",
-    //   "request": "launch",
+    //   "request"// },
     //   "name": "Chrome Canary",
     //   "port": 9222,
     //   "url": "http://localhost:3000",
@@ -51,7 +191,7 @@
   ],
   // "compounds": [
   //   {
-  //     "name": "Full-stack",
+  // ],
   //     "configurations": [
   //       "Node",
   //       "Chrome"

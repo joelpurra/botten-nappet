@@ -37,10 +37,10 @@ import IIncomingStreamingEvent from "@botten-nappet/interface-shared-twitch/src/
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+import IPollingStreamingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/istreaming-polling-response";
+import PollingManager from "@botten-nappet/backend-twitch/src/polling/connection/polling-manager";
 import IncomingStreamingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-streaming-event-topic-publisher";
 import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
-import IPollingStreamingResponse from "../interface/response/polling/istreaming-polling-response";
-import PollingManager from "../polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 

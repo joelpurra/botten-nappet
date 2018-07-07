@@ -22,68 +22,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import "reflect-metadata";
 
 import {
-    Container,
-} from "aurelia-dependency-injection";
-import {
     assert,
 } from "check-types";
 
-import configLibrary,
-{
-    IConfig,
-} from "config";
+import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
 
-import loadPackageJson from "@botten-nappet/shared/src/util/load-package-json";
-
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import RootLoggerResolver from "@botten-nappet/shared/src/util/root-logger-resolver";
-
-import SharedContainerRoot from "./shared-container-root";
-
-import generateDependencyGraph,
-{
-    IGraphsConfig,
-} from "@botten-nappet/shared/src/depdency-graph/generate-dependency-graph";
-
-const checkAndGenerateGraphs = (rootContainer: Container, rootConfig: IConfig) => {
-    const graphsEnabled: boolean = rootConfig.get("graphs.enabled");
-    if (graphsEnabled) {
-        const graphsDependenciesServerSharedConfig: IGraphsConfig = rootConfig.get("graphs.dependencies.server.shared");
-
-        generateDependencyGraph(rootContainer, graphsDependenciesServerSharedConfig);
-    }
-};
+import SharedMain from "./shared-main";
 
 export default async function main(): Promise<void> {
     assert.hasLength(arguments, 0);
 
-    const rootContainer = new Container();
-
-    checkAndGenerateGraphs(rootContainer, configLibrary);
-
-    rootContainer.registerInstance("IConfig", configLibrary);
-
-    const packageJson = await loadPackageJson();
-    rootContainer.registerInstance("IPackageJson", packageJson);
-
-    // TODO: is this a proper custom resolver?
-    const rootLoggerResolver: RootLoggerResolver = rootContainer.get(RootLoggerResolver);
-    const rootLogger = rootLoggerResolver.get();
-    rootContainer.registerInstance(PinoLogger, rootLogger);
-    // rootContainer.autoRegister(PinoLogger, RootLoggerResolver);
-    // const rootLogger = rootContainer.get(PinoLogger);
-
-    const sharedContainerRoot = rootContainer.get(SharedContainerRoot) as SharedContainerRoot;
-
-    try {
-        await sharedContainerRoot.start();
-    } catch (error) {
-        throw error;
-    } finally {
-        try {
-            await sharedContainerRoot.stop();
-        } catch (stoppingError) {
-            rootLogger.error(stoppingError, "Masking related error while stopping due to error.", "stoppingError");
-        }
-    }
+    await createRootResolver<SharedMain>(async (resolver) => resolver(SharedMain));
 }

@@ -47,7 +47,7 @@ function getAsrtPropertyKey(propertyKey: string | symbol) {
     return propertyKey || asrtAssignedMetadataConstructorSymbol;
 }
 
-function assertAsrtAssignedMetadata(target: Object, propertyKey: string | symbol, asrtDecoratorArgs: any[]) {
+function assertAsrtAssignedMetadata(target: object, propertyKey: string | symbol, asrtDecoratorArgs: any[]) {
     const asrtAssignedParameters: number[]
         = Reflect.getOwnMetadata(asrtAssignedMetadataSymbol, target, propertyKey);
 
@@ -59,7 +59,7 @@ function assertAsrtAssignedMetadata(target: Object, propertyKey: string | symbol
     }
 }
 
-function addAsrtAssignedMetadata(target: Object, propertyKey: string | symbol, parameterIndex: number) {
+function addAsrtAssignedMetadata(target: object, propertyKey: string | symbol, parameterIndex: number) {
     const existingRequiredParameters: number[]
         = Reflect.getOwnMetadata(asrtAssignedMetadataSymbol, target, propertyKey) || [];
 
@@ -70,7 +70,7 @@ function addAsrtAssignedMetadata(target: Object, propertyKey: string | symbol, p
 
 function asrtMethodDecorator(
     asrtMethodDecoratorArguments: any[],
-    target: Object,
+    target: object,
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<Function>,
 ) {
@@ -106,7 +106,7 @@ function asrtMethodDecorator(
     };
 }
 
-function asrtParameterDecorator(target: Object, propertyKey: string | symbol, parameterIndex: number) {
+function asrtParameterDecorator(target: object, propertyKey: string | symbol, parameterIndex: number) {
     const key = getAsrtPropertyKey(propertyKey);
 
     addAsrtAssignedMetadata(target, key, parameterIndex);
@@ -151,7 +151,7 @@ function asrtClassDecorator<T extends {
 export function asrt<T extends { new(...args: any[]): {} }>(...asrtDecoratorArgs: any[]): any {
     // TODO: clearly define return value types for different types of decorators.
     return function asrtDecorator(
-        target: Object | T,
+        target: object | T,
         propertyKey: string | symbol,
         parameterIndexOrDescriptor: number | TypedPropertyDescriptor<Function>,
     ) {

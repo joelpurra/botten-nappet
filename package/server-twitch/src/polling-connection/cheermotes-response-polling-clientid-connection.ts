@@ -50,7 +50,7 @@ export default class CheermotesResponsePollingClientIdConnection
         super(
             logger,
             backendConfig.twitchAppClientId,
-            backendConfig.bottenNappetDefaultPollingInterval,
+            backendConfig.bottenNappetCheermotesPollingInterval,
             true,
             "get",
         );
