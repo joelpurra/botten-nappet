@@ -45,7 +45,7 @@ export default abstract class IntersectionTopicsSubscriber<T> extends TopicsSubs
 
     @asrt(1)
     protected async filterMessages(
-        @asrt() topicMessages: IZeroMqTopicMessages
+        @asrt() topicMessages: IZeroMqTopicMessages,
     ): Promise<boolean> {
         const currentTopics = await this.topicHelper.split(topicMessages.topic);
 

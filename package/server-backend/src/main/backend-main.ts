@@ -19,9 +19,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import {
-    context,
-} from "@botten-nappet/backend-shared/lib/dependency-injection/context/context";
-import {
     scoped,
 } from "@botten-nappet/backend-shared/lib/dependency-injection/scoped/scoped";
 import {

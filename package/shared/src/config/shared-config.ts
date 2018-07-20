@@ -56,6 +56,10 @@ export default class SharedConfig {
         assert.nonEmptyString(this.loggingFile);
         assert.nonEmptyString(this.zmqXPublisherAddress);
         assert.nonEmptyString(this.zmqXSubscriberAddress);
+        assert.nonEmptyString(this.zmqServerPrivateKey);
+        assert.nonEmptyString(this.zmqServerPublicKey);
+        assert.nonEmptyString(this.zmqClientPrivateKey);
+        assert.nonEmptyString(this.zmqClientPublicKey);
 
         assert.nonEmptyString(this.topicApplicationAuthenticationEvent);
         assert.nonEmptyString(this.topicApplicationUnauthenticationEvent);
@@ -111,7 +115,7 @@ export default class SharedConfig {
     }
 
     public get zmqXPublisherAddress(): string {
-        const value = this.config.get<string>(`${this.prefix}.zmqXPublisherAddress`);
+        const value = this.config.get<string>(`${this.prefix}.zmq.address.xpublisher`);
 
         assert.nonEmptyString(value);
         assert(value.startsWith("tcp://"));
@@ -120,10 +124,46 @@ export default class SharedConfig {
     }
 
     public get zmqXSubscriberAddress(): string {
-        const value = this.config.get<string>(`${this.prefix}.zmqXSubscriberAddress`);
+        const value = this.config.get<string>(`${this.prefix}.zmq.address.xsubscriber`);
 
         assert.nonEmptyString(value);
         assert(value.startsWith("tcp://"));
+
+        return value;
+    }
+
+    public get zmqServerPrivateKey(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmq.keys.server.private`);
+
+        assert.nonEmptyString(value);
+        assert.hasLength(value, 40);
+
+        return value;
+    }
+
+    public get zmqServerPublicKey(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmq.keys.server.public`);
+
+        assert.nonEmptyString(value);
+        assert.hasLength(value, 40);
+
+        return value;
+    }
+
+    public get zmqClientPrivateKey(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmq.keys.client.private`);
+
+        assert.nonEmptyString(value);
+        assert.hasLength(value, 40);
+
+        return value;
+    }
+
+    public get zmqClientPublicKey(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmq.keys.client.public`);
+
+        assert.nonEmptyString(value);
+        assert.hasLength(value, 40);
 
         return value;
     }

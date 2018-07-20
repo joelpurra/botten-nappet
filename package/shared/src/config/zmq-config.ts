@@ -41,4 +41,20 @@ export default class ZmqConfig {
     public get zmqXSubscriberAddress(): string {
         return this.sharedConfig.zmqXSubscriberAddress;
     }
+
+    public get zmqServerPrivateKey(): string {
+        return this.sharedConfig.zmqServerPrivateKey;
+    }
+
+    public get zmqServerPublicKey(): string {
+        return this.sharedConfig.zmqServerPublicKey;
+    }
+
+    public get zmqClientPrivateKey(): string {
+        return this.sharedConfig.zmqClientPrivateKey;
+    }
+
+    public get zmqClientPublicKey(): string {
+        return this.sharedConfig.zmqClientPublicKey;
+    }
 }

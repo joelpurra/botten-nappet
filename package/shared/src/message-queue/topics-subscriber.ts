@@ -55,11 +55,11 @@ import {
 @asrt(4)
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
     protected logger: PinoLogger;
-    protected topics: string[] | null;
-    private socket: any | null;
-    private zmqSubject: Subject<IZeroMqTopicMessages> | null;
-    private sharedzmqObservable: Rx.Observable<T> | null;
-    private zmqSubcription: Subscription | null;
+    protected topics: string[] | null = null;
+    private socket: any | null = null;
+    private zmqSubject: Subject<IZeroMqTopicMessages> | null = null;
+    private sharedzmqObservable: Rx.Observable<T> | null = null;
+    private zmqSubcription: Subscription | null = null;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -67,13 +67,9 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         @asrt() private readonly zmqConfig: ZmqConfig,
         @asrt() protected readonly topicConfig: TopicConfig,
     ) {
-        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
+        assert(zmq.capability.curve, "ZMQ lacks curve capability.");
 
-        this.topics = null;
-        this.zmqSubject = null;
-        this.sharedzmqObservable = null;
-        this.zmqSubcription = null;
-        this.socket = null;
+        this.logger = logger.child(`${this.constructor.name} (${this.topicConfig.topic})`);
     }
 
     @asrt(0)
@@ -89,7 +85,14 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         };
 
         this.socket = new zmq.Subscriber(zmqSubcriberOptions);
+
+        this.socket.curveSecretKey = this.zmqConfig.zmqClientPrivateKey;
+        this.socket.curvePublicKey = this.zmqConfig.zmqClientPublicKey;
+        this.socket.curveServerKey = this.zmqConfig.zmqServerPublicKey;
+
         await this.socket.connect(this.zmqConfig.zmqXPublisherAddress);
+        assert.equal(this.socket.securityMechanism, "curve");
+
         await this.socket.subscribe(...this.topics);
 
         const openedObserver: Observer<T> = {
@@ -148,6 +151,13 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
     public async reconnect(): Promise<void> {
         await this.disconnect();
         await this.connect();
+    }
+
+    @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        const connected = (this.socket && !this.socket.closed) || false;
+
+        return connected;
     }
 
     public get dataObservable(): Rx.Observable<T> {

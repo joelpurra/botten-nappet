@@ -27,4 +27,7 @@ export default interface IConnectable {
 
     // TODO: separate interfaces per method?
     reconnect: () => Promise<void>;
+
+    // TODO: separate interfaces per method?
+    isConnected(): Promise<boolean>;
 }

@@ -49,9 +49,9 @@ import {
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
+import IPollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/ipolling-connection";
 import IHttpData from "@botten-nappet/interface-backend-twitch/src/event/ihttp-data";
 import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihttp-header";
-import IPollingConnection from "./ipolling-connection";
 
 type DataHandler = (data: any) => void;
 type DataFilter = (data: any) => boolean;
@@ -124,6 +124,12 @@ export default abstract class PollingConnection<T> implements IPollingConnection
     public async reconnect(): Promise<void> {
         await this.disconnect();
         await this.connect();
+    }
+
+    @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        // TODO: implement a real check.
+        return true;
     }
 
     @asrt(0)
@@ -207,6 +213,10 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         this.intervalSubscription.unsubscribe();
         this.pollingSubcription.unsubscribe();
         this.pollingSubject.complete();
+
+        this.intervalSubscription = null;
+        this.pollingSubject = null;
+        this.pollingSubcription = null;
     }
 
     public async send(): Promise<void> {

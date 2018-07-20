@@ -50,6 +50,8 @@ export default abstract class Proxy implements IConnectable {
         @asrt() logger: PinoLogger,
         @asrt() private readonly zmqConfig: ZmqConfig,
     ) {
+        assert(zmq.capability.curve, "ZMQ lacks curve capability.");
+
         this.logger = logger.child(this.constructor.name);
     }
 
@@ -69,10 +71,18 @@ export default abstract class Proxy implements IConnectable {
         // NOTE: based on example by Tomasz Janczuk.
         // https://gist.github.com/tjanczuk/f133cc65977f5a8c4a7f
         this.xsubscriberSocket = new zmq.XSubscriber(zmqXSubcriberOptions);
+        this.xsubscriberSocket.curveServer = true;
+        this.xsubscriberSocket.curveSecretKey = this.zmqConfig.zmqServerPrivateKey;
+
         await this.xsubscriberSocket.bind(this.zmqConfig.zmqXSubscriberAddress);
+        assert.equal(this.xsubscriberSocket.securityMechanism, "curve");
 
         this.xpublisherSocket = new zmq.XPublisher(zmqXPublisherOptions);
+        this.xpublisherSocket.curveServer = true;
+        this.xpublisherSocket.curveSecretKey = this.zmqConfig.zmqServerPrivateKey;
+
         await this.xpublisherSocket.bind(this.zmqConfig.zmqXPublisherAddress);
+        assert.equal(this.xpublisherSocket.securityMechanism, "curve");
 
         // NOTE: listening outside of the async/await (promise) chain.
         this.listenXsubscriber();
@@ -103,6 +113,16 @@ export default abstract class Proxy implements IConnectable {
     }
 
     @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        const connected = (
+            this.xsubscriberSocket && !this.xsubscriberSocket.closed &&
+            this.xpublisherSocket && !this.xpublisherSocket.closed
+        ) || false;
+
+        return connected;
+    }
+
+    @asrt(0)
     private async listenXsubscriber(): Promise<void> {
         assert.not.equal(this.xsubscriberSocket, null);
         assert.not.equal(this.xpublisherSocket, null);
@@ -122,7 +142,7 @@ export default abstract class Proxy implements IConnectable {
             }
         }
 
-        if (this.xsubscriberSocket && this.xpublisherSocket) {
+        if (await this.isConnected()) {
             // TODO: reconnect if the socket should stay open?
             // TODO: avoid disconnection race condition.
             await this.disconnect();
@@ -149,7 +169,7 @@ export default abstract class Proxy implements IConnectable {
             }
         }
 
-        if (this.xpublisherSocket && this.xsubscriberSocket) {
+        if (await this.isConnected()) {
             // TODO: reconnect if the socket should stay open?
             // TODO: avoid disconnection race condition.
             await this.disconnect();

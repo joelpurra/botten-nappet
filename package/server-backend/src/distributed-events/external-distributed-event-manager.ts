@@ -32,9 +32,9 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import DistributedEventManager from "@botten-nappet/backend-shared/src/distributed-events/distributed-event-manager";
 import DistributedEventStorageManager from "@botten-nappet/backend-shared/src/storage/manager/distributed-event-storage-manager";
 
-/* tslint:enable max-line-length */
+import ExternalRawTopicsSubscriber from "@botten-nappet/server-backend/src/message-queue/external-raw-topics-subscriber";
 
-import ExternalRawTopicsSubscriber from "../message-queue/external-raw-topics-subscriber";
+/* tslint:enable max-line-length */
 
 @asrt()
 @autoinject

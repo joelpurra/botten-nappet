@@ -69,8 +69,17 @@ shared:
         vidy:
             incomingSearchResultEvent: "external:shared:vidy:incoming:search:result:event"
             outgoingSearchCommand: "external:shared:vidy:outgoing:search:command"
-    zmqXPublisherAddress: "tcp://127.0.0.1:54859"
-    zmqXSubscriberAddress: "tcp://127.0.0.1:54860"
+    zmq:
+        keys:
+            server:
+                private: null
+                public: null
+            client:
+                private: null
+                public: null
+        address:
+            xpublisher: "tcp://127.0.0.1:54859"
+            xsubscriber: "tcp://127.0.0.1:54860"
 templates:
     topics-subscriber:
         templatePaths:

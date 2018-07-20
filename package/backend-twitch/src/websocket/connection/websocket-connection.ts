@@ -53,8 +53,8 @@ import WebSocket from "ws";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+import IWebSocketConnection from "@botten-nappet/backend-twitch/src/websocket/connection/iwebsocket-connection";
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
-import IWebSocketConnection from "./iwebsocket-connection";
 
 @asrt()
 export default abstract class WebSocketConnection<T, V> implements IWebSocketConnection<T, V> {
@@ -93,6 +93,7 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
             },
             error: (error) => {
                 // TODO: handle errors.
+                // TODO: disconnect?
                 this.logger.error(error, "error", "openedObserver");
             },
             next: (message) => {
@@ -175,12 +176,23 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         // TODO: force websocket termination after a "close" timeout.
         this.websocketSubcription.unsubscribe();
         this.websocketSubject.complete();
+
+        this.websocketSubject = null;
+        this.websocketSubcription = null;
     }
 
     @asrt(0)
     public async reconnect(): Promise<void> {
         await this.disconnect();
         await this.connect();
+    }
+
+    @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        // TODO: implement a real check.
+        const connected = (this.websocketSubject && this.websocketSubcription && true) || false;
+
+        return connected;
     }
 
     @asrt(1)

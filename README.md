@@ -26,6 +26,8 @@ export VIDY_VIDEO_LINK_BASE_URL='https://vidy.cn/v/'
 export VIDY_SYSTEM_UUID='configure me'
 export BOTTEN_NAPPET_SHARED_LOG_FILE="${TMPDIR}.botten-nappet.log"
 export BOTTEN_NAPPET_BACKEND_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory"
+export BOTTEN_NAPPET_SHARED_ZMQ_PRIVATE_KEY="...generate..."
+export BOTTEN_NAPPET_SHARED_ZMQ_PUBLIC_KEY="...generate..."
 ```
 
 
@@ -63,8 +65,12 @@ npm run --silent test
 npm run --silent watch
 
 # Generate short-lived internal certificates.
-# NOTE: assuming that BOTTEN_NAPPET_CERTIFICATES_DIRECTORY is a writeable directory.
+# NOTE: assuming that BOTTEN_NAPPET_GENERATE_CERTIFICATES_DIRECTORY is a writeable directory.
 npm run --silent build:certificates:generate
+export BOTTEN_NAPPET_SHARED_ZMQ_SERVER_PRIVATE_KEY="$(cat ././dist/certificates/zmq/zmq.server.private.key)"
+export BOTTEN_NAPPET_SHARED_ZMQ_SERVER_PUBLIC_KEY="$(cat ././dist/certificates/zmq/zmq.server.public.key)"
+export BOTTEN_NAPPET_SHARED_ZMQ_CLIENT_PRIVATE_KEY="$(cat ././dist/certificates/zmq/zmq.client.private.key)"
+export BOTTEN_NAPPET_SHARED_ZMQ_CLIENT_PUBLIC_KEY="$(cat ././dist/certificates/zmq/zmq.client.public.key)"
 
 # Modify the ZeroMQ port if running multiple instances.
 #export BOTTEN_NAPPET_SHARED_ZMQ_PUBLISHER_ADDRESSa="tcp://localhost:61611"

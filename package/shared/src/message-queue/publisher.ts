@@ -42,16 +42,16 @@ import {
 @asrt(2)
 @autoinject
 export default class Publisher implements IConnectable {
-    private socket: any | null;
+    private socket: any | null = null;
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() private readonly zmqConfig: ZmqConfig,
     ) {
-        this.logger = logger.child(this.constructor.name);
+        assert(zmq.capability.curve, "ZMQ lacks curve capability.");
 
-        this.socket = null;
+        this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
@@ -63,7 +63,13 @@ export default class Publisher implements IConnectable {
         };
 
         this.socket = new zmq.Publisher(zmqPublisherOptions);
+
+        this.socket.curveSecretKey = this.zmqConfig.zmqClientPrivateKey;
+        this.socket.curvePublicKey = this.zmqConfig.zmqClientPublicKey;
+        this.socket.curveServerKey = this.zmqConfig.zmqServerPublicKey;
+
         await this.socket.connect(this.zmqConfig.zmqXSubscriberAddress);
+        assert.equal(this.socket.securityMechanism, "curve");
 
         this.logger.debug("connected");
     }
@@ -84,6 +90,13 @@ export default class Publisher implements IConnectable {
     public async reconnect(): Promise<void> {
         await this.disconnect();
         await this.connect();
+    }
+
+    @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        const connected = (this.socket && !this.socket.closed) || false;
+
+        return connected;
     }
 
     @asrt(2)
