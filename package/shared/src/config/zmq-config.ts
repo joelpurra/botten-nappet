@@ -34,7 +34,11 @@ export default class ZmqConfig {
         @asrt() private readonly sharedConfig: SharedConfig,
     ) { }
 
-    public get zmqAddress(): string {
-        return this.sharedConfig.zmqAddress;
+    public get zmqXPublisherAddress(): string {
+        return this.sharedConfig.zmqXPublisherAddress;
+    }
+
+    public get zmqXSubscriberAddress(): string {
+        return this.sharedConfig.zmqXSubscriberAddress;
     }
 }

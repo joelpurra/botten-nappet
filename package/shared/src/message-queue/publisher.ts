@@ -63,7 +63,7 @@ export default class Publisher implements IConnectable {
         };
 
         this.socket = new zmq.Publisher(zmqPublisherOptions);
-        await this.socket.bind(this.zmqConfig.zmqAddress);
+        await this.socket.connect(this.zmqConfig.zmqXSubscriberAddress);
 
         this.logger.debug("connected");
     }
@@ -72,7 +72,7 @@ export default class Publisher implements IConnectable {
     public async disconnect(): Promise<void> {
         assert.not.null(this.socket);
 
-        await this.socket.unbind(this.zmqConfig.zmqAddress);
+        await this.socket.disconnect(this.zmqConfig.zmqXSubscriberAddress);
         await this.socket.close();
 
         this.socket = null;

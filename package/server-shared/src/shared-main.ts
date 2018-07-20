@@ -27,18 +27,20 @@ import {
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
+import MessageQueueProxy from "@botten-nappet/shared/src/message-queue/proxy";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
-@asrt(1)
+@asrt(2)
 @autoinject
 export default class SharedMain implements IStartableStoppable {
     constructor(
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
+        @asrt() private readonly proxy: MessageQueueProxy,
     ) { }
 
     @asrt(0)
     public async start(): Promise<void> {
-        // await this.something.start();
+        await this.proxy.connect();
 
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
@@ -48,6 +50,6 @@ export default class SharedMain implements IStartableStoppable {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        // await this.something.stop();
+        await this.proxy.disconnect();
     }
 }

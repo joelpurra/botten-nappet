@@ -54,7 +54,8 @@ export default class SharedConfig {
         assert.nonEmptyString(this.version);
         assert.nonEmptyString(this.loggingLevel);
         assert.nonEmptyString(this.loggingFile);
-        assert.nonEmptyString(this.zmqAddress);
+        assert.nonEmptyString(this.zmqXPublisherAddress);
+        assert.nonEmptyString(this.zmqXSubscriberAddress);
 
         assert.nonEmptyString(this.topicApplicationAuthenticationEvent);
         assert.nonEmptyString(this.topicApplicationUnauthenticationEvent);
@@ -109,8 +110,17 @@ export default class SharedConfig {
         return value;
     }
 
-    public get zmqAddress(): string {
-        const value = this.config.get<string>(`${this.prefix}.zmqAddress`);
+    public get zmqXPublisherAddress(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmqXPublisherAddress`);
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith("tcp://"));
+
+        return value;
+    }
+
+    public get zmqXSubscriberAddress(): string {
+        const value = this.config.get<string>(`${this.prefix}.zmqXSubscriberAddress`);
 
         assert.nonEmptyString(value);
         assert(value.startsWith("tcp://"));

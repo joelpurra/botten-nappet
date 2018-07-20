@@ -62,8 +62,13 @@ npm run --silent build
 npm run --silent test
 npm run --silent watch
 
+# Generate short-lived internal certificates.
+# NOTE: assuming that BOTTEN_NAPPET_CERTIFICATES_DIRECTORY is a writeable directory.
+npm run --silent build:certificates:generate
+
 # Modify the ZeroMQ port if running multiple instances.
-#export BOTTEN_NAPPET_SHARED_ZMQ_ADDRESS="tcp://localhost:61611"
+#export BOTTEN_NAPPET_SHARED_ZMQ_PUBLISHER_ADDRESSa="tcp://localhost:61611"
+#export BOTTEN_NAPPET_SHARED_ZMQ_SUBSCRIBER_ADDRESS="tcp://localhost:61612"
 
 # Set logging parameters.
 export BOTTEN_NAPPET_SHARED_LOGGING_LEVEL='trace'

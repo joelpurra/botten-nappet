@@ -44,13 +44,13 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-import IEventSubscriptionConnection from "../event/ievent-subscription-connection";
 
-import IZeroMqTopicMessages from "./izeromq-topic-message";
+import IZeroMqTopicMessages from "@botten-nappet/shared/src/message-queue/izeromq-topic-message";
 import {
     ZeroMqMessages,
-} from "./zeromq-types";
+} from "@botten-nappet/shared/src/message-queue/zeromq-types";
 
 @asrt(4)
 export default abstract class TopicsSubscriber<T> implements IEventSubscriptionConnection<T> {
@@ -89,7 +89,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         };
 
         this.socket = new zmq.Subscriber(zmqSubcriberOptions);
-        await this.socket.connect(this.zmqConfig.zmqAddress);
+        await this.socket.connect(this.zmqConfig.zmqXPublisherAddress);
         await this.socket.subscribe(...this.topics);
 
         const openedObserver: Observer<T> = {
@@ -137,7 +137,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
         this.zmqSubcription!.unsubscribe();
         this.zmqSubject!.complete();
 
-        await this.socket.disconnect(this.zmqConfig.zmqAddress);
+        await this.socket.disconnect(this.zmqConfig.zmqXPublisherAddress);
         await this.socket.close();
         this.socket = null;
 
