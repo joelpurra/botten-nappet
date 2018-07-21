@@ -69,7 +69,7 @@ export default class FollowingIrcReplyHandler extends EventSubscriptionManager<I
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingFollowingEvent,
+        // @asrt() data: IIncomingFollowingEvent,
     ): Promise<boolean> {
         return true;
     }

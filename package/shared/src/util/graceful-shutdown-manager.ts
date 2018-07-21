@@ -39,10 +39,6 @@ import {
     first,
 } from "rxjs/operators";
 
-import {
-    EventEmitter,
-} from "events";
-
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
@@ -114,33 +110,30 @@ export default class GracefulShutdownManager {
                 this.logger.warn("Detected shutdown.", "shutdownPromise");
             });
 
-        // TODO: update rxjs or fix the type definitions for the nodejs event emitter mismatch.
-        const processAsEventTargetLike = ((process as EventEmitter) as EventTargetLike);
-
-        this.subscriptions.SIGBREAK = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGBREAK")
+        this.subscriptions.SIGBREAK = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGBREAK")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGHUP = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGHUP")
+        this.subscriptions.SIGHUP = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGHUP")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGINT = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGINT")
+        this.subscriptions.SIGINT = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGINT")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGQUIT = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGQUIT")
+        this.subscriptions.SIGQUIT = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGQUIT")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.SIGTERM = fromEvent<NodeJS.Signals>(processAsEventTargetLike, "SIGTERM")
+        this.subscriptions.SIGTERM = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGTERM")
             .subscribe(this.handleSignalEvent);
 
-        this.subscriptions.exit = fromEvent<number>(processAsEventTargetLike, "exit")
+        this.subscriptions.exit = fromEvent<number>(process as EventTargetLike<number>, "exit")
             .subscribe(this.handleExitEvent);
 
         this.subscriptions.uncaughtException =
-            fromEvent<Error>(processAsEventTargetLike, "uncaughtException")
+            fromEvent<Error>(process as EventTargetLike<Error>, "uncaughtException")
                 .subscribe(this.handleUncaughtExceptionEvent);
 
         this.subscriptions.unhandledRejection =
-            fromEvent(processAsEventTargetLike, "unhandledRejection", (reason, promise) => [reason, promise])
+            fromEvent(process as EventTargetLike<any>, "unhandledRejection", (reason, promise) => [reason, promise])
                 .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
     }
 
@@ -230,7 +223,9 @@ export default class GracefulShutdownManager {
         if (Array.isArray(signalAndCode)) {
             [
                 signal,
-                code,
+                /* tslint:disable:trailing-comma */
+                code
+                /* tslint:enable:trailing-comma */
             ] = signalAndCode as [
                 NodeJS.Signals,
                 number
@@ -247,7 +242,9 @@ export default class GracefulShutdownManager {
 
     private async handleEvent(
         @asrt() shutdownEvent: ShutdownEvent,
-        ...args: any[],
+        /* tslint:disable:trailing-comma */
+        ...args: any[]
+        /* tslint:enable:trailing-comma */
     ): Promise<void> {
         assert.equal(typeof shutdownEvent, "string");
 

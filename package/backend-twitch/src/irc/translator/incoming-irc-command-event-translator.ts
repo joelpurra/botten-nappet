@@ -26,9 +26,9 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 
-import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
 import IrcManager from "@botten-nappet/backend-twitch/src/irc/connection/irc-manager";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 @asrt(3)
 export default class IncomingIrcCommandEventTranslator extends IrcManager {
@@ -53,7 +53,7 @@ export default class IncomingIrcCommandEventTranslator extends IrcManager {
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingIrcCommand,
+        // @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
         return true;
     }

@@ -302,14 +302,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         this.startables.push(twitchIrcVidyCommandHandler);
         this.startables.push(twitchIrcVidyResultEventHandler);
 
-        await Bluebird.map(this.startables, async (startable) => {
-            try {
-                await startable.start();
-            } catch (error) {
-                this.logger.error(startable, error);
-                debugger;
-            }
-        });
+        await Bluebird.map(this.startables, async (startable) => await startable.start());
 
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),

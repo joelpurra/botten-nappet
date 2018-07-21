@@ -87,7 +87,7 @@ export default class PingPubSubHandler extends PubSubManager {
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IPubSubResponse,
+        // @asrt() data: IPubSubResponse,
     ): Promise<boolean> {
         // TODO: check if the most recent ping was sent within 15 seconds, otherwise delay and reconnect.
         // TODO: backoff doubling for reconnects.

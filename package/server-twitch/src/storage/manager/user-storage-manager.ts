@@ -70,7 +70,7 @@ export default class UserStorageManager {
 
         this.logger.trace(user, "getByUsername");
 
-        return user as IUser[];
+        return user as IUser;
     }
 
     @asrt(1)
@@ -83,7 +83,7 @@ export default class UserStorageManager {
             username: user.username,
         };
 
-        const userFromDatabase: IUserCamo = await this.UserRepository.findOne(findUser);
+        const userFromDatabase: IUserCamo = await this.UserRepository.findOne(findUser) as IUserSchema;
 
         const userFromDatabaseWithoutId = {
             ...userFromDatabase,

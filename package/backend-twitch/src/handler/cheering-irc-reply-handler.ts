@@ -55,7 +55,7 @@ export default class CheeringIrcReplyHandler extends EventSubscriptionManager<II
         // TODO: use a string templating system.
         // TODO: configure response.
         /* tslint:disable:max-line-length */
-        const response = `Cheers times ${data.bits} @${username}! You've now cheered a grand total of ${data.total} bits 😀`;
+        const response = `Cheers times ${data.data.bits} @${username}! You've now cheered a grand total of ${data.data.total} bits 😀`;
         /* tslint:enable:max-line-length */
 
         const command: IOutgoingIrcCommand = {
@@ -71,7 +71,7 @@ export default class CheeringIrcReplyHandler extends EventSubscriptionManager<II
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingCheeringEvent,
+        // @asrt() data: IIncomingCheeringEvent,
     ): Promise<boolean> {
         return true;
     }

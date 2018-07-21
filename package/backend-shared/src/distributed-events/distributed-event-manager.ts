@@ -22,11 +22,15 @@ import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 
+/* tslint:disable:max-line-length */
+
+import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
+import DistributedEventStorageManager from "@botten-nappet/server-backend/src/storage/manager/distributed-event-storage-manager";
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
-import DistributedEventStorageManager from "@botten-nappet/server-backend/src/storage/manager/distributed-event-storage-manager";
+
+/* tslint:enable:max-line-length */
 
 @asrt(3)
 export default abstract class DistributedEventManager extends EventSubscriptionManager<IDistributedEvent> {
@@ -51,7 +55,7 @@ export default abstract class DistributedEventManager extends EventSubscriptionM
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IDistributedEvent,
+        // @asrt() data: IDistributedEvent,
     ): Promise<boolean> {
         return true;
     }

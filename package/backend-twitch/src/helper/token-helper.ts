@@ -75,7 +75,7 @@ export default class TokenHelper {
 
         // TODO: what if it's not ok?
         // TODO: define type/interface.
-        const ok = data.status === "ok";
+        // const ok = data.status === "ok";
 
         this.logger.debug(rawToken, data, "revoke");
     }

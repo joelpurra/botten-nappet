@@ -103,7 +103,7 @@ export default abstract class TopicsSubscriber<T> implements IEventSubscriptionC
                 // TODO: handle errors.
                 this.logger.error(error, "error", "openedObserver");
             },
-            next: (message) => {
+            next: () => {
                 // this.logger.trace(message, "next", "openedObserver");
             },
         };

@@ -27,11 +27,11 @@ import {
 
 import {
     deepParseIso8601UtcDates,
-} from "@botten-nappet/client-shared/src/utilities";
+} from "../../../client-shared/src/utilities";
 
-import BotSocket from "@botten-nappet/client-shared/src/bot-socket";
-import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
-import SpeechManager from "@botten-nappet/client-shared/src/speech-manager";
+import BotSocket from "../../../client-shared/src/bot-socket";
+import ConsoleLog from "../../../client-shared/src/console-log";
+import SpeechManager from "../../../client-shared/src/speech-manager";
 
 export default class BrowserEventManager {
     public chatMessageSayIgnoredStrings: string[];
@@ -113,8 +113,11 @@ export default class BrowserEventManager {
             next: (botEvent) => this.trigger(botEvent),
         };
 
-        // TODO: unsubscribe.
         this.dataHandlerSubscription = this.handlerObservable.subscribe(dataHandlerObserver);
+    }
+
+    public async stop(): Promise<void> {
+        this.dataHandlerSubscription!.unsubscribe();
     }
 
     public trigger(botEvent: any): void {

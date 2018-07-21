@@ -18,19 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// NOTE: single-import adding reflection metadata globally.
-import "reflect-metadata";
-
-import {
-    assert,
-} from "check-types";
-
-import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
-
-import BackendApplication from "@botten-nappet/server-backend/src/application/application";
-
-export default async function main(): Promise<void> {
-    assert.hasLength(arguments, 0);
-
-    await createRootResolver<BackendApplication>(async (resolver) => resolver(BackendApplication));
+declare interface Window {
+    SpeechSynthesisUtterance: {
+        new(text: string): SpeechSynthesisUtterance
+    };
 }

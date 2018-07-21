@@ -47,7 +47,7 @@ import ApplicationUnauthenticationEventTopicPublisher from "@botten-nappet/serve
 /* tslint:enable max-line-length */
 
 @asrt(8)
-export default class BackendMain implements IStartableStoppable {
+export default class BackendApplication implements IStartableStoppable {
     private logger: PinoLogger;
     private shouldBroadcastApplicationAuthenticationHack: boolean = false;
 

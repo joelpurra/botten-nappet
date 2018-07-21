@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default interface ICamoDatabaseConnection {
-    // TODO: update and/or patch @types/camo.
-    close: () => void;
+declare interface Window {
+    // NOTE: debugging tool.
+    triggerBotEvent: (botEvent: any) => void;
 }

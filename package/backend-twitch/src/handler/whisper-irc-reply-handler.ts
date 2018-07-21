@@ -83,7 +83,7 @@ export default class WhisperIrcReplyHandler extends EventSubscriptionManager<IIn
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingWhisperEvent,
+        // @asrt() data: IIncomingWhisperEvent,
     ): Promise<boolean> {
         return true;
     }

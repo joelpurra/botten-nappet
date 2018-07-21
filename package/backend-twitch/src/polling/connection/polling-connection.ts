@@ -145,7 +145,9 @@ export default abstract class PollingConnection<T> implements IPollingConnection
                 // TODO: handle errors.
                 this.logger.error(error, "error", "openedObserver");
             },
-            next: (message) => {
+            next: (
+                // message
+            ) => {
                 // this.logger.trace(message, "next", "openedObserver");
             },
         };
@@ -297,7 +299,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
     }
 
     @asrt(0)
-    private async getAllData(): Promise<IHttpData> {
+    private async getAllData(): Promise<IHttpData | string> {
         const overriddenData = await this.getData();
 
         const data = {
@@ -405,10 +407,12 @@ export default abstract class PollingConnection<T> implements IPollingConnection
             },
         };
 
-        const responseSubscription = request
-            // .pipe(
-            //     tap((val) => this.logger.trace(val, uri, "response", "request")),
-            // )
-            .subscribe(responseObserver);
+        // const responseSubscription = request
+        //     .pipe(
+        //         tap((val) => this.logger.trace(val, uri, "response", "request")),
+        //     )
+        //     .subscribe(responseObserver);
+
+        request.subscribe(responseObserver);
     }
 }

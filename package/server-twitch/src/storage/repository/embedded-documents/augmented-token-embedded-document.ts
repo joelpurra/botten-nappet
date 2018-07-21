@@ -26,7 +26,11 @@ import {
     EmbeddedDocument,
 } from "camo";
 
+/* tslint:disable:max-line-length */
+
 import RawTokenEmbeddedDocument from "@botten-nappet/server-twitch/src/storage/repository/embedded-documents/raw-token-embedded-document";
+
+/* tslint:enable:max-line-length */
 
 @asrt(0)
 export default class AugmentedTokenEmbeddedDocument extends EmbeddedDocument {

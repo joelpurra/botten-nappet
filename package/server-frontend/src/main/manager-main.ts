@@ -42,8 +42,8 @@ import SocketIo from "socket.io";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import FrontendConfig from "@botten-nappet/server-frontend/src/config/frontend-config";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
 
@@ -320,9 +320,9 @@ export default class FrontendManagerMain {
 
         if (this.io) {
             try {
-                await Bluebird.promisify(this.io.close, {
+                await Bluebird.promisify<void, (() => void) | undefined>(this.io.close, {
                     context: this.io,
-                })();
+                })(undefined);
             } catch (error) {
                 this.logger
                     .error(error, this.io, "Swallowed error while closing io.");

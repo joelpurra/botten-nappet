@@ -22,9 +22,9 @@ import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/ipubsub-connection";
 import PubSubManager from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-manager";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 @asrt(2)
 export default class LoggingPubSubHandler extends PubSubManager {
@@ -47,7 +47,7 @@ export default class LoggingPubSubHandler extends PubSubManager {
 
     @asrt(1)
     protected async filter(
-        @asrt() data: object,
+        // @asrt() data: object,
     ): Promise<boolean> {
         // TODO: verify that the data contains both the topic and the actual message data.
         return true;

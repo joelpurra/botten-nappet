@@ -24,8 +24,8 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 import IrcManager from "@botten-nappet/backend-twitch/src/irc/connection/irc-manager";
 
@@ -42,7 +42,7 @@ export default class ReconnectIrcHandler extends IrcManager {
 
     @asrt(1)
     protected async dataHandler(
-        @asrt() data: IIncomingIrcCommand,
+        // @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
         this.logger.info("Reconnecting irc upon server request.", "dataHandler");
 

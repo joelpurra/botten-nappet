@@ -35,9 +35,7 @@ import Rx,
 } from "rxjs";
 import {
     concatMap,
-    every,
     first,
-    last,
     map,
     mergeMap,
     share,
@@ -102,7 +100,9 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         };
 
         const openObserver: NextObserver<Event> = {
-            next: (event) => {
+            next: (
+                // event
+            ) => {
                 // this._logger.trace(event, "next", "openObserver");
                 this.logger.debug("next", "openObserver");
 
@@ -112,7 +112,9 @@ export default abstract class WebSocketConnection<T, V> implements IWebSocketCon
         };
 
         const closeObserver: NextObserver<Event> = {
-            next: (event) => {
+            next: (
+                // event
+            ) => {
                 // this._logger.trace(event, "next", "closeObserver");
                 this.logger.debug("next", "closeObserver");
             },

@@ -86,14 +86,14 @@ export default class FollowReminderIrcHandler extends ConnectionManager<IIncomin
 
     @asrt(1)
     protected async dataHandler(
-        @asrt() data: IIncomingIrcCommand,
+        // @asrt() data: IIncomingIrcCommand,
     ): Promise<void> {
         throw new Error("Unexpected call to dataHandler.");
     }
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingIrcCommand,
+        // @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
         return false;
     }

@@ -28,9 +28,9 @@ import {
 
 import {
     connect as camoConnect,
+    IDatabaseConnection as ICamoDatabaseConnection,
 } from "camo";
 
-import ICamoDatabaseConnection from "@botten-nappet/backend-shared/src/storage/icamo-database-connection";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -56,8 +56,7 @@ export default abstract class DatabaseConnection implements IConnectable {
     public async connect() {
         assert.equal(this.database, null);
 
-        const db = await camoConnect(this.databaseUri);
-        this.database = db as ICamoDatabaseConnection;
+        this.database = await camoConnect(this.databaseUri);
 
         // NOTE: hack to reach NeDB through Camo.
         // TODO: better null handling.

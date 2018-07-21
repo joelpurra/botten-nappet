@@ -18,7 +18,7 @@ export function within(keyValue: any, name: string) {
         throw new Error(`Invalid name (${name})`);
     }
 
-    return function (target: any, key: any, index: number) {
+    return function (target: any, _key: any, index: number) {
         let params = getDecoratorDependencies(target, "within");
         params[index] = Within.of(keyValue, name);
     };

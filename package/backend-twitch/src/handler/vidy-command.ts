@@ -66,7 +66,7 @@ export default class VidyCommandIrcHandler extends EventSubscriptionManager<IInc
             .map((tokenizedPart) => tokenizedPart.trim())
             .filter((tokenizedPart) => tokenizedPart.length > 0);
 
-        const incomingCommand = tokenizedMessageParts[0];
+        // const incomingCommand = tokenizedMessageParts[0];
         const incomingCommandArguments = tokenizedMessageParts.slice(1);
 
         const query = incomingCommandArguments.join(" ");

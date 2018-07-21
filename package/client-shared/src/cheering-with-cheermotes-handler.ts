@@ -73,7 +73,9 @@ export default class CheeringWithCheermotesHandler extends SimpleNotificationHan
         return new Promise<HTMLImageElement>((resolve, reject) => {
             const image = new Image();
             image.src = url;
-            image.onload = (event) => resolve(image);
+            image.onload = (
+                // event
+            ) => resolve(image);
             image.onabort = (event) => reject(event);
             image.onerror = (event) => reject(event);
         });

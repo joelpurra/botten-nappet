@@ -29,12 +29,18 @@ import axios from "axios";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
+/* tslint:disable:max-line-length */
+
 import ApplicationAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/application-access-token-provider";
+
+/* tslint:enable:max-line-length */
+
+import {
+    UserNameOrId,
+} from "@botten-nappet/backend-twitch/src/helper/username-or-id";
 
 import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
 import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
-
-type UserNameOrId = string | number;
 
 export default class UserHelper {
     private logger: PinoLogger;

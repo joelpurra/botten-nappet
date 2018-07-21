@@ -28,9 +28,13 @@ import {
     assert,
 } from "check-types";
 
+/* tslint:disable:max-line-length */
+
 import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
 import DistributedEventRepositoryClass from "@botten-nappet/server-backend/src/storage/repository/distributed-event-repository";
 import IDistributedEventSchema from "@botten-nappet/server-backend/src/storage/repository/idistributed-event-schema";
+
+/* tslint:enable:max-line-length */
 
 @asrt(0)
 @autoinject

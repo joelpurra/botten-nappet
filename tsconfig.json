@@ -77,9 +77,6 @@
       "@botten-nappet/server-twitch/*": [
         "./package/server-twitch/*",
       ],
-      "@botten-nappet/server-twitch-irc/*": [
-        "./package/server-twitch-irc/*",
-      ],
       "@botten-nappet/server-vidy/*": [
         "./package/server-vidy/*",
       ],

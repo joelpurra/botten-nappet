@@ -13,7 +13,7 @@ import { Container, Resolver, resolver, getDecoratorDependencies } from "aurelia
  * Decorator: Specifies the container should be a boundary to any child containers.
  */
 export function boundary(keyValue: any) {
-    return function (target: any, key: any, index: number) {
+    return function (target: any, _key: any, index: number) {
         let params = getDecoratorDependencies(target, "boundary");
         params[index] = Boundary.of(keyValue);
     };
@@ -48,7 +48,7 @@ export class Boundary implements Resolver {
      * @param container The container to resolve from.
      * @return Nothing. Will always throw an error.
      */
-    public get(container: Container): any {
+    public get(_container: Container): any {
         throw new Error(`Reached resolver lookup boundary for container and key: ${this._key}`)
     }
 }

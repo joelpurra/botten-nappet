@@ -42,6 +42,8 @@ export default async function client() {
 
     await browserEventManager.start();
 
+    window.addEventListener("unload", async () => await browserEventManager.stop());
+
     // NOTE: debugging tool.
     window.triggerBotEvent = (botEvent: any) => browserEventManager.trigger(botEvent);
 }

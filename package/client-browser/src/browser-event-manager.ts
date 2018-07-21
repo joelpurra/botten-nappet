@@ -113,8 +113,11 @@ export default class BrowserEventManager {
             next: (botEvent) => this.trigger(botEvent),
         };
 
-        // TODO: unsubscribe.
         this.dataHandlerSubscription = this.handlerObservable.subscribe(dataHandlerObserver);
+    }
+
+    public async stop(): Promise<void> {
+        this.dataHandlerSubscription!.unsubscribe();
     }
 
     public trigger(botEvent: any): void {

@@ -26,10 +26,10 @@ export class rxios {
     private _httpClient: AxiosInstance;
 
     constructor(private options: rxiosConfig = {}) {
-        this._httpClient = axios.create(options);
+        this._httpClient = axios.create(this.options);
     }
 
-    private _makeRequest<T>(method: string, url: string, queryParams?: object, body?: object) {
+    private _makeRequest<T>(method: string, url: string, queryParams?: object, body?: object | string) {
         let request: AxiosPromise<T>;
         switch (method) {
             case "GET":
@@ -66,15 +66,15 @@ export class rxios {
         return this._makeRequest<T>("GET", url, queryParams);
     }
 
-    public post<T>(url: string, body: object, queryParams?: object) {
+    public post<T>(url: string, body: object | string, queryParams?: object) {
         return this._makeRequest<T>("POST", url, queryParams, body);
     }
 
-    public put<T>(url: string, body: object, queryParams?: object) {
+    public put<T>(url: string, body: object | string, queryParams?: object) {
         return this._makeRequest<T>("PUT", url, queryParams, body);
     }
 
-    public patch<T>(url: string, body: object, queryParams?: object) {
+    public patch<T>(url: string, body: object | string, queryParams?: object) {
         return this._makeRequest<T>("PATCH", url, queryParams, body);
     }
 

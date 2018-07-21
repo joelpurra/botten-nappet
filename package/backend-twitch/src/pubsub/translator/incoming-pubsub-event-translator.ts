@@ -53,7 +53,7 @@ export default class IncomingPubSubEventTranslator extends PubSubManager {
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IPubSubResponse,
+        // @asrt() data: IPubSubResponse,
     ): Promise<boolean> {
         return true;
     }

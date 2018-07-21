@@ -24,9 +24,9 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
 import IrcManager from "@botten-nappet/backend-twitch/src/irc/connection/irc-manager";
+import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 
 @asrt(2)
 export default class LoggingIrcHandler extends IrcManager {
@@ -48,7 +48,7 @@ export default class LoggingIrcHandler extends IrcManager {
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingIrcCommand,
+        // @asrt() data: IIncomingIrcCommand,
     ): Promise<boolean> {
         return true;
     }

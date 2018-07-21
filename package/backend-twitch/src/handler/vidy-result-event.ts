@@ -88,7 +88,7 @@ export default class VidyResultEventHandler extends EventSubscriptionManager<IIn
 
     @asrt(1)
     public async filter(
-        @asrt() data: IIncomingSearchResultEvent,
+        // @asrt() data: IIncomingSearchResultEvent,
     ): Promise<boolean> {
         // TODO: merge with IOutgoingSearchCommand to get channel context, triggerer
         // username, search query-response validity checks.

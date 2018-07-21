@@ -29,8 +29,6 @@ import {
     assert,
 } from "check-types";
 
-import fs from "fs";
-
 import pino from "pino";
 
 import LoggingConfig from "@botten-nappet/shared/src/config/logging-config";

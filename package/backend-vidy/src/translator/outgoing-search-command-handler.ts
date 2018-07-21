@@ -76,7 +76,7 @@ export default class OutgoingSearchCommandHandler extends EventSubscriptionManag
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IOutgoingSearchCommand,
+        // @asrt() data: IOutgoingSearchCommand,
     ): Promise<boolean> {
         return true;
     }

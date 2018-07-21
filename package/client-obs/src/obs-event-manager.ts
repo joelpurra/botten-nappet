@@ -92,7 +92,9 @@ export default class ObsEventManager {
                 this.subscriptionHandler.handle(data);
             },
 
-            "cowbell": (data: any) => {
+            "cowbell": (
+                // data: any
+            ) => {
                 this.soundManager.playRandom("cowbell");
             },
 
@@ -127,8 +129,11 @@ export default class ObsEventManager {
             next: (botEvent) => this.trigger(botEvent),
         };
 
-        // TODO: unsubscribe.
         this.dataHandlerSubscription = this.handlerObservable.subscribe(dataHandlerObserver);
+    }
+
+    public async stop(): Promise<void> {
+        this.dataHandlerSubscription!.unsubscribe();
     }
 
     public trigger(botEvent: any): void {

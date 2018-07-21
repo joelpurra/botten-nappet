@@ -50,15 +50,15 @@ export default class SubscriptionIrcReplyHandler extends EventSubscriptionManage
     ): Promise<void> {
         const username = data.triggerer.name;
 
-        this.logger.trace("Responding to subscriber.", username, data.message, "dataHandler");
+        this.logger.trace("Responding to subscriber.", username, data.data.message, "dataHandler");
 
         // TODO: use a string templating system.
         // TODO: configure response.
         let response = null;
 
-        if (data.months > 0) {
+        if (data.data.months > 0) {
             /* tslint:disable:max-line-length */
-            response = `Wow, @${username}, thanks for getting your ${data.months} rubber duckies in a row!`;
+            response = `Wow, @${username}, thanks for getting your ${data.data.months} rubber duckies in a row!`;
             /* tslint:enable:max-line-length */
         } else {
             response = `Wow, @${username}, thanks for becoming my newest rubber ducky!`;
@@ -77,7 +77,7 @@ export default class SubscriptionIrcReplyHandler extends EventSubscriptionManage
 
     @asrt(1)
     protected async filter(
-        @asrt() data: IIncomingSubscriptionEvent,
+        // @asrt() data: IIncomingSubscriptionEvent,
     ): Promise<boolean> {
         return true;
     }

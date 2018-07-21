@@ -57,7 +57,7 @@ export default class ApplicationUnauthenticationEventTranslator
 
     @asrt(1)
     protected async dataHandler(
-        @asrt() data: IApplicationUnauthenticationEvent,
+        // @asrt() data: IApplicationUnauthenticationEvent,
     ): Promise<void> {
         const event: IOutgoingApplicationUnauthenticationCommand = {
             application: {

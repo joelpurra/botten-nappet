@@ -36,9 +36,13 @@ import ConnectionManager from "@botten-nappet/shared/src/connection/connection-m
 
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
+/* tslint:disable:max-line-length */
+
 import PollingApplicationTokenConnection from "@botten-nappet/backend-twitch/src/authentication/polling-application-token-connection";
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IPollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/ipolling-connection";
+
+/* tslint:enable:max-line-length */
 
 @asrt(3)
 @autoinject
@@ -46,7 +50,6 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     private waitForFirstTokenPromise: Promise<undefined>;
     private tokenHasBeenSet: (() => void) | null;
     private applicationAccessToken: string | null;
-    private rawOAuthToken: IRawToken | null;
     private oauthTokenRevocationHeaders: {};
     private oauthTokenRevocationMethod: string;
 
@@ -62,13 +65,11 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
         this.oauthTokenRevocationMethod = "post";
         this.oauthTokenRevocationHeaders = {};
 
-        // TODO: use rawOAuthToken for anything?
-        this.rawOAuthToken = null;
         this.applicationAccessToken = null;
 
         this.tokenHasBeenSet = null;
 
-        this.waitForFirstTokenPromise = new Promise((resolve, reject) => {
+        this.waitForFirstTokenPromise = new Promise((resolve) => {
             const waitForToken = () => {
                 resolve();
             };
@@ -158,7 +159,6 @@ export default class ApplicationTokenManager extends ConnectionManager<IRawToken
     private async setToken(
         @asrt() data: IRawToken,
     ) {
-        this.rawOAuthToken = data;
         this.applicationAccessToken = data.access_token;
 
         await this.tokenHasBeenSet!();

@@ -12,7 +12,7 @@ import { Container, Resolver, resolver, getDecoratorDependencies } from "aurelia
  * Decorator: Specifies the dependency should be contained to a new child of the current container.
  */
 export function contained(keyValue: any) {
-    return function (target: any, key: any, index: number) {
+    return function (target: any, _key: any, index: number) {
         let params = getDecoratorDependencies(target, "contained");
         params[index] = Contained.of(keyValue);
     };
