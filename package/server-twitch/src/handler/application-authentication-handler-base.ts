@@ -81,13 +81,16 @@ export default abstract class ApplicationAuthenticationHandlerBase
     ): Promise<void> {
         if (this.isIOutgoingApplicationUnauthenticationCommand(data)) {
             if (!this.isApplicationAuthenticated) {
-                throw new Error(
-                    `Application was not authenticated, cannot unauthenticate: ${
-                    data.application.name
-                    } ${
-                    data.application.id
-                    }`,
-                );
+                // TODO: ignore or throw for duplicate authentication?
+                return;
+
+                // throw new Error(
+                //     `Application was not authenticated, cannot unauthenticate: ${
+                //     data.application.name
+                //     } ${
+                //     data.application.id
+                //     }`,
+                // );
             }
 
             await this.applicationTokenManager.stop();
@@ -109,13 +112,16 @@ export default abstract class ApplicationAuthenticationHandlerBase
 
         if (this.isIOutgoingApplicationAuthenticationCommand(data)) {
             if (this.isApplicationAuthenticated) {
-                throw new Error(
-                    `Application was already authenticated, cannot authenticate again: ${
-                    data.application.name
-                    } ${
-                    data.application.id
-                    }`,
-                );
+                // TODO: ignore or throw for duplicate authentication?
+                return;
+
+                // throw new Error(
+                //     `Application was already authenticated, cannot authenticate again: ${
+                //     data.application.name
+                //     } ${
+                //     data.application.id
+                //     }`,
+                // );
             }
 
             // TODO: factory to create new "twitch applications".

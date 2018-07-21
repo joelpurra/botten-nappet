@@ -82,13 +82,16 @@ export default abstract class UserAuthenticationHandlerBase
     ): Promise<void> {
         if (this.isIOutgoingUserUnauthenticationCommand(data)) {
             if (!this.isUserAuthenticated) {
-                throw new Error(
-                    `User was not authenticated, cannot unauthenticate: ${
-                    data.recipient.name
-                    } ${
-                    data.recipient.id
-                    }`,
-                );
+                // TODO: ignore or throw for duplicate authentication?
+                return;
+
+                // throw new Error(
+                //     `User was not authenticated, cannot unauthenticate: ${
+                //     data.recipient.name
+                //     } ${
+                //     data.recipient.id
+                //     }`,
+                // );
             }
 
             await this.perUserHandlersMain.stop();
@@ -117,13 +120,16 @@ export default abstract class UserAuthenticationHandlerBase
 
         if (this.isIOutgoingUserAuthenticationCommand(data)) {
             if (this.isUserAuthenticated) {
-                throw new Error(
-                    `User was already authenticated, cannot authenticate again: ${
-                    data.recipient.name
-                    } ${
-                    data.recipient.id
-                    }`,
-                );
+                // TODO: ignore or throw for duplicate authentication?
+                return;
+
+                // throw new Error(
+                //     `User was already authenticated, cannot authenticate again: ${
+                //     data.recipient.name
+                //     } ${
+                //     data.recipient.id
+                //     }`,
+                // );
             }
 
             // TODO: factory to create new "twitch user-based applications".

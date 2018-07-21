@@ -24,6 +24,7 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
+import Bluebird from "bluebird";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -48,6 +49,7 @@ import ApplicationUnauthenticationEventTopicPublisher from "@botten-nappet/serve
 @asrt(8)
 export default class BackendMain implements IStartableStoppable {
     private logger: PinoLogger;
+    private shouldBroadcastApplicationAuthenticationHack: boolean = false;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -86,7 +88,24 @@ export default class BackendMain implements IStartableStoppable {
 
         this.logger.info("Application authentication initialized.");
 
+        // TODO HACK REMOVE: find better solution than to rebroadcast application state.
+        this.shouldBroadcastApplicationAuthenticationHack = true;
+
+        const broadcastApplicationAuthenticationHack = (): Bluebird<void> => Bluebird.delay(1000)
+            .then(() => this.applicationAuthenticationEventEmitter.emit(event))
+            .then(() => {
+                // TODO: if this hack is kept around, ensure it doesn't hog resources due to recursion.
+                if (this.shouldBroadcastApplicationAuthenticationHack) {
+                    broadcastApplicationAuthenticationHack();
+                }
+            });
+
+        this.logger.warn("Application authentication hack initialized.");
+        broadcastApplicationAuthenticationHack();
+
         await this.gracefulShutdownManager.waitForShutdownSignal();
+
+        this.shouldBroadcastApplicationAuthenticationHack = false;
     }
 
     @asrt(0)

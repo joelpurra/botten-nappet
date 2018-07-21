@@ -307,7 +307,6 @@ export default class PerUserHandlersMain implements IStartableStoppable {
                 await startable.start();
             } catch (error) {
                 this.logger.error(startable, error);
-                debugger;
             }
         });
 

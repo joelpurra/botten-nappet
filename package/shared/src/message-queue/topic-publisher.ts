@@ -65,7 +65,7 @@ export default abstract class TopicPublisher<T> implements IConnectable, ISendin
 
     @asrt(0)
     public async isConnected(): Promise<boolean> {
-        const connected = (this.socket && !this.socket.closed) || false;
+        const connected = await this.publisher.isConnected();
 
         return connected;
     }

@@ -104,9 +104,7 @@ export default class Publisher implements IConnectable {
         @asrt() topic: string,
         @asrt() msg: ZeroMqMessage,
     ): Promise<void> {
-        assert.not.null(this.socket);
-        // TODO: better null handling.
-        assert(!this.socket!.closed);
+        assert(await this.isConnected());
 
         await this.socket!.send([
             topic,
