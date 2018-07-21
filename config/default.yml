@@ -3,7 +3,8 @@ backend:
         default: 30000
         streaming: 30000
         cheermotes: 600000
-    databaseUri: null
+    shared:
+        databaseUri: null
     followingPollingLimit: 5
     logging:
         file: null
@@ -18,6 +19,7 @@ backend:
             outgoingIrcCommand: "external:backend:twitch:outgoing:irc:command"
             incomingPubSubEvent: "external:backend:twitch:incoming:pubsub:event"
     twitch:
+        databaseUri: null
         appClientId: null
         appClientSecret: null
         appOAuthRedirectUrl: null

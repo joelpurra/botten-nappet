@@ -1,6 +1,8 @@
 backend:
-  databaseUri: BOTTEN_NAPPET_BACKEND_DATABASE_URI
+  shared:
+    databaseUri: BOTTEN_NAPPET_SHARED_DATABASE_URI
   twitch:
+    databaseUri: BOTTEN_NAPPET_TWITCH_DATABASE_URI
     appClientId: TWITCH_APP_CLIENT_ID
     appClientSecret: TWITCH_APP_CLIENT_SECRET
     appOAuthRedirectUrl: TWITCH_APP_OAUTH_REDIRECT_URL

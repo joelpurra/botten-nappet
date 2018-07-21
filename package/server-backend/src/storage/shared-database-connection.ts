@@ -21,34 +21,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-
 import {
-    Document,
-} from "camo";
+    autoinject,
+} from "aurelia-framework";
 
-import AugmentedTokenEmbeddedDocument from "@botten-nappet/backend-shared/src/storage/repository/embedded-documents/augmented-token-embedded-document";
-import IUserSchema from "@botten-nappet/backend-shared/src/storage/repository/iuser-schema";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-@asrt(0)
-export default class UserRepository extends Document<IUserSchema> {
+import DatabaseConfig from "@botten-nappet/backend-shared/src/config/database-config";
+import DatabaseConnection from "@botten-nappet/backend-shared/src/storage/database-connection";
 
-    public static collectionName() {
-        return "user";
-    }
-
-    constructor() {
-        super();
-
-        super.schema({
-            twitchToken: {
-                type: AugmentedTokenEmbeddedDocument,
-            },
-            username: {
-                match: /^[a-z0-9][a-z0-9-]/i,
-                required: true,
-                type: String,
-                unique: true,
-            },
-        });
+@asrt(2)
+@autoinject
+export default class SharedDatabaseConnection extends DatabaseConnection {
+    constructor(
+        @asrt() logger: PinoLogger,
+        @asrt() databaseConfig: DatabaseConfig,
+    ) {
+        super(logger, databaseConfig.sharedDatabaseUri);
     }
 }

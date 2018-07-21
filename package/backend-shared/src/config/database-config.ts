@@ -34,7 +34,11 @@ export default class DatabaseConfig {
         @asrt() private readonly backendConfig: BackendConfig,
     ) { }
 
-    public get databaseUri(): string {
-        return this.backendConfig.databaseUri;
+    public get sharedDatabaseUri(): string {
+        return this.backendConfig.sharedDatabaseUri;
+    }
+
+    public get twitchDatabaseUri(): string {
+        return this.backendConfig.twitchDatabaseUri;
     }
 }

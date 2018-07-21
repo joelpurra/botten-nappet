@@ -33,9 +33,9 @@ import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-conf
 
 /* tslint:disable max-line-length */
 
-import DatabaseConnection from "@botten-nappet/backend-shared/src/storage/database-connection";
 import ExternalDistributedEventManager from "@botten-nappet/server-backend/src/distributed-events/external-distributed-event-manager";
 import MessageQueueExternalRawTopicsSubscriber from "@botten-nappet/server-backend/src/message-queue/external-raw-topics-subscriber";
+import SharedDatabaseConnection from "@botten-nappet/server-backend/src/storage/shared-database-connection";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
 import IApplicationAuthenticationEvent from "@botten-nappet/interface-shared/src/event/iapplication-authentication-event";
@@ -53,7 +53,7 @@ export default class BackendMain implements IStartableStoppable {
         @asrt() logger: PinoLogger,
         @asrt() private readonly backendConfig: BackendConfig,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
-        @asrt() private readonly databaseConnection: DatabaseConnection,
+        @asrt() private readonly sharedDatabaseConnection: SharedDatabaseConnection,
         @asrt() private readonly messageQueueExternalRawTopicsSubscriber: MessageQueueExternalRawTopicsSubscriber,
         @asrt() @scoped(ExternalDistributedEventManager)
         private readonly externalDistributedEventManager: ExternalDistributedEventManager,
@@ -71,7 +71,7 @@ export default class BackendMain implements IStartableStoppable {
 
         this.backendConfig.validate();
 
-        await this.databaseConnection.connect();
+        await this.sharedDatabaseConnection.connect();
         await this.messageQueueExternalRawTopicsSubscriber.connect();
 
         // TODO: ensure event distributed event manager starts sooner?
@@ -107,6 +107,6 @@ export default class BackendMain implements IStartableStoppable {
         }
 
         await this.messageQueueExternalRawTopicsSubscriber.disconnect();
-        await this.databaseConnection.disconnect();
+        await this.sharedDatabaseConnection.disconnect();
     }
 }

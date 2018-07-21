@@ -47,8 +47,8 @@ export default class BackendConfig {
     public validate(): any {
         // TODO: more dynamic config value list?
         // TODO: add validation error messages.
-        assert.nonEmptyString(this.databaseUri);
-        assert.match(this.databaseUri, /^nedb:\/\//);
+        assert.nonEmptyString(this.sharedDatabaseUri);
+        assert.nonEmptyString(this.twitchDatabaseUri);
         assert.nonEmptyString(this.topicTwitchOutgoingApplicationAuthenticationCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingApplicationUnauthenticationCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingUserAuthenticationCommand);
@@ -73,8 +73,17 @@ export default class BackendConfig {
         assert.nonEmptyString(this.vidySystemUuid);
     }
 
-    public get databaseUri(): string {
-        const value = this.config.get<string>(`${this.prefix}.databaseUri`);
+    public get sharedDatabaseUri(): string {
+        const value = this.config.get<string>(`${this.prefix}.shared.databaseUri`);
+
+        assert.nonEmptyString(value);
+        assert(value.startsWith, "nedb://");
+
+        return value;
+    }
+
+    public get twitchDatabaseUri(): string {
+        const value = this.config.get<string>(`${this.prefix}.twitch.databaseUri`);
 
         assert.nonEmptyString(value);
         assert(value.startsWith, "nedb://");

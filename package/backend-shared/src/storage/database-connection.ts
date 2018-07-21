@@ -21,32 +21,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import {
-    autoinject,
-} from "aurelia-framework";
 import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
 
 import {
-    connect,
+    connect as camoConnect,
 } from "camo";
 
+import ICamoDatabaseConnection from "@botten-nappet/backend-shared/src/storage/icamo-database-connection";
+import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import DatabaseConfig from "../config/database-config";
-import ICamoDatabaseConnection from "./icamo-database-connection";
 
 @asrt(2)
-@autoinject
-export default class DatabaseConnection {
+export default abstract class DatabaseConnection implements IConnectable {
     public autocompactionInterval: number;
     private database: ICamoDatabaseConnection | null;
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
-        @asrt() private readonly databaseConfig: DatabaseConfig,
+        @asrt() private readonly databaseUri: string,
     ) {
         this.logger = logger.child(this.constructor.name);
 
@@ -60,8 +56,15 @@ export default class DatabaseConnection {
     public async connect() {
         assert.equal(this.database, null);
 
-        const db = await connect(this.databaseConfig.databaseUri);
+        const db = await camoConnect(this.databaseUri);
         this.database = db as ICamoDatabaseConnection;
+
+        // NOTE: hack to reach NeDB through Camo.
+        // TODO: better null handling.
+        const collections = this.database!._collections;
+
+        const collectionNames = Object.keys(collections);
+        this.logger.info(collectionNames, "loaded", "connect");
 
         return undefined;
     }
@@ -74,6 +77,7 @@ export default class DatabaseConnection {
         // TODO: better null handling.
         const collections = this.database!._collections;
 
+        const collectionNames = Object.keys(collections);
         const dbs = Object.values(collections);
 
         // NOTE: flush data to disk.
@@ -93,12 +97,28 @@ export default class DatabaseConnection {
             }
         }))
             .tap(() => {
-                this.logger.info("database written to disk", "disconnect");
+                this.logger.info(collectionNames, "database written to disk", "disconnect");
             })
             .tapCatch((error) => {
-                this.logger.error(error, "disconnect");
+                this.logger.error(collectionNames, error, "disconnect");
             });
 
         return this.database!.close();
+    }
+
+    @asrt(0)
+    public async reconnect(): Promise<void> {
+        await this.disconnect();
+        await this.connect();
+    }
+
+    @asrt(0)
+    public async isConnected(): Promise<boolean> {
+        // TODO: implement a real check.
+        // NOTE: emulating internals of camo.
+        // https://github.com/scottwrobinson/camo/blob/2e8db555d4f3e00dff7a30b13cc58ceb3ffe4363/lib/clients/index.js
+        const connected = (global.CLIENT) || false;
+
+        return connected;
     }
 }

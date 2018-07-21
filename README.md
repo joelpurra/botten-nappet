@@ -25,7 +25,8 @@ export VIDY_API_KEY_SECRET='sandbox'
 export VIDY_VIDEO_LINK_BASE_URL='https://vidy.cn/v/'
 export VIDY_SYSTEM_UUID='configure me'
 export BOTTEN_NAPPET_SHARED_LOG_FILE="${TMPDIR}.botten-nappet.log"
-export BOTTEN_NAPPET_BACKEND_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory"
+export BOTTEN_NAPPET_SHARED_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory/shared"
+export BOTTEN_NAPPET_TWITCH_DATABASE_URI="nedb://.../path/to/botten-nappet/database-directory/twitch"
 export BOTTEN_NAPPET_SHARED_ZMQ_PRIVATE_KEY="...generate..."
 export BOTTEN_NAPPET_SHARED_ZMQ_PUBLIC_KEY="...generate..."
 ```
@@ -140,7 +141,8 @@ export -n VIDY_API_KEY_ID
 export -n VIDY_API_KEY_SECRET
 export -n VIDY_SYSTEM_UUID
 export -n BOTTEN_NAPPET_SHARED_LOG_FILE
-export -n BOTTEN_NAPPET_BACKEND_DATABASE_URI
+export -n BOTTEN_NAPPET_SHARED_DATABASE_URI
+export -n BOTTEN_NAPPET_TWITCH_DATABASE_URI
 ```
 
 

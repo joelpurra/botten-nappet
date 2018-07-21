@@ -195,7 +195,7 @@ export default class TwitchAuthenticatedApplicationMain implements IStartableSto
 
         this.logger.info("Started.");
 
-        await this.gracefulShutdownManager.waitForShutdownSignal();
+        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

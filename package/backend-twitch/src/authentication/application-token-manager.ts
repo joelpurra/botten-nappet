@@ -36,9 +36,9 @@ import ConnectionManager from "@botten-nappet/shared/src/connection/connection-m
 
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
-import ApplicationTokenManagerConfig from "../config/application-token-manager-config";
-import IPollingConnection from "../polling/connection/ipolling-connection";
-import PollingApplicationTokenConnection from "./polling-application-token-connection";
+import PollingApplicationTokenConnection from "@botten-nappet/backend-twitch/src/authentication/polling-application-token-connection";
+import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+import IPollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/ipolling-connection";
 
 @asrt(3)
 @autoinject
