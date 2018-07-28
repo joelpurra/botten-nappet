@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ITwitchApiV5ChannelCheermotes from "./itwitch-api-v5-channel-cheermotes";
+import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v5-channel-cheermotes";
 
 /* tslint:disable no-empty-interface */
 export default interface IPollingCheermotesResponse extends ITwitchApiV5ChannelCheermotes { }

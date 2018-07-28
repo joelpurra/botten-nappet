@@ -18,8 +18,19 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUser from "./iuser";
+// NOTE: single-import adding reflection metadata globally.
+import "reflect-metadata";
 
-export default interface IUserCamo extends IUser {
-    _schema?: object;
+import {
+    assert,
+} from "check-types";
+
+import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
+
+import SharedMain from "@botten-nappet/server-shared/src/application/application";
+
+export default async function main(): Promise<void> {
+    assert.hasLength(arguments, 0);
+
+    await createRootResolver<SharedMain>(async (resolver) => resolver(SharedMain));
 }

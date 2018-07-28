@@ -27,8 +27,8 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import MultiConnectionManager from "../connection/multi-connection-manager";
-import IEventSubscriptionConnection from "./ievent-subscription-connection";
+import MultiConnectionManager from "@botten-nappet/shared/src/connection/multi-connection-manager";
+import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 export default abstract class MultiEventSubscriptionManager<T> extends MultiConnectionManager<T> {
     constructor(

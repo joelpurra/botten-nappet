@@ -40,7 +40,7 @@ import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connectio
 
 import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-irc-command-single-item-json-topics-subscriber";
 
-import TwitchPerUserIrcApi from "./per-user-irc-api";
+import TwitchPerUserIrcApi from "@botten-nappet/server-twitch/src/irc/per-user-irc-api";
 
 /* tslint:enable:max-line-length */
 

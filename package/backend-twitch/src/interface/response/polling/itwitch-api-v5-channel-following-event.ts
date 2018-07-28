@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ITwitchApiV5ChannelFollower from "./itwitch-api-v5-channel-follower";
+import ITwitchApiV5ChannelFollower from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v5-channel-follower";
 
 export default interface ITwitchApiV5ChannelFollowingEvent {
     // TODO: iso8601 datetime string type?

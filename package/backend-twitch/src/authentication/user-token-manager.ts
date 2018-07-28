@@ -30,8 +30,8 @@ import {
 
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
-import TokenHelper from "../helper/token-helper";
-import UserTokenHelper from "../helper/user-token-helper";
+import TokenHelper from "@botten-nappet/backend-twitch/src/helper/token-helper";
+import UserTokenHelper from "@botten-nappet/backend-twitch/src/helper/user-token-helper";
 
 @asrt()
 @autoinject

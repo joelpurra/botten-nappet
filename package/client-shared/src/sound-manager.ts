@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConsoleLog from "./console-log";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
 
 type SoundGroup = Array<{ id: string; name: string; }>;
 

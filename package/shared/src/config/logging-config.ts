@@ -25,7 +25,7 @@ import {
     autoinject,
 } from "aurelia-dependency-injection";
 
-import SharedConfig from "./shared-config";
+import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 
 @asrt(1)
 @autoinject

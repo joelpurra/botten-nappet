@@ -27,8 +27,8 @@ import {
 
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 
-import UserNameProvider from "./user-name-provider";
-import UserTokenManager from "./user-token-manager";
+import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
+import UserTokenManager from "@botten-nappet/backend-twitch/src/authentication/user-token-manager";
 
 @asrt(2)
 @autoinject

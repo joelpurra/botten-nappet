@@ -29,8 +29,8 @@ import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
 import IIncomingPubSubEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-pub-sub-event";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
-import PubSubConnection from "../../pubsub/connection/pubsub-connection";
-import PubSubManager from "../../pubsub/connection/pubsub-manager";
+import PubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-connection";
+import PubSubManager from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-manager";
 
 @asrt(3)
 export default class IncomingPubSubEventTranslator extends PubSubManager {

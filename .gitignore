@@ -1,6 +1,8 @@
-node_modules/
-dist/
-*.log
+*.d.ts
+*.d.ts.map
 *.dependencies.txt
 *.gv
 *.gv.*
+*.log
+dist/
+node_modules/

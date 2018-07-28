@@ -40,13 +40,14 @@ import TwitchOutgoingApplicationUnauthenticationCommandSingleItemJsonTopicsSubsc
 import ApplicationAuthenticatedEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/application-authenticated-event-topic-publisher";
 import ApplicationUnauthenticatedEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/application-unauthenticated-event-topic-publisher";
 
-import ApplicationAuthenticationHandlerBase from "./application-authentication-handler-base";
+import ApplicationAuthenticationHandlerBase from "@botten-nappet/server-twitch/src/handler/application-authentication-handler-base";
 
 /* tslint:enable max-line-length */
 
 @asrt(8)
 @autoinject
 export default abstract class ApplicationAuthenticationHandler extends ApplicationAuthenticationHandlerBase {
+
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() outgoingApplicationAuthenticationCommandSubscriptionConnection:

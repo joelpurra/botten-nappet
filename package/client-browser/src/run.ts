@@ -22,7 +22,7 @@ import BotSocket from "@botten-nappet/client-shared/src/bot-socket";
 import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
 import SpeechManager from "@botten-nappet/client-shared/src/speech-manager";
 
-import BrowserEventManager from "./browser-event-manager";
+import BrowserEventManager from "@botten-nappet/client-browser/src/browser-event-manager";
 
 export default async function client() {
     const logger = new ConsoleLog();

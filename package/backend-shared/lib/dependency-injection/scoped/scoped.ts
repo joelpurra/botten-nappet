@@ -9,7 +9,7 @@ import { Container, Resolver, resolver, getDecoratorDependencies } from "aurelia
  * Decorator: Specifies the dependency should be scoped to the current container.
  */
 export function scoped(keyValue: any) {
-    return function (target, key, index) {
+    return function (target: any, key: any, index: number) {
         let params = getDecoratorDependencies(target, "scoped");
         params[index] = Scoped.of(keyValue);
     };

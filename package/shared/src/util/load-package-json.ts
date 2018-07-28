@@ -30,7 +30,7 @@ import pkgDir from "pkg-dir";
 const thenReadJson = require("then-read-json");
 /* tslint:enable no-var-requires */
 
-import IPackageJson from "./ipackage-json";
+import IPackageJson from "@botten-nappet/shared/src/util/ipackage-json";
 
 export default async function loadPackageJson(): Promise<IPackageJson> {
     const projectRootDirectoryPath = await pkgDir(__dirname);

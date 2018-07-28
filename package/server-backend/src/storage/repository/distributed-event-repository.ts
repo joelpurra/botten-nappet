@@ -18,8 +18,35 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IDistributedEvent from "./idistributed-event";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
-export default interface IDistributedEventCamo extends IDistributedEvent {
-    _schema?: object;
+import {
+    Document,
+} from "camo";
+
+import IDistributedEventSchema from "@botten-nappet/server-backend/src/storage/repository/idistributed-event-schema";
+
+@asrt(0)
+export default class DistributedEventRepository extends Document<IDistributedEventSchema> {
+
+    public static collectionName() {
+        return "distributed-event";
+    }
+
+    constructor() {
+        super();
+
+        super.schema({
+            messages: {
+                required: true,
+                type: [Buffer],
+            },
+            topic: {
+                required: true,
+                type: String,
+            },
+        });
+    }
 }

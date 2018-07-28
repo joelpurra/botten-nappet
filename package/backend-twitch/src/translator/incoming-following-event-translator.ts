@@ -32,15 +32,15 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 /* tslint:disable:max-line-length */
 
 import IIncomingFollowingEvent from "@botten-nappet/interface-shared-twitch/src/event/iincoming-following-event";
-import IPollingFollowingResponse from "../interface/response/polling/ifollowing-polling-response";
-import ITwitchApiV5ChannelFollowingEvent from "../interface/response/polling/itwitch-api-v5-channel-following-event";
+import IPollingFollowingResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/ifollowing-polling-response";
+import ITwitchApiV5ChannelFollowingEvent from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v5-channel-following-event";
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IncomingFollowingEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-following-event-topic-publisher";
 import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
-import PollingManager from "../polling/connection/polling-manager";
+import PollingManager from "@botten-nappet/backend-twitch/src/polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 

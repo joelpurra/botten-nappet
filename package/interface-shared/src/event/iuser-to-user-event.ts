@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserNameId from "../data/iuser-name-id";
-import IUserEvent from "./iuser-event";
+import IUserNameId from "@botten-nappet/interface-shared/src/data/iuser-name-id";
+import IUserEvent from "@botten-nappet/interface-shared/src/event/iuser-event";
 
 export default interface IUserToUserEvent<T> extends IUserEvent<T> {
     sender: IUserNameId;

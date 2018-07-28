@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import anime from "animejs";
-import ConsoleLog from "./console-log";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
 
 export default class NotificationManager {
     private containerElement: HTMLDivElement;

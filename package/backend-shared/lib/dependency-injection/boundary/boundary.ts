@@ -13,7 +13,7 @@ import { Container, Resolver, resolver, getDecoratorDependencies } from "aurelia
  * Decorator: Specifies the container should be a boundary to any child containers.
  */
 export function boundary(keyValue: any) {
-    return function (target, key, index) {
+    return function (target: any, key: any, index: number) {
         let params = getDecoratorDependencies(target, "boundary");
         params[index] = Boundary.of(keyValue);
     };

@@ -35,7 +35,7 @@ import loadPackageJson from "@botten-nappet/shared/src/util/load-package-json";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import RootLoggerResolver from "@botten-nappet/shared/src/util/root-logger-resolver";
 
-import SharedContainerRoot from "./shared-container-root";
+import SharedContainerRoot from "@botten-nappet/backend-shared/src/main/shared-container-root";
 
 import generateDependencyGraph,
 {

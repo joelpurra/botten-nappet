@@ -18,20 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import main from "./main";
+import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
 
-const run = async (): Promise<void> => {
-    try {
-        await main();
-
-        process.exitCode = 0;
-    } catch (error) {
-        /* tslint:disable:no-console */
-        console.error("Error.", error);
-        /* tslint:enable:no-console */
-
-        process.exitCode = 1;
-    }
-};
-
-export default run;
+export default interface IDistributedEventCamo extends IDistributedEvent {
+    _schema?: object;
+}

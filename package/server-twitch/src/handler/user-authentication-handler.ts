@@ -30,7 +30,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 /* tslint:disable max-line-length */
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
-import UserAuthenticationHandlerBase from "./user-authentication-handler-base";
+import UserAuthenticationHandlerBase from "@botten-nappet/server-twitch/src/handler/user-authentication-handler-base";
 
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import UserAuthenticatedEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/user-authenticated-event-topic-publisher";
@@ -38,7 +38,7 @@ import UserUnauthenticatedEventTopicPublisher from "@botten-nappet/server-backen
 import TwitchOutgoingUserAuthenticationCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-user-authentication-command-single-item-json-topics-subscriber";
 import TwitchOutgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-user-unauthentication-command-single-item-json-topics-subscriber";
 
-import PerUserHandlersMain from "../per-user-handlers-main";
+import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
 
 /* tslint:enable max-line-length */
 

@@ -31,8 +31,8 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IIncomingPollingEvent from "@botten-nappet/interface-backend-twitch/src/event/iincoming-polling-event";
 
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
-import IPollingConnection from "../connection/ipolling-connection";
-import PollingManager from "../connection/polling-manager";
+import IPollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/ipolling-connection";
+import PollingManager from "@botten-nappet/backend-twitch/src/polling/connection/polling-manager";
 
 @asrt(6)
 export default class IncomingPollingEventTranslator extends PollingManager<any> {

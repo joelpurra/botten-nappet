@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ISendingConnection from "../connection/isending-connection";
+import ISendingConnection from "@botten-nappet/shared/src/connection/isending-connection";
 
 export default interface IEventPublisherConnection<T> extends ISendingConnection<T> {
 }

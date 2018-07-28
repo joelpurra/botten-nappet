@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     TwitchApiV6StreamingEventType,
-} from "./twitch-api-v6-streaming-event-types";
+} from "@botten-nappet/backend-twitch/src/interface/response/polling/twitch-api-v6-streaming-event-types";
 
 export default interface ITwitchApiV6StreamingEvent {
     community_ids: string[];

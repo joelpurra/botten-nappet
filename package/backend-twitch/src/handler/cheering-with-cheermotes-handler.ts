@@ -45,7 +45,7 @@ import {
 import {
     CheermoteBackground,
     CheermoteImageType,
-} from "../interface/response/polling/itwitch-api-v5-channel-cheermotes";
+} from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v5-channel-cheermotes";
 
 /* tslint:enable max-line-length */
 

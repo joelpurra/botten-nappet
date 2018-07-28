@@ -34,8 +34,6 @@ import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/i
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
-
 /* tslint:disable:max-line-length */
 
 import ApplicationAuthenticationEventTranslator from "@botten-nappet/backend-twitch/src/translator/application-authentication-event-translator";
@@ -63,14 +61,13 @@ import UserAuthenticationHandler from "@botten-nappet/server-twitch/src/handler/
 
 /* tslint:enable:max-line-length */
 
-@asrt(22)
+@asrt(21)
 export default class TwitchAuthenticatedApplicationMain implements IStartableStoppable {
     private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
-        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() @scoped(ApplicationAuthenticationEventTranslator)
         private readonly applicationAuthenticationEventTranslator:
             ApplicationAuthenticationEventTranslator,
@@ -194,8 +191,6 @@ export default class TwitchAuthenticatedApplicationMain implements IStartableSto
         await this.userAuthenticationHandler.start();
 
         this.logger.info("Started.");
-
-        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

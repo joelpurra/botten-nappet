@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IRawToken from "./iraw-token";
+import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
 export default interface IAugmentedToken {
     storedAt: number;

@@ -20,8 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     ICheerTokenWithCheermoteUrl,
-} from "./icheertoken-with-cheermotes-url";
-import IUserChannelEvent from "./iuser-channel-event";
+} from "@botten-nappet/interface-shared-twitch/src/event/icheertoken-with-cheermotes-url";
+import IUserChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/iuser-channel-event";
 
 interface IIncomingCheeringWithCheermotesEventData {
     message: string | null;

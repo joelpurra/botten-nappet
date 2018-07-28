@@ -35,9 +35,9 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IStartableStoppable from "../startable-stoppable/istartable-stoppable";
+import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import IReceivingConnection from "./ireceiving-connection";
+import IReceivingConnection from "@botten-nappet/shared/src/connection/ireceiving-connection";
 
 @asrt(2)
 export default abstract class ConnectionManager<T> implements IStartableStoppable {

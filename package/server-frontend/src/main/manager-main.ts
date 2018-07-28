@@ -43,7 +43,7 @@ import SocketIo from "socket.io";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import FrontendConfig from "../config/frontend-config";
+import FrontendConfig from "@botten-nappet/server-frontend/src/config/frontend-config";
 
 /* tslint:disable max-line-length */
 
@@ -61,7 +61,7 @@ import {
     isValidColor,
 } from "@botten-nappet/client-shared/src/colors";
 
-import FrontendManagedMain from "./managed-main";
+import FrontendManagedMain from "@botten-nappet/server-frontend/src/main/managed-main";
 
 interface ICustomWebSocketEventData {
     eventName: string;

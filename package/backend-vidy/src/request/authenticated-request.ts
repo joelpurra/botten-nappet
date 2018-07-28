@@ -37,7 +37,7 @@ import moment from "moment";
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import SharedConfig from "@botten-nappet/shared/src/config/shared-config";
 
-import IClientContext from "./iclient-context";
+import IClientContext from "@botten-nappet/backend-vidy/src/request/iclient-context";
 
 @asrt(2)
 @autoinject

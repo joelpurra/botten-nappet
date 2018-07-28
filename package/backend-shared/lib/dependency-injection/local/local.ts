@@ -20,7 +20,7 @@ export function levels(keyValue: any, levels: number) {
         throw new Error(`Out of range: levels (${levels})`);
     }
 
-    return function (target, key, index) {
+    return function (target: any, key: any, index: number) {
         let params = getDecoratorDependencies(target, "levels");
         params[index] = Levels.of(keyValue, levels);
     };

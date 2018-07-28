@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IOutgoingSearchCommand from "./ioutgoing-search-command";
+import IOutgoingSearchCommand from "@botten-nappet/interface-shared-vidy/src/event/ioutgoing-search-command";
 
 interface IPaginatedResults<T> {
     nextPageKey: string;

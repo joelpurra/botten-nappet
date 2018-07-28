@@ -28,7 +28,6 @@ import Bluebird from "bluebird";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable max-line-length */
@@ -47,14 +46,13 @@ import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/ser
 
 /* tslint:enable max-line-length */
 
-@asrt(7)
+@asrt(6)
 export default class TwitchPerUserIrcApi implements IStartableStoppable {
     private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
-        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly twitchIrcConnection: TwitchIrcConnection,
         @asrt() private twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
@@ -107,8 +105,6 @@ export default class TwitchPerUserIrcApi implements IStartableStoppable {
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
-
-        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

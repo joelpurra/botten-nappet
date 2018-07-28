@@ -5,6 +5,10 @@
     "module": "es2015",
     "moduleResolution": "node",
     "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     // Decorators.
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -20,6 +24,8 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
@@ -70,6 +76,9 @@
       ],
       "@botten-nappet/server-twitch/*": [
         "./package/server-twitch/*",
+      ],
+      "@botten-nappet/server-twitch-irc/*": [
+        "./package/server-twitch-irc/*",
       ],
       "@botten-nappet/server-vidy/*": [
         "./package/server-vidy/*",

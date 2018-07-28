@@ -29,8 +29,8 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
+import IPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/ipubsub-connection";
+import PubSubManager from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-manager";
 
 @asrt(2)
 export default class PingPubSubHandler extends PubSubManager {

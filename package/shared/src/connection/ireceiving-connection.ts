@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import Rx from "rxjs";
 
-import IConnectable from "./iconnectable";
+import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
 export default interface IReceivingConnection<T> extends IConnectable {
     readonly dataObservable: Rx.Observable<T>;

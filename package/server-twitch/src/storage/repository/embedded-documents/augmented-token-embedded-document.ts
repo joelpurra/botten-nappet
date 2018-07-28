@@ -23,31 +23,30 @@ import {
 } from "@botten-nappet/shared/src/util/asrt";
 
 import {
-    Document,
+    EmbeddedDocument,
 } from "camo";
 
-import AugmentedTokenEmbeddedDocument from "@botten-nappet/backend-shared/src/storage/repository/embedded-documents/augmented-token-embedded-document";
-import IUserSchema from "@botten-nappet/backend-shared/src/storage/repository/iuser-schema";
+import RawTokenEmbeddedDocument from "@botten-nappet/server-twitch/src/storage/repository/embedded-documents/raw-token-embedded-document";
 
 @asrt(0)
-export default class UserRepository extends Document<IUserSchema> {
-
-    public static collectionName() {
-        return "user";
-    }
-
+export default class AugmentedTokenEmbeddedDocument extends EmbeddedDocument {
     constructor() {
         super();
 
         super.schema({
-            twitchToken: {
-                type: AugmentedTokenEmbeddedDocument,
-            },
-            username: {
-                match: /^[a-z0-9][a-z0-9-]/i,
+            expiresApproximatelyAt: {
+                min: 1,
                 required: true,
-                type: String,
-                unique: true,
+                type: Number,
+            },
+            storedAt: {
+                min: 1,
+                required: true,
+                type: Number,
+            },
+            token: {
+                required: false,
+                type: RawTokenEmbeddedDocument,
             },
         });
     }

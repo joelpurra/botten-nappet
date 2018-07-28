@@ -31,8 +31,8 @@ import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication
 
 import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 
-import PollingApplicationTokenConnectionConfig from "../config/polling-application-token-connection-config";
-import PollingConnection from "../polling/connection/polling-connection";
+import PollingApplicationTokenConnectionConfig from "@botten-nappet/backend-twitch/src/config/polling-application-token-connection-config";
+import PollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/polling-connection";
 
 @asrt(3)
 export default class PollingApplicationTokenConnection extends PollingConnection<IRawToken> {

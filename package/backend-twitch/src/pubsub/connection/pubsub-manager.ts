@@ -28,7 +28,7 @@ import ConnectionManager from "@botten-nappet/shared/src/connection/connection-m
 
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
-import IPubSubConnection from "./ipubsub-connection";
+import IPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/ipubsub-connection";
 
 @asrt(2)
 export default abstract class PubSubManager extends ConnectionManager<IPubSubResponse> {

@@ -26,7 +26,7 @@ import {
 } from "aurelia-framework";
 
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
-import UserAugmentedTokenProvider from "./user-augmented-token-provider";
+import UserAugmentedTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-augmented-token-provider";
 
 @asrt(1)
 @autoinject

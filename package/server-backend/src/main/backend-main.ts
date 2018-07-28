@@ -36,7 +36,7 @@ import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-conf
 
 import ExternalDistributedEventManager from "@botten-nappet/server-backend/src/distributed-events/external-distributed-event-manager";
 import MessageQueueExternalRawTopicsSubscriber from "@botten-nappet/server-backend/src/message-queue/external-raw-topics-subscriber";
-import SharedDatabaseConnection from "@botten-nappet/server-backend/src/storage/shared-database-connection";
+import SharedDatabaseConnection from "@botten-nappet/server-backend/src/storage/connection/shared-database-connection";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 
 import IApplicationAuthenticationEvent from "@botten-nappet/interface-shared/src/event/iapplication-authentication-event";

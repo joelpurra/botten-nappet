@@ -36,8 +36,8 @@ import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/u
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
 import IncomingCheermotesEventTopicPublisher from "@botten-nappet/server-backend/src/topic-publisher/twitch-incoming-cheermotes-event-topic-publisher";
 import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
-import IPollingCheermotesResponse from "../interface/response/polling/icheermotes-polling-response";
-import PollingManager from "../polling/connection/polling-manager";
+import IPollingCheermotesResponse from "@botten-nappet/backend-twitch/src/interface/response/polling/icheermotes-polling-response";
+import PollingManager from "@botten-nappet/backend-twitch/src/polling/connection/polling-manager";
 
 /* tslint:enable:max-line-length */
 

@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import IApplicationEvent from "@botten-nappet/interface-shared/src/event/iapplication-event";
-import IUserNameId from "../data/iuser-name-id";
+import IUserNameId from "@botten-nappet/interface-shared/src/data/iuser-name-id";
 
 export default interface IUserEvent<T> extends IApplicationEvent<T> {
     recipient: IUserNameId;

@@ -18,8 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ITwitchApiV6Pagination from "./itwitch-api-v6-pagination";
-import ITwitchApiV6StreamingEvent from "./itwitch-api-v6-streaming-event";
+import ITwitchApiV6Pagination from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v6-pagination";
+import ITwitchApiV6StreamingEvent from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v6-streaming-event";
 
 export default interface IPollingStreamingResponse extends ITwitchApiV6Pagination {
     data: ITwitchApiV6StreamingEvent[];

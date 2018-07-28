@@ -24,13 +24,13 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IConnectable from "../connection/iconnectable";
+import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 
-import ISendingConnection from "../connection/isending-connection";
-import IEventEmitter from "../event/ievent-emitter";
-import Publisher from "./publisher";
+import ISendingConnection from "@botten-nappet/shared/src/connection/isending-connection";
+import IEventEmitter from "@botten-nappet/shared/src/event/ievent-emitter";
+import Publisher from "@botten-nappet/shared/src/message-queue/publisher";
 
 @asrt(3)
 export default abstract class TopicPublisher<T> implements IConnectable, ISendingConnection<T>, IEventEmitter<T> {

@@ -25,7 +25,7 @@ import {
     autoinject,
 } from "aurelia-framework";
 
-import UserRawTokenProvider from "./user-raw-token-provider";
+import UserRawTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-raw-token-provider";
 
 @asrt(1)
 @autoinject

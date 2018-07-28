@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ITwitchApiV5ChannelFollowingEvent from "./itwitch-api-v5-channel-following-event";
+import ITwitchApiV5ChannelFollowingEvent from "@botten-nappet/backend-twitch/src/interface/response/polling/itwitch-api-v5-channel-following-event";
 
 export default interface IPollingFollowingResponse {
     "_cursor": string;

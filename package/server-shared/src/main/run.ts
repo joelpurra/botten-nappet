@@ -18,35 +18,20 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
+import main from "@botten-nappet/server-shared/src/main/main";
 
-import {
-    Document,
-} from "camo";
+const run = async (): Promise<void> => {
+    try {
+        await main();
 
-import IDistributedEventSchema from "./idistributed-event-schema";
+        process.exitCode = 0;
+    } catch (error) {
+        /* tslint:disable:no-console */
+        console.error("Error.", error);
+        /* tslint:enable:no-console */
 
-@asrt(0)
-export default class DistributedEventRepository extends Document<IDistributedEventSchema> {
-
-    public static collectionName() {
-        return "distributed-event";
+        process.exitCode = 1;
     }
+};
 
-    constructor() {
-        super();
-
-        super.schema({
-            messages: {
-                required: true,
-                type: [Buffer],
-            },
-            topic: {
-                required: true,
-                type: String,
-            },
-        });
-    }
-}
+export default run;

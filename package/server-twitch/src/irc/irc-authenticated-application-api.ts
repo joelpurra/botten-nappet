@@ -28,9 +28,6 @@ import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
 
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
@@ -39,46 +36,47 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 /* tslint:disable:max-line-length */
 
-import CheermotesResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/cheermotes-response-polling-clientid-connection";
-import FollowingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/following-response-polling-clientid-connection";
-import StreamingResponsePollingClientIdConnection from "@botten-nappet/server-twitch/src/polling-connection/streaming-response-polling-clientid-connection";
+import TwitchIrcConnection from "@botten-nappet/backend-twitch/src/irc/connection/irc-connection";
 
-import TwitchPerUserPollingApi from "./per-user-polling-api";
+import OutgoingIrcCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-irc-command-single-item-json-topics-subscriber";
+
+import TwitchPerUserIrcApi from "@botten-nappet/server-twitch/src/irc/per-user-irc-api";
 
 /* tslint:enable:max-line-length */
 
-@asrt(5)
-export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
+@asrt(4)
+export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
     private connectables: IConnectable[] = [];
     private logger: PinoLogger;
 
     constructor(
-        @asrt() @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
-        private readonly twitchPerUserPollingApi: () => TwitchPerUserPollingApi,
+        @asrt() @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
+        private readonly twitchPerUserIrcApi: () => TwitchPerUserIrcApi,
         @asrt() logger: PinoLogger,
-        @asrt() @scoped(CheermotesResponsePollingClientIdConnection)
-        private readonly twitchPollingCheermotesConnection: CheermotesResponsePollingClientIdConnection,
-        @asrt() @scoped(StreamingResponsePollingClientIdConnection)
-        private readonly twitchPollingStreamingConnection: StreamingResponsePollingClientIdConnection,
-        @asrt() @scoped(FollowingResponsePollingClientIdConnection)
-        private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
+        @asrt() @scoped(TwitchIrcConnection)
+        private readonly twitchIrcConnection: TwitchIrcConnection,
+        // @asrt() private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
+        //     IncomingIrcCommandSingleItemJsonTopicsSubscriber,
+        @asrt() @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
+        private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
+            OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
     ) {
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(this.connectables, 0);
+        this.connectables.push(this.twitchIrcConnection);
+        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
 
-        this.connectables.push(this.twitchPollingFollowingConnection);
-        this.connectables.push(this.twitchPollingStreamingConnection);
-        this.connectables.push(this.twitchPollingCheermotesConnection);
+        // TODO: decide where the subscriber gets connected, preferably in an automated fashion.
+        // this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
 
-        await this.twitchPerUserPollingApi().start();
+        await this.twitchPerUserIrcApi().start();
     }
 
     @asrt(0)
@@ -86,8 +84,8 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        if (this.twitchPerUserPollingApi) {
-            await this.twitchPerUserPollingApi().stop();
+        if (this.twitchPerUserIrcApi) {
+            await this.twitchPerUserIrcApi().stop();
         }
 
         await Bluebird.map(

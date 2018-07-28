@@ -18,19 +18,37 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// NOTE: single-import adding reflection metadata globally.
-import "reflect-metadata";
+import {
+    asrt,
+} from "@botten-nappet/shared/src/util/asrt";
 
 import {
-    assert,
-} from "check-types";
+    Document,
+} from "camo";
 
-import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
+import AugmentedTokenEmbeddedDocument from "@botten-nappet/server-twitch/src/storage/repository/embedded-documents/augmented-token-embedded-document";
+import IUserSchema from "@botten-nappet/server-twitch/src/storage/repository/iuser-schema";
 
-import SharedMain from "./shared-main";
+@asrt(0)
+export default class UserRepository extends Document<IUserSchema> {
 
-export default async function main(): Promise<void> {
-    assert.hasLength(arguments, 0);
+    public static collectionName() {
+        return "user";
+    }
 
-    await createRootResolver<SharedMain>(async (resolver) => resolver(SharedMain));
+    constructor() {
+        super();
+
+        super.schema({
+            twitchToken: {
+                type: AugmentedTokenEmbeddedDocument,
+            },
+            username: {
+                match: /^[a-z0-9][a-z0-9-]/i,
+                required: true,
+                type: String,
+                unique: true,
+            },
+        });
+    }
 }

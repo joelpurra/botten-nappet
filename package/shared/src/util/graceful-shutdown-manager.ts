@@ -43,7 +43,7 @@ import {
     EventEmitter,
 } from "events";
 
-import PinoLogger from "./pino-logger";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | NodeJS.Signals);
 

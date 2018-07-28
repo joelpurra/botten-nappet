@@ -38,7 +38,7 @@ import MultiEventSubscriptionManager from "@botten-nappet/shared/src/event/multi
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
-import PerUserHandlersMain from "@botten-nappet/server-twitch/src/per-user-handlers-main";
+import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
 
 /* tslint:enable max-line-length */
 

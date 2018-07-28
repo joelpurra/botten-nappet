@@ -27,9 +27,9 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
-import ITopicMessages from "./itopic-messages";
-import IZeroMqTopicMessages from "./izeromq-topic-message";
+import IntersectionTopicsSubscriber from "@botten-nappet/shared/src/message-queue/intersection-topics-subscriber";
+import ITopicMessages from "@botten-nappet/shared/src/message-queue/itopic-messages";
+import IZeroMqTopicMessages from "@botten-nappet/shared/src/message-queue/izeromq-topic-message";
 
 @asrt(4)
 export default abstract class JsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<ITopicMessages<T>> {

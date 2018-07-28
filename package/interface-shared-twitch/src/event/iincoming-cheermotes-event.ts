@@ -25,7 +25,7 @@ import ITwitchApiV5ChannelCheermotes from "@botten-nappet/backend-twitch/src/int
 
 /* tslint:enable max-line-length */
 
-import IChannelEvent from "./ichannel-event";
+import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
 
 interface IIncomingCheermotesEventData {
     cheermotes: ITwitchApiV5ChannelCheermotes;

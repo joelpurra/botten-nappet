@@ -27,7 +27,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import ConnectionManager from "@botten-nappet/shared/src/connection/connection-manager";
 
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
-import IIRCConnection from "./iirc-connection";
+import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
 
 @asrt(2)
 export default abstract class IrcManager extends ConnectionManager<IIncomingIrcCommand> {

@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import SimpleNotificationHandler from "./simple-notification-handler";
+import SimpleNotificationHandler from "@botten-nappet/client-shared/src/simple-notification-handler";
 
 export default class FollowingHandler extends SimpleNotificationHandler {
     public handle(data: any) {

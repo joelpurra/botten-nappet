@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
 
-import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
+import IWebSocketConnection from "@botten-nappet/backend-twitch/src/websocket/connection/iwebsocket-connection";
 
 export default interface IPubSubConnection extends IWebSocketConnection<IPubSubResponse, any> {
 }

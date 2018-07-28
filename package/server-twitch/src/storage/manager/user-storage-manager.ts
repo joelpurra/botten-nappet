@@ -33,10 +33,10 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
-import IUser from "../iuser";
-import IUserCamo from "../iuser-camo";
-import IUserSchema from "../repository/iuser-schema";
-import UserRepositoryClass from "../repository/user-repository";
+import IUser from "@botten-nappet/server-twitch/src/storage/interface/iuser";
+import IUserCamo from "@botten-nappet/server-twitch/src/storage/interface/iuser-camo";
+import IUserSchema from "@botten-nappet/server-twitch/src/storage/repository/iuser-schema";
+import UserRepositoryClass from "@botten-nappet/server-twitch/src/storage/repository/user-repository";
 
 @asrt(1)
 @autoinject

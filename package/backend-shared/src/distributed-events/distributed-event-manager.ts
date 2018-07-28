@@ -25,8 +25,8 @@ import {
 import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subscription-manager";
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import IDistributedEvent from "../storage/idistributed-event";
-import DistributedEventStorageManager from "../storage/manager/distributed-event-storage-manager";
+import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
+import DistributedEventStorageManager from "@botten-nappet/server-backend/src/storage/manager/distributed-event-storage-manager";
 
 @asrt(3)
 export default abstract class DistributedEventManager extends EventSubscriptionManager<IDistributedEvent> {

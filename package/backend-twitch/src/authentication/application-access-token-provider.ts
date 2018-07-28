@@ -25,7 +25,7 @@ import {
     autoinject,
 } from "aurelia-framework";
 
-import ApplicationTokenManager from "./application-token-manager";
+import ApplicationTokenManager from "@botten-nappet/backend-twitch/src/authentication/application-token-manager";
 
 @asrt(1)
 @autoinject

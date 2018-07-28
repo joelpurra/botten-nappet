@@ -27,7 +27,7 @@ import {
 
 import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
 
-import BackendMain from "./backend-main";
+import BackendMain from "@botten-nappet/server-backend/src/main/backend-main";
 
 export default async function main(): Promise<void> {
     assert.hasLength(arguments, 0);

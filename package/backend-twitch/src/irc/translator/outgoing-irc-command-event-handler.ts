@@ -28,7 +28,7 @@ import EventSubscriptionManager from "@botten-nappet/shared/src/event/event-subs
 import IEventSubscriptionConnection from "@botten-nappet/shared/src/event/ievent-subscription-connection";
 
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
-import IIRCConnection from "../connection/iirc-connection";
+import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
 
 @asrt(3)
 export default class OutgoingIrcCommandEventHandler extends EventSubscriptionManager<IOutgoingIrcCommand> {

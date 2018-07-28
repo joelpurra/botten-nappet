@@ -23,8 +23,8 @@ import {
 } from "@botten-nappet/shared/src/util/asrt";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
-import IPubSubConnection from "../connection/ipubsub-connection";
-import PubSubManager from "../connection/pubsub-manager";
+import IPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/ipubsub-connection";
+import PubSubManager from "@botten-nappet/backend-twitch/src/pubsub/connection/pubsub-manager";
 
 @asrt(2)
 export default class LoggingPubSubHandler extends PubSubManager {

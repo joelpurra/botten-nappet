@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import main from "./main";
+import main from "@botten-nappet/server-twitch/src/main/main";
 
 const run = async (): Promise<void> => {
     try {

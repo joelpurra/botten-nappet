@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IChannelEvent from "./ichannel-event";
+import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
 
 // NOTE: same as TwitchApiV6StreamingEventType.
 type IncomingStreamingEventType = "live" | "vodcast" | "";

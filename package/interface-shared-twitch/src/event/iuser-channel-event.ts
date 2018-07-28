@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import IUserNameId from "@botten-nappet/interface-shared/src/data/iuser-name-id";
-import IChannelEvent from "./ichannel-event";
+import IChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/ichannel-event";
 
 export default interface IUserChannelEvent<T> extends IChannelEvent<T> {
     triggerer: IUserNameId;

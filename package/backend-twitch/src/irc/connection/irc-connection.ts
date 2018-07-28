@@ -33,12 +33,12 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IrcConfig from "../../config/irc-config";
+import IrcConfig from "@botten-nappet/backend-twitch/src/config/irc-config";
 
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
-import UserAccessTokenProvider from "../../authentication/user-access-token-provider";
-import UserChannelNameProvider from "../../authentication/user-channel-provider";
-import UserNameProvider from "../../authentication/user-name-provider";
+import UserAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/user-access-token-provider";
+import UserChannelNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-channel-provider";
+import UserNameProvider from "@botten-nappet/backend-twitch/src/authentication/user-name-provider";
 
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
@@ -46,8 +46,8 @@ import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/eve
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
-import WebSocketConnection from "../../websocket/connection/websocket-connection";
-import IIRCConnection from "./iirc-connection";
+import WebSocketConnection from "@botten-nappet/backend-twitch/src/websocket/connection/websocket-connection";
+import IIRCConnection from "@botten-nappet/backend-twitch/src/irc/connection/iirc-connection";
 
 @asrt(7)
 @autoinject

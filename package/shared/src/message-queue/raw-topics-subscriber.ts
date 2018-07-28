@@ -24,11 +24,11 @@ import {
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import IDistributedEvent from "@botten-nappet/backend-shared/src/storage/idistributed-event";
+import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
+import IntersectionTopicsSubscriber from "@botten-nappet/shared/src/message-queue/intersection-topics-subscriber";
 
 @asrt(4)
 export default abstract class RawTopicsSubscriber extends IntersectionTopicsSubscriber<IDistributedEvent> {

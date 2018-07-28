@@ -38,13 +38,13 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
-import IUser from "@botten-nappet/backend-shared/src/storage/iuser";
-import UserStorageManager from "@botten-nappet/backend-shared/src/storage/manager/user-storage-manager";
+import IUser from "@botten-nappet/server-twitch/src/storage/interface/iuser";
+import UserStorageManager from "@botten-nappet/server-twitch/src/storage/manager/user-storage-manager";
 
 import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
 
-import CSRFHelper from "./csrf-helper";
-import RequestHelper from "./request-helper";
+import CSRFHelper from "@botten-nappet/backend-twitch/src/helper/csrf-helper";
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 
 @asrt(5)
 @autoinject

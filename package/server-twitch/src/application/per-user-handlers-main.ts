@@ -76,9 +76,9 @@ import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nap
 import IncomingWhisperEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-whisper-event-single-item-json-topics-subscriber";
 import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-incoming-search-result-event-single-item-json-topics-subscriber";
 
-import BackendTwitchIrcAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/irc-authenticated-application-api";
-import BackendTwitchPollingAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/polling-authenticated-application-api";
-import BackendTwitchPubSubAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/pubsub-authenticated-application-api";
+import BackendTwitchIrcAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/irc/irc-authenticated-application-api";
+import BackendTwitchPollingAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/polling/polling-authenticated-application-api";
+import BackendTwitchPubSubAuthenticatedApplicationApi from "@botten-nappet/server-twitch/src/pubsub/pubsub-authenticated-application-api";
 
 /* tslint:enable max-line-length */
 
@@ -307,6 +307,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
                 await startable.start();
             } catch (error) {
                 this.logger.error(startable, error);
+                debugger;
             }
         });
 

@@ -18,12 +18,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import BallzManager from "./ballz-manager";
-import ConsoleLog from "./console-log";
-import NotificationManager from "./notification-manager";
-import ScreenLog from "./screen-log";
-import SimpleNotificationHandler from "./simple-notification-handler";
-import SoundManager from "./sound-manager";
+import BallzManager from "@botten-nappet/client-shared/src/ballz-manager";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
+import NotificationManager from "@botten-nappet/client-shared/src/notification-manager";
+import ScreenLog from "@botten-nappet/client-shared/src/screen-log";
+import SimpleNotificationHandler from "@botten-nappet/client-shared/src/simple-notification-handler";
+import SoundManager from "@botten-nappet/client-shared/src/sound-manager";
 
 export default class CheeringWithCheermotesHandler extends SimpleNotificationHandler {
     private maxNumberOfBallsToAdd: number;

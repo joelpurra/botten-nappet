@@ -18,10 +18,10 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import ConsoleLog from "./console-log";
-import NotificationManager from "./notification-manager";
-import ScreenLog from "./screen-log";
-import SoundManager from "./sound-manager";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
+import NotificationManager from "@botten-nappet/client-shared/src/notification-manager";
+import ScreenLog from "@botten-nappet/client-shared/src/screen-log";
+import SoundManager from "@botten-nappet/client-shared/src/sound-manager";
 
 export default abstract class SimpleNotificationHandler {
     constructor(

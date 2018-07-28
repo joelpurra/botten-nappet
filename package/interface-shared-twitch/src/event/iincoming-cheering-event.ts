@@ -18,7 +18,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import IUserChannelEvent from "./iuser-channel-event";
+import IUserChannelEvent from "@botten-nappet/interface-shared-twitch/src/event/iuser-channel-event";
 
 interface IIncomingCheeringEventData {
     message: string | null;

@@ -30,7 +30,7 @@ import statusScroller from "@botten-nappet/client-shared/src/status-scroller";
 import SubscriptionHandler from "@botten-nappet/client-shared/src/subscription-handler";
 import VidyHandler from "@botten-nappet/client-shared/src/vidy-handler";
 
-import ObsEventManager from "./obs-event-manager";
+import ObsEventManager from "@botten-nappet/client-obs/src/obs-event-manager";
 
 export default async function client() {
     const logger = new ConsoleLog();

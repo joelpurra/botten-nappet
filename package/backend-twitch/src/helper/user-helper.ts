@@ -29,10 +29,10 @@ import axios from "axios";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import ApplicationAccessTokenProvider from "../authentication/application-access-token-provider";
+import ApplicationAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentication/application-access-token-provider";
 
-import UserAuthenticationConfig from "../config/user-authentication-config";
-import RequestHelper from "./request-helper";
+import UserAuthenticationConfig from "@botten-nappet/backend-twitch/src/config/user-authentication-config";
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 
 type UserNameOrId = string | number;
 

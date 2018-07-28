@@ -31,7 +31,6 @@ import {
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TwitchUserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
@@ -50,14 +49,13 @@ import PubSubReconnectHandler from "@botten-nappet/backend-twitch/src/pubsub/han
 
 /* tslint:enable max-line-length */
 
-@asrt(6)
+@asrt(5)
 export default class TwitchPerUserPubSubApi {
     private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
-        @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly twitchAllPubSubTopicsForTwitchUserIdConnection: PubSubConnection,
         @asrt() @scoped(IncomingPubSubEventTopicPublisher)
         private readonly messageQueueTopicPublisherForIIncomingPubSubEvent:
@@ -102,8 +100,6 @@ export default class TwitchPerUserPubSubApi {
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
-
-        // await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)

@@ -22,13 +22,13 @@ import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
 
-import PinoLogger from "../util/pino-logger";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import TopicConfig from "@botten-nappet/shared/src/config/topic-config";
 import TopicHelper from "@botten-nappet/shared/src/message-queue/topics-splitter";
-import ZmqConfig from "../config/zmq-config";
-import IntersectionTopicsSubscriber from "./intersection-topics-subscriber";
-import IZeroMqTopicMessages from "./izeromq-topic-message";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
+import IntersectionTopicsSubscriber from "@botten-nappet/shared/src/message-queue/intersection-topics-subscriber";
+import IZeroMqTopicMessages from "@botten-nappet/shared/src/message-queue/izeromq-topic-message";
 
 @asrt(4)
 export default abstract class SingleItemJsonTopicsSubscriber<T> extends IntersectionTopicsSubscriber<T> {

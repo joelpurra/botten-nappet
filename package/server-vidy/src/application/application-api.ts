@@ -32,24 +32,28 @@ import {
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
+import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
+/* tslint:disable:max-line-length */
 
-import TwitchAuthenticatedApplicationMain from "@botten-nappet/server-twitch/src/application-main";
-import TwitchDatabaseConnection from "@botten-nappet/server-twitch/src/storage/twitch-database-connection";
+import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-outgoing-search-command-single-item-json-topics-subscriber";
+import VidyApi from "@botten-nappet/server-vidy/src/application/api";
+
+/* tslint:enable:max-line-length */
 
 @asrt(4)
 @autoinject
-export default class TwitchBasics implements IStartableStoppable {
+export default class BackendVidyApplicationApi implements IStartableStoppable {
+    private logger: any;
     private connectables: IConnectable[] = [];
-    private logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
-        @asrt() private readonly twitchDatabaseConnection: TwitchDatabaseConnection,
-        @asrt() private readonly application: TwitchAuthenticatedApplicationMain,
+        @asrt() private readonly vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand:
+            OutgoingSearchCommandSingleItemJsonTopicsSubscriber,
+        @asrt() private readonly vidyApi: VidyApi,
     ) {
         this.logger = logger.child(this.constructor.name);
     }
@@ -58,13 +62,13 @@ export default class TwitchBasics implements IStartableStoppable {
     public async start(): Promise<void> {
         assert.hasLength(this.connectables, 0);
 
-        this.connectables.push(this.twitchDatabaseConnection);
+        this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand);
 
         await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
 
         this.logger.info("Connected.");
 
-        await this.application.start();
+        await this.vidyApi.start();
 
         this.logger.info("Started.");
 
@@ -72,13 +76,15 @@ export default class TwitchBasics implements IStartableStoppable {
     }
 
     @asrt(0)
-    public async  stop(): Promise<void> {
+    public async stop(): Promise<void> {
         this.logger.info("Stopping.");
 
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
-        await this.application.stop();
+        if (this.vidyApi) {
+            this.vidyApi.stop();
+        }
 
         await Bluebird.map(
             this.connectables,
@@ -86,8 +92,7 @@ export default class TwitchBasics implements IStartableStoppable {
                 try {
                     await connectable.disconnect();
                 } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
+                    this.logger.error(error, connectable, "Swallowed error while disconnecting.");
                 }
             },
         );

@@ -27,12 +27,12 @@ import {
 
 import createRootResolver from "@botten-nappet/backend-shared/src/main/create-root-resolver";
 
-import TwitchBasics from "./basics";
+import TwitchApplication from "@botten-nappet/server-twitch/src/application/application";
 
 export default async function main(): Promise<void> {
     assert.hasLength(arguments, 0);
 
-    await createRootResolver<TwitchBasics>(
-        async (resolver) => resolver(TwitchBasics),
+    await createRootResolver<TwitchApplication>(
+        async (resolver) => resolver(TwitchApplication),
     );
 }

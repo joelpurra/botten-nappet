@@ -32,8 +32,8 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IAugmentedToken from "@botten-nappet/interface-shared-twitch/src/authentication/iaugmented-token";
 import IRawToken from "@botten-nappet/interface-shared-twitch/src/authentication/iraw-token";
 
-import TokenHelperConfig from "../config/token-helper-config";
-import RequestHelper from "./request-helper";
+import TokenHelperConfig from "@botten-nappet/backend-twitch/src/config/token-helper-config";
+import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-helper";
 
 @asrt(3)
 @autoinject

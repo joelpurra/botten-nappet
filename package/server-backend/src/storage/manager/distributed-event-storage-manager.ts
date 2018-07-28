@@ -28,9 +28,9 @@ import {
     assert,
 } from "check-types";
 
-import IDistributedEvent from "../idistributed-event";
-import DistributedEventRepositoryClass from "../repository/distributed-event-repository";
-import IDistributedEventSchema from "../repository/idistributed-event-schema";
+import IDistributedEvent from "@botten-nappet/server-backend/src/storage/interface/idistributed-event";
+import DistributedEventRepositoryClass from "@botten-nappet/server-backend/src/storage/repository/distributed-event-repository";
+import IDistributedEventSchema from "@botten-nappet/server-backend/src/storage/repository/idistributed-event-schema";
 
 @asrt(0)
 @autoinject

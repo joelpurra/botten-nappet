@@ -32,7 +32,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IWebSocketCommand from "@botten-nappet/interface-backend-twitch/src/event/iwebsocket-command";
 
-import WebSocketConnection from "../../websocket/connection/websocket-connection";
+import WebSocketConnection from "@botten-nappet/backend-twitch/src/websocket/connection/websocket-connection";
 
 /* tslint:disable max-line-length */
 
@@ -40,7 +40,7 @@ import UserAccessTokenProvider from "@botten-nappet/backend-twitch/src/authentic
 import PubSubConfig from "@botten-nappet/backend-twitch/src/config/pubsub-config";
 import UserPubSubTopicsProvider from "@botten-nappet/backend-twitch/src/pubsub/connection/user-pubsub-topics-provider";
 import IPubSubResponse from "@botten-nappet/interface-backend-twitch/src/event/ipubsub-response";
-import IPubSubConnection from "./ipubsub-connection";
+import IPubSubConnection from "@botten-nappet/backend-twitch/src/pubsub/connection/ipubsub-connection";
 
 /* tslint:enable max-line-length */
 

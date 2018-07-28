@@ -27,7 +27,7 @@ import {
 
 import io from "socket.io-client";
 
-import ConsoleLog from "./console-log";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
 
 export default class BotSocket {
     private socket: SocketIOClient.Socket | null;

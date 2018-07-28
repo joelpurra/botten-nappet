@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import IIncomingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/iincoming-irc-command";
 import IOutgoingIrcCommand from "@botten-nappet/interface-backend-twitch/src/event/ioutgoing-irc-command";
 
-import IWebSocketConnection from "../../websocket/connection/iwebsocket-connection";
+import IWebSocketConnection from "@botten-nappet/backend-twitch/src/websocket/connection/iwebsocket-connection";
 
 export default interface IIRCConnection extends IWebSocketConnection<IIncomingIrcCommand, IOutgoingIrcCommand> {
     readonly channel: Promise<string>;

@@ -18,36 +18,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {
-    asrt,
-} from "@botten-nappet/shared/src/util/asrt";
+import IUser from "@botten-nappet/server-twitch/src/storage/interface/iuser";
 
-import {
-    EmbeddedDocument,
-} from "camo";
-
-import RawTokenEmbeddedDocument from "./raw-token-embedded-document";
-
-@asrt(0)
-export default class AugmentedTokenEmbeddedDocument extends EmbeddedDocument {
-    constructor() {
-        super();
-
-        super.schema({
-            expiresApproximatelyAt: {
-                min: 1,
-                required: true,
-                type: Number,
-            },
-            storedAt: {
-                min: 1,
-                required: true,
-                type: Number,
-            },
-            token: {
-                required: false,
-                type: RawTokenEmbeddedDocument,
-            },
-        });
-    }
+export default interface IUserCamo extends IUser {
+    _schema?: object;
 }

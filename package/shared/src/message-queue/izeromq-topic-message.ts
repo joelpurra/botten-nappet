@@ -20,7 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import {
     ZeroMqMessages,
-} from "./zeromq-types";
+} from "@botten-nappet/shared/src/message-queue/zeromq-types";
 
 export default interface IZeroMqTopicMessages {
     topic: string;

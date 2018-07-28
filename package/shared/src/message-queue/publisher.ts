@@ -33,12 +33,12 @@ import zmq from "zeromq-ng";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-import ZmqConfig from "../config/zmq-config";
+import ZmqConfig from "@botten-nappet/shared/src/config/zmq-config";
 
-import IConnectable from "../connection/iconnectable";
+import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import {
     ZeroMqMessage,
-} from "./zeromq-types";
+} from "@botten-nappet/shared/src/message-queue/zeromq-types";
 
 @asrt(2)
 @autoinject

@@ -31,7 +31,7 @@ import RequestHelper from "@botten-nappet/backend-twitch/src/helper/request-help
 import IHttpData from "@botten-nappet/interface-backend-twitch/src/event/ihttp-data";
 import IHttpHeaders from "@botten-nappet/interface-backend-twitch/src/event/ihttp-header";
 
-import PollingConnection from "./polling-connection";
+import PollingConnection from "@botten-nappet/backend-twitch/src/polling/connection/polling-connection";
 
 @asrt()
 export default abstract class PollingClientIdConnection<T> extends PollingConnection<T> {

@@ -30,9 +30,9 @@ import {
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import FrontendConfig from "../config/frontend-config";
+import FrontendConfig from "@botten-nappet/server-frontend/src/config/frontend-config";
 
-import FrontendManagerMain from "./manager-main";
+import FrontendManagerMain from "@botten-nappet/server-frontend/src/main/manager-main";
 
 @asrt(2)
 export default class FrontendMain implements IStartableStoppable {
