@@ -83,6 +83,9 @@
     "url": "https://joelpurra.com/support/"
   },
   "homepage": "https://joelpurra.com/projects/botten-nappet/",
+  "engines": {
+    "node": "^8.0.0"
+  },
   "dependencies": {
     "@botten-nappet/backend-shared": "file:./package/backend-shared",
     "@botten-nappet/backend-twitch": "file:./package/backend-twitch",
@@ -124,6 +127,7 @@
     "merge-options": "^1.0.1",
     "moment": "^2.22.1",
     "nedb": "^1.8.0",
+    "node": "^8.11.3",
     "object-path": "^0.11.4",
     "paper": "^0.11.5",
     "pino": "^4.17.0",
