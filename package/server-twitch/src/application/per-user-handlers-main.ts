@@ -29,8 +29,8 @@ import {
 } from "@botten-nappet/shared/src/util/asrt";
 import Bluebird from "bluebird";
 
-import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
@@ -83,9 +83,8 @@ import BackendTwitchPubSubAuthenticatedApplicationApi from "@botten-nappet/serve
 /* tslint:enable max-line-length */
 
 @asrt(23)
-export default class PerUserHandlersMain implements IStartableStoppable {
-    private startables: IStartableStoppable[] = [];
-    private logger: PinoLogger;
+export default class PerUserHandlersMain extends StartablesManager {
+    protected logger: PinoLogger;
 
     constructor(
         @asrt()
@@ -153,14 +152,13 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         private readonly twitchUserIdProvider: TwitchUserIdProvider,
         @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-
-        this.logger.info("Starting.");
-
+    public async loadStartables(): Promise<void> {
         const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
             this.logger,
             this.messageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
@@ -283,9 +281,10 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         this.startables.push(twitchIrcTextResponseCommandHandler);
         this.startables.push(twitchIrcVidyCommandHandler);
         this.startables.push(twitchIrcVidyResultEventHandler);
+    }
 
-        await Bluebird.map(this.startables, async (startable) => await startable.start());
-
+    @asrt(0)
+    public async selfStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
@@ -299,7 +298,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
+    public async selfStop(): Promise<void> {
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
@@ -314,16 +313,5 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         if (this.backendTwitchPollingAuthenticatedApplicationApi) {
             await this.backendTwitchPollingAuthenticatedApplicationApi().stop();
         }
-
-        await Bluebird.map(
-            this.startables,
-            async (startable) => {
-                try {
-                    await startable.stop();
-                } catch (error) {
-                    this.logger.error(error, startable, "Swallowed error while stopping.");
-                }
-            },
-        );
     }
 }
