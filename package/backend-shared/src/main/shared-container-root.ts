@@ -37,8 +37,10 @@ import {
 
 @asrt(4)
 export default class SharedContainerRoot implements IStartableStoppable {
+    private logger: PinoLogger;
+
     constructor(
-        @asrt() private readonly logger: PinoLogger,
+        @asrt() logger: PinoLogger,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly messageQueuePublisher: MessageQueuePublisher,
         @asrt() @inject("IRealRoot")

@@ -27,11 +27,11 @@ import {
 
 import {
     deepParseIso8601UtcDates,
-} from "../../../client-shared/src/utilities";
+} from "@botten-nappet/client-shared/src/utilities";
 
-import BotSocket from "../../../client-shared/src/bot-socket";
-import ConsoleLog from "../../../client-shared/src/console-log";
-import SpeechManager from "../../../client-shared/src/speech-manager";
+import BotSocket from "@botten-nappet/client-shared/src/bot-socket";
+import ConsoleLog from "@botten-nappet/client-shared/src/console-log";
+import SpeechManager from "@botten-nappet/client-shared/src/speech-manager";
 
 export default class BrowserEventManager {
     public chatMessageSayIgnoredStrings: string[];

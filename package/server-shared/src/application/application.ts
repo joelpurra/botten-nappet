@@ -34,8 +34,10 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 @asrt(3)
 @autoinject
 export default class SharedMain implements IStartableStoppable {
+    private logger: PinoLogger;
+
     constructor(
-        @asrt() private readonly logger: PinoLogger,
+        @asrt() logger: PinoLogger,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly proxy: MessageQueueProxy,
     ) {
