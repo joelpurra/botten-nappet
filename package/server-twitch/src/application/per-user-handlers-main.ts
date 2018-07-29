@@ -322,15 +322,15 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.backendTwitchPubSubAuthenticatedApplicationApi) {
-            this.backendTwitchPubSubAuthenticatedApplicationApi().stop();
+            await this.backendTwitchPubSubAuthenticatedApplicationApi().stop();
         }
 
         if (this.backendTwitchIrcAuthenticatedApplicationApi) {
-            this.backendTwitchIrcAuthenticatedApplicationApi().stop();
+            await this.backendTwitchIrcAuthenticatedApplicationApi().stop();
         }
 
         if (this.backendTwitchPollingAuthenticatedApplicationApi) {
-            this.backendTwitchPollingAuthenticatedApplicationApi().stop();
+            await this.backendTwitchPollingAuthenticatedApplicationApi().stop();
         }
 
         await Bluebird.map(

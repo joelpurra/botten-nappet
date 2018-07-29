@@ -83,7 +83,7 @@ export default class BackendVidyApplicationApi implements IStartableStoppable {
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.vidyApi) {
-            this.vidyApi.stop();
+            await this.vidyApi.stop();
         }
 
         await Bluebird.map(

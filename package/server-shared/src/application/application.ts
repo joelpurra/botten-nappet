@@ -29,24 +29,33 @@ import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/i
 
 import MessageQueueProxy from "@botten-nappet/shared/src/message-queue/proxy";
 import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
-@asrt(2)
+@asrt(3)
 @autoinject
 export default class SharedMain implements IStartableStoppable {
     constructor(
+        @asrt() private readonly logger: PinoLogger,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly proxy: MessageQueueProxy,
-    ) { }
+    ) {
+        this.logger = logger.child(this.constructor.name);
+
+    }
 
     @asrt(0)
     public async start(): Promise<void> {
         await this.proxy.connect();
+
+        this.logger.info("Started.");
 
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)
     public async stop(): Promise<void> {
+        this.logger.info("Stopping.");
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

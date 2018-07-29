@@ -63,12 +63,13 @@ interface IDataHandlerObject {
 @asrt()
 export default abstract class PollingConnection<T> implements IPollingConnection<T> {
     protected logger: PinoLogger;
-    private intervalSubscription: Rx.Subscription | null;
-    private pollingSubject: Subject<T> | null;
-    private sharedpollingObservable: Rx.Observable<T> | null;
-    private pollingSubcription: Subscription | null;
-    private dataHandlerObjects: IDataHandlerObject[];
-    private intervalMinimumMilliseconds: number;
+    private intervalSubscription: Rx.Subscription | null = null;
+    private pollingSubject: Subject<T> | null = null;
+    private sharedpollingObservable: Rx.Observable<T> | null = null;
+    private pollingSubscription: Subscription | null = null;
+    private dataHandlerObjects: IDataHandlerObject[] = [];
+    // TODO: configurable.
+    private intervalMinimumMilliseconds: number = 10 * 1000;
     private readonly methods: string[] = [
         "get",
         "delete",
@@ -101,16 +102,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
         this.logger = logger.child(this.constructor.name);
 
         assert(this.methods.includes(this.method));
-
-        this.intervalMinimumMilliseconds = 10 * 1000;
-
         assert(this.intervalInMilliseconds >= this.intervalMinimumMilliseconds);
-
-        this.intervalSubscription = null;
-        this.pollingSubject = null;
-        this.sharedpollingObservable = null;
-        this.pollingSubcription = null;
-        this.dataHandlerObjects = [];
     }
 
     public get dataObservable(): Rx.Observable<T> {
@@ -128,14 +120,14 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
     @asrt(0)
     public async isConnected(): Promise<boolean> {
-        // TODO: implement a real check.
-        return true;
+        return (this.pollingSubscription && this.pollingSubscription.closed) || false;
     }
 
     @asrt(0)
     public async connect(): Promise<void> {
+        assert.null(this.intervalSubscription);
         assert.null(this.pollingSubject);
-        assert.null(this.pollingSubcription);
+        assert.null(this.pollingSubscription);
 
         const openedObserver: Observer<T> = {
             complete: () => {
@@ -154,9 +146,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
 
         this.pollingSubject = new Subject();
 
-        this.pollingSubject.asObservable();
-
-        this.sharedpollingObservable = this.pollingSubject
+        this.sharedpollingObservable = this.pollingSubject.asObservable()
             .pipe(
                 // tap((val) => this.logger.trace(val, "pollingSubject")),
                 share(),
@@ -164,7 +154,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
                 concatMap((message) => from(this.parseMessage(message))),
         );
 
-        this.pollingSubcription = this.sharedpollingObservable
+        this.pollingSubscription = this.sharedpollingObservable
             .subscribe(openedObserver);
 
         const intervalObservable = interval(this.intervalInMilliseconds);
@@ -196,7 +186,7 @@ export default abstract class PollingConnection<T> implements IPollingConnection
     public async disconnect(): Promise<void> {
         assert.not.null(this.intervalSubscription);
         assert.not.null(this.pollingSubject);
-        assert.not.null(this.pollingSubcription);
+        assert.not.null(this.pollingSubscription);
 
         if (!(this.intervalSubscription instanceof Rx.Subscription)) {
             throw new TypeError("this.intervalSubscription must be Rx.Subscription");
@@ -206,19 +196,19 @@ export default abstract class PollingConnection<T> implements IPollingConnection
             throw new TypeError("this.pollingSubject must be Subject");
         }
 
-        if (!(this.pollingSubcription instanceof Subscription)) {
+        if (!(this.pollingSubscription instanceof Subscription)) {
             throw new TypeError("this.pollingSubcription must be Subscription");
         }
 
         // TODO: verify that the refcount reaches 0 for a proper polling "close".
         // TODO: force polling termination after a "close" timeout.
         this.intervalSubscription.unsubscribe();
-        this.pollingSubcription.unsubscribe();
+        this.pollingSubscription.unsubscribe();
         this.pollingSubject.complete();
 
         this.intervalSubscription = null;
         this.pollingSubject = null;
-        this.pollingSubcription = null;
+        this.pollingSubscription = null;
     }
 
     public async send(): Promise<void> {
@@ -402,17 +392,17 @@ export default abstract class PollingConnection<T> implements IPollingConnection
             next: (response) => {
                 // this.logger.trace(response, "next", "responseObserver");
 
+                responseSubscription.unsubscribe();
+
                 // TODO: better null handling.
                 this.pollingSubject!.next(response);
             },
         };
 
-        // const responseSubscription = request
-        //     .pipe(
-        //         tap((val) => this.logger.trace(val, uri, "response", "request")),
-        //     )
-        //     .subscribe(responseObserver);
-
-        request.subscribe(responseObserver);
+        const responseSubscription = request
+            //     .pipe(
+            //         tap((val) => this.logger.trace(val, uri, "response", "request")),
+            //     )
+            .subscribe(responseObserver);
     }
 }

@@ -49,6 +49,8 @@ export default class FrontendManagedMain {
 
     @asrt(0)
     public async stop(): Promise<void> {
+        this.logger.info("Stopping.");
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

@@ -79,8 +79,6 @@ export default class BackendApplication implements IStartableStoppable {
         // TODO: ensure event distributed event manager starts sooner?
         await this.externalDistributedEventManager.start();
 
-        this.logger.info("Started.");
-
         const event: IApplicationAuthenticationEvent = {
             interfaceName: "IApplicationAuthenticationEvent",
         };
@@ -103,6 +101,8 @@ export default class BackendApplication implements IStartableStoppable {
         this.logger.warn("Application authentication hack initialized.");
         broadcastApplicationAuthenticationHack();
 
+        this.logger.info("Started.");
+
         await this.gracefulShutdownManager.waitForShutdownSignal();
 
         this.shouldBroadcastApplicationAuthenticationHack = false;
@@ -110,6 +110,8 @@ export default class BackendApplication implements IStartableStoppable {
 
     @asrt(0)
     public async stop(): Promise<void> {
+        this.logger.info("Stopping.");
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.

@@ -27,22 +27,25 @@ import {
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
-import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
-
 import MessageQueuePublisher from "@botten-nappet/shared/src/message-queue/publisher";
+import GracefulShutdownManager from "@botten-nappet/shared/src/util/graceful-shutdown-manager";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import {
     IRealRoot,
 } from "@botten-nappet/backend-shared/src/main/ireal-root";
 
-@asrt(3)
+@asrt(4)
 export default class SharedContainerRoot implements IStartableStoppable {
     constructor(
-        @asrt() @inject("IRealRoot")
-        private readonly realRoot: IRealRoot,
+        @asrt() private readonly logger: PinoLogger,
         @asrt() private readonly gracefulShutdownManager: GracefulShutdownManager,
         @asrt() private readonly messageQueuePublisher: MessageQueuePublisher,
-    ) { }
+        @asrt() @inject("IRealRoot")
+        private readonly realRoot: IRealRoot,
+    ) {
+        this.logger = logger.child(this.constructor.name);
+    }
 
     @asrt(0)
     public async start(): Promise<void> {
@@ -50,10 +53,14 @@ export default class SharedContainerRoot implements IStartableStoppable {
         await this.messageQueuePublisher.connect();
 
         await this.realRoot.start();
+
+        this.logger.info("Started.");
     }
 
     @asrt(0)
     public async stop(): Promise<void> {
+        this.logger.info("Stopping.");
+
         // TODO: better cleanup handling.
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
@@ -61,5 +68,7 @@ export default class SharedContainerRoot implements IStartableStoppable {
 
         await this.messageQueuePublisher.disconnect();
         await this.gracefulShutdownManager.stop();
+
+        this.logger.info("Stopped.");
     }
 }

@@ -57,13 +57,13 @@ export default class RootLoggerResolver implements Resolver {
 
         // NOTE: makes assumptions regarding the process startup.
         const startingDirectory = path.dirname(process.argv[1]);
-        const currentPackageJson = await readPkgUp({
+        const startingPackageJson = await readPkgUp({
             cwd: startingDirectory,
         });
 
         const {
-            name: currentPackageName,
-        } = currentPackageJson.pkg;
+            name: startingPackageName,
+        } = startingPackageJson.pkg;
 
         const ancestors = [
             this.loggingConfig.applicationName,
@@ -72,7 +72,7 @@ export default class RootLoggerResolver implements Resolver {
         const rootPinoLogger = pino({
             extreme: true,
             level: this.loggingConfig.level,
-            name: currentPackageName,
+            name: startingPackageName,
             onTerminated: (
                 /* tslint:disable:no-unused-variable */
                 // eventName,
@@ -83,7 +83,7 @@ export default class RootLoggerResolver implements Resolver {
             },
         }, logFileStream);
 
-        const logger = new PinoLogger(ancestors, currentPackageName, rootPinoLogger);
+        const logger = new PinoLogger(ancestors, startingPackageName, rootPinoLogger);
 
         return logger;
     }

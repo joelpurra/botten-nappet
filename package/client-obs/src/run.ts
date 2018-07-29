@@ -88,7 +88,7 @@ export default async function client() {
 
     await obsEventManager.start();
 
-    window.addEventListener("unload", async () => await obsEventManager.stop());
+    window.addEventListener("unload", async () => obsEventManager.stop());
 
     // NOTE: debugging tool.
     window.triggerBotEvent = (botEvent: any) => obsEventManager.trigger(botEvent);

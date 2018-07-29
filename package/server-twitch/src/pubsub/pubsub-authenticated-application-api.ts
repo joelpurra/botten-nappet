@@ -75,7 +75,7 @@ export default class BackendTwitchPubSubAuthenticatedApplicationApi implements I
         // TODO: check if each of these have been started successfully.
         // TODO: better null handling.
         if (this.twitchPerUserPubSubApi) {
-            this.twitchPerUserPubSubApi().stop();
+            await this.twitchPerUserPubSubApi().stop();
         }
 
         await Bluebird.map(

@@ -114,14 +114,10 @@ export default class PinoLogger {
             ...this.names,
             this.name,
         ];
-        const fullChildName = `${[
-            ...ancestors,
-            childName,
-        ].join("/")}`;
 
         const childBindings = {
+            ancestors,
             childName,
-            fullChildName,
         };
 
         const pinoLogger = this.parentPinoLogger.child(childBindings);
