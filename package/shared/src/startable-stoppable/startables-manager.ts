@@ -53,20 +53,20 @@ export default abstract class StartablesManager implements IStartableStoppable {
 
         this.logger.debug(`Started ${this.startables.length} startables.`);
 
-        this.logger.debug("Starting self-startable.");
+        this.logger.debug("Handing over starting to self-startable.");
 
         await this.selfStart();
 
-        this.logger.debug("Started self-startable.");
+        this.logger.debug("Back from starting self-startable.");
     }
 
     @asrt(0)
     public async stop(): Promise<void> {
-        this.logger.debug("Starting self-startable.");
+        this.logger.debug("Handing over stopping to self-startable.");
 
         await this.selfStop();
 
-        this.logger.debug("Started self-startable.");
+        this.logger.debug("Back from stopping self-startable.");
 
         this.logger.debug(`Stopping ${this.startables.length} startables.`);
 

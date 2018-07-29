@@ -31,7 +31,7 @@ import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
 
 @asrt(2)
-export default abstract class AggregateConnectablesManager implements IConnectable {
+export default class AggregateConnectablesManager implements IConnectable {
     private logger: PinoLogger;
 
     constructor(

@@ -28,7 +28,9 @@ import AggregateConnectablesManager from "@botten-nappet/shared/src/connection/a
 import LoggingStartable from "@botten-nappet/shared/src/startable-stoppable/logging-startable";
 
 @asrt(2)
-export default abstract class ConnectablesManager extends LoggingStartable {
+export default class ConnectablesManager extends LoggingStartable {
+    protected readonly logger: PinoLogger;
+
     constructor(
         @asrt() logger: PinoLogger,
         @asrt() private readonly aggregateConnectablesManager: AggregateConnectablesManager,

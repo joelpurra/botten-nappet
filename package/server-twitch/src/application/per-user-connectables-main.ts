@@ -24,10 +24,10 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
 
-import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import AggregateConnectablesManager from "@botten-nappet/shared/src/connection/aggregate-connectables-manager";
+import ConnectablesManager from "@botten-nappet/shared/src/connection/connectables-manager";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -49,9 +49,8 @@ import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nap
 /* tslint:enable max-line-length */
 
 @asrt(12)
-export default class PerUserHandlersMain implements IStartableStoppable {
-    private connectables: IConnectable[] = [];
-    private logger: PinoLogger;
+export default class PerUserHandlersMain extends StartablesManager {
+    protected readonly logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -87,28 +86,38 @@ export default class PerUserHandlersMain implements IStartableStoppable {
         @asrt() @scoped(TwitchUserIdProvider)
         private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
+    public async loadStartables(): Promise<void> {
+        const connectablesManager = new ConnectablesManager(
+            this.logger,
+            new AggregateConnectablesManager(
+                this.logger,
+                [
+                    // TODO: dependency injection with automatic stateful initialization, such as connecting/starting?
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent,
 
-        this.logger.info("Starting.");
+                    this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent,
+                ],
+            ),
+        );
 
-        // TODO: dependency injection with automatic stateful initialization, such as connecting/starting?
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
+        this.startables.push(connectablesManager);
+    }
 
-        this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
-
-        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
-
+    @asrt(0)
+    public async selfStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
@@ -116,20 +125,7 @@ export default class PerUserHandlersMain implements IStartableStoppable {
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        await Bluebird.map(
-            this.connectables,
-            async (connectable) => {
-                try {
-                    await connectable.disconnect();
-                } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
-                }
-            },
-        );
+    public async selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }
