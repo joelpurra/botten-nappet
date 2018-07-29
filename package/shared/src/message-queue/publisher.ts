@@ -109,7 +109,9 @@ export default class Publisher implements IConnectable {
         @asrt() topic: string,
         @asrt() msg: ZeroMqMessage,
     ): Promise<void> {
-        if (!await this.isConnected()) {
+        const connected = await this.isConnected();
+
+        if (!connected) {
             this.logger.warn(topic, msg, "Could not send message; not connected.");
 
             // TODO: make sure all messages get sent?
@@ -123,11 +125,11 @@ export default class Publisher implements IConnectable {
             //     JSON.stringify(msg).length
             //     } characters in message object)`,
             // );
+        } else {
+            await this.socket!.send([
+                topic,
+                msg,
+            ]);
         }
-
-        await this.socket!.send([
-            topic,
-            msg,
-        ]);
     }
 }
