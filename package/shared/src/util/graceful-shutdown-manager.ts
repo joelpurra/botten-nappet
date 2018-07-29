@@ -33,7 +33,7 @@ import Rx, {
     Subject,
 } from "rxjs";
 import {
-    EventTargetLike,
+    NodeStyleEventEmitter,
 } from "rxjs/internal/observable/fromEvent";
 import {
     first,
@@ -46,10 +46,11 @@ type ShutdownEvent = ("exit" | "uncaughtException" | "unhandledRejection" | Node
 @asrt(1)
 @autoinject
 export default class GracefulShutdownManager {
-    private shutdownObservableInternal: Rx.Observable<void> | null;
-    private shutdownSubject: Subject<void> | null;
-    private shutdownPromise: Promise<void> | null;
+    private shutdownObservableInternal: Rx.Observable<void> | null = null;
+    private shutdownSubject: Subject<void> | null = null;
+    private shutdownPromise: Promise<void> | null = null;
     private subscriptions: {
+        [key: string]: Rx.Subscription | null,
         SIGBREAK: Rx.Subscription | null,
         SIGHUP: Rx.Subscription | null,
         SIGINT: Rx.Subscription | null,
@@ -58,7 +59,16 @@ export default class GracefulShutdownManager {
         exit: Rx.Subscription | null,
         uncaughtException: Rx.Subscription | null,
         unhandledRejection: Rx.Subscription | null,
-    };
+    } = {
+            SIGBREAK: null,
+            SIGHUP: null,
+            SIGINT: null,
+            SIGQUIT: null,
+            SIGTERM: null,
+            exit: null,
+            uncaughtException: null,
+            unhandledRejection: null,
+        };
     private logger: PinoLogger;
 
     constructor(
@@ -70,21 +80,6 @@ export default class GracefulShutdownManager {
         this.handleExitEvent = this.handleExitEvent.bind(this);
         this.handleUncaughtExceptionEvent = this.handleUncaughtExceptionEvent.bind(this);
         this.handleUnhandledRejectionEvent = this.handleUnhandledRejectionEvent.bind(this);
-
-        this.subscriptions = {
-            SIGBREAK: null,
-            SIGHUP: null,
-            SIGINT: null,
-            SIGQUIT: null,
-            SIGTERM: null,
-            exit: null,
-            uncaughtException: null,
-            unhandledRejection: null,
-        };
-
-        this.shutdownSubject = null;
-        this.shutdownObservableInternal = null;
-        this.shutdownPromise = null;
     }
 
     @asrt(0)
@@ -110,30 +105,31 @@ export default class GracefulShutdownManager {
                 this.logger.warn("Detected shutdown.", "shutdownPromise");
             });
 
-        this.subscriptions.SIGBREAK = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGBREAK")
-            .subscribe(this.handleSignalEvent);
+        const signals: NodeJS.Signals[] = [
+            "SIGBREAK",
+            "SIGHUP",
+            "SIGINT",
+            "SIGQUIT",
+            "SIGTERM",
+        ];
 
-        this.subscriptions.SIGHUP = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGHUP")
-            .subscribe(this.handleSignalEvent);
+        signals.forEach((signal) => {
+            this.subscriptions[signal] = fromEvent<NodeJS.Signals>(
+                process as NodeStyleEventEmitter,
+                signal,
+            )
+                .subscribe(this.handleSignalEvent.bind(null, signal));
+        });
 
-        this.subscriptions.SIGINT = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGINT")
-            .subscribe(this.handleSignalEvent);
-
-        this.subscriptions.SIGQUIT = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGQUIT")
-            .subscribe(this.handleSignalEvent);
-
-        this.subscriptions.SIGTERM = fromEvent<NodeJS.Signals>(process as EventTargetLike<NodeJS.Signals>, "SIGTERM")
-            .subscribe(this.handleSignalEvent);
-
-        this.subscriptions.exit = fromEvent<number>(process as EventTargetLike<number>, "exit")
+        this.subscriptions.exit = fromEvent<number>(process as NodeStyleEventEmitter, "exit")
             .subscribe(this.handleExitEvent);
 
         this.subscriptions.uncaughtException =
-            fromEvent<Error>(process as EventTargetLike<Error>, "uncaughtException")
+            fromEvent<Error>(process as NodeStyleEventEmitter, "uncaughtException")
                 .subscribe(this.handleUncaughtExceptionEvent);
 
         this.subscriptions.unhandledRejection =
-            fromEvent(process as EventTargetLike<any>, "unhandledRejection", (reason, promise) => [reason, promise])
+            fromEvent(process as NodeStyleEventEmitter, "unhandledRejection", (reason, promise) => [reason, promise])
                 .subscribe(([reason, promise]) => this.handleUnhandledRejectionEvent(reason, promise));
     }
 
@@ -209,9 +205,8 @@ export default class GracefulShutdownManager {
         return this.handleEvent("unhandledRejection", reason, promise);
     }
 
-    @asrt(1)
     private async handleSignalEvent(
-        @asrt() signalAndCode: any,
+        signalAndCode: any,
     ): Promise<void> {
         // NOTE: there seems to have been a change in signal event
         // arguments sometime between nodejs v10.0.0 and v10.2.1.
@@ -234,7 +229,10 @@ export default class GracefulShutdownManager {
             signal = signalAndCode as NodeJS.Signals;
             code = signal;
         } else {
-            throw new Error("signalAndCode");
+            // NOTE: ignore type mismatches on this level.
+            // throw new Error("signalAndCode");
+            signal = "SIGUNUSED";
+            code = `Unknown event signal/code: ${signalAndCode}`;
         }
 
         return this.handleEvent(signal, code);
