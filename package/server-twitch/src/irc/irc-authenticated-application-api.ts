@@ -27,10 +27,10 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
 
-import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import AggregateConnectablesManager from "@botten-nappet/shared/src/connection/aggregate-connectables-manager";
+import ConnectablesManager from "@botten-nappet/shared/src/connection/connectables-manager";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -45,9 +45,8 @@ import TwitchPerUserIrcApi from "@botten-nappet/server-twitch/src/irc/per-user-i
 /* tslint:enable:max-line-length */
 
 @asrt(4)
-export default class BackendTwitchIrcAuthenticatedApplicationApi implements IStartableStoppable {
-    private connectables: IConnectable[] = [];
-    private logger: PinoLogger;
+export default class BackendTwitchIrcAuthenticatedApplicationApi extends StartablesManager {
+    protected readonly logger: PinoLogger;
 
     constructor(
         @asrt() @context(TwitchPerUserIrcApi, "TwitchPerUserIrcApi")
@@ -55,49 +54,42 @@ export default class BackendTwitchIrcAuthenticatedApplicationApi implements ISta
         @asrt() logger: PinoLogger,
         @asrt() @scoped(TwitchIrcConnection)
         private readonly twitchIrcConnection: TwitchIrcConnection,
-        // @asrt() private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand:
-        //     IncomingIrcCommandSingleItemJsonTopicsSubscriber,
         @asrt() @scoped(OutgoingIrcCommandSingleItemJsonTopicsSubscriber)
         private readonly twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand:
             OutgoingIrcCommandSingleItemJsonTopicsSubscriber,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-        this.connectables.push(this.twitchIrcConnection);
-        this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand);
+    public async loadStartables(): Promise<void> {
+        const connectablesManager = new ConnectablesManager(
+            this.logger,
+            new AggregateConnectablesManager(
+                this.logger,
+                [
+                    this.twitchIrcConnection,
+                    this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchOutgoingIrcCommand,
 
-        // TODO: decide where the subscriber gets connected, preferably in an automated fashion.
-        // this.connectables.push(this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
+                    // TODO: decide where the subscriber gets connected, preferably in an automated fashion.
+                    // this.twitchMessageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand,
+                ],
+            ),
+        );
 
-        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
-
-        this.logger.info("Connected.");
-
-        await this.twitchPerUserIrcApi().start();
+        this.startables.push(connectablesManager);
+        this.startables.push(this.twitchPerUserIrcApi());
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        if (this.twitchPerUserIrcApi) {
-            await this.twitchPerUserIrcApi().stop();
-        }
+    public async selfStart(): Promise<void> {
+        // NOTE: empty.
+    }
 
-        await Bluebird.map(
-            this.connectables,
-            async (connectable) => {
-                try {
-                    await connectable.disconnect();
-                } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
-                }
-            },
-        );
+    @asrt(0)
+    public async selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }

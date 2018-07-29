@@ -27,13 +27,10 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
 
-import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import AggregateConnectablesManager from "@botten-nappet/shared/src/connection/aggregate-connectables-manager";
+import ConnectablesManager from "@botten-nappet/shared/src/connection/connectables-manager";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -48,9 +45,8 @@ import TwitchPerUserPollingApi from "@botten-nappet/server-twitch/src/polling/pe
 /* tslint:enable:max-line-length */
 
 @asrt(5)
-export default class BackendTwitchPollingAuthenticatedApplicationApi implements IStartableStoppable {
-    private connectables: IConnectable[] = [];
-    private logger: PinoLogger;
+export default class BackendTwitchPollingAuthenticatedApplicationApi extends StartablesManager {
+    protected readonly logger: PinoLogger;
 
     constructor(
         @asrt() @context(TwitchPerUserPollingApi, "TwitchPerUserPollingApi")
@@ -63,43 +59,36 @@ export default class BackendTwitchPollingAuthenticatedApplicationApi implements 
         @asrt() @scoped(FollowingResponsePollingClientIdConnection)
         private readonly twitchPollingFollowingConnection: FollowingResponsePollingClientIdConnection,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-        assert.hasLength(this.connectables, 0);
+    public async loadStartables(): Promise<void> {
+        const connectablesManager = new ConnectablesManager(
+            this.logger,
+            new AggregateConnectablesManager(
+                this.logger,
+                [
+                    this.twitchPollingFollowingConnection,
+                    this.twitchPollingStreamingConnection,
+                    this.twitchPollingCheermotesConnection,
+                ],
+            ),
+        );
 
-        this.connectables.push(this.twitchPollingFollowingConnection);
-        this.connectables.push(this.twitchPollingStreamingConnection);
-        this.connectables.push(this.twitchPollingCheermotesConnection);
-
-        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
-
-        this.logger.info("Connected.");
-
-        await this.twitchPerUserPollingApi().start();
+        this.startables.push(connectablesManager);
+        this.startables.push(this.twitchPerUserPollingApi());
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        if (this.twitchPerUserPollingApi) {
-            await this.twitchPerUserPollingApi().stop();
-        }
+    public async selfStart(): Promise<void> {
+        // NOTE: empty.
+    }
 
-        await Bluebird.map(
-            this.connectables,
-            async (connectable) => {
-                try {
-                    await connectable.disconnect();
-                } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
-                }
-            },
-        );
+    @asrt(0)
+    public async selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }
