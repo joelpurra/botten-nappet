@@ -24,13 +24,10 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
 
-import IConnectable from "@botten-nappet/shared/src/connection/iconnectable";
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import AggregateConnectablesManager from "@botten-nappet/shared/src/connection/aggregate-connectables-manager";
+import ConnectablesManager from "@botten-nappet/shared/src/connection/connectables-manager";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -62,9 +59,8 @@ import UserAuthenticationHandler from "@botten-nappet/server-twitch/src/handler/
 /* tslint:enable:max-line-length */
 
 @asrt(21)
-export default class TwitchAuthenticatedApplicationMain implements IStartableStoppable {
-    private connectables: IConnectable[] = [];
-    private logger: PinoLogger;
+export default class TwitchAuthenticatedApplicationMain extends StartablesManager {
+    protected readonly logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -135,94 +131,73 @@ export default class TwitchAuthenticatedApplicationMain implements IStartableSto
         private readonly outgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber:
             OutgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-        assert.hasLength(this.connectables, 0);
+    public async loadStartables(): Promise<void> {
+        const connectablesManager = new ConnectablesManager(
+            this.logger,
+            new AggregateConnectablesManager(
+                this.logger,
+                [
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationAuthenticationEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationUnauthenticationEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationAuthenticatedEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationUnauthenticatedEvent,
 
-        this.logger.info("Starting.");
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIUserAuthenticationEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIUserUnauthenticationEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIUserAuthenticatedEvent,
+                    this.messageQueueSingleItemJsonTopicsSubscriberForIUserUnauthenticatedEvent,
 
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationAuthenticationEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationUnauthenticationEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationAuthenticatedEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIApplicationUnauthenticatedEvent);
+                    this.outgoingApplicationAuthenticationCommandSingleItemJsonTopicsSubscriber,
+                    this.outgoingApplicationUnauthenticationCommandSingleItemJsonTopicsSubscriber,
 
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIUserAuthenticationEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIUserUnauthenticationEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIUserAuthenticatedEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIUserUnauthenticatedEvent);
+                    this.outgoingUserAuthenticationCommandSingleItemJsonTopicsSubscriber,
+                    this.outgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber,
+                ],
+            ),
+        );
 
-        this.connectables.push(this.outgoingApplicationAuthenticationCommandSingleItemJsonTopicsSubscriber);
-        this.connectables.push(this.outgoingApplicationUnauthenticationCommandSingleItemJsonTopicsSubscriber);
-
-        this.connectables.push(this.outgoingUserAuthenticationCommandSingleItemJsonTopicsSubscriber);
-        this.connectables.push(this.outgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber);
-
-        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
-
-        this.logger.info("Connected.");
+        this.startables.push(connectablesManager);
 
         // TODO: register unauthentication after the authentication even has been
         // triggered to automatically scope context variables?
-        await this.applicationAuthenticationEventTranslator.start();
-        await this.applicationUnauthenticationEventTranslator.start();
+        this.startables.push(this.applicationAuthenticationEventTranslator);
+        this.startables.push(this.applicationUnauthenticationEventTranslator);
 
         // TODO: register unauthenticated after the authenticated even has been
         // triggered to automatically scope context variables?
-        await this.applicationAuthenticatedEventTranslator.start();
-        await this.applicationUnauthenticatedEventTranslator.start();
+        this.startables.push(this.applicationAuthenticatedEventTranslator);
+        this.startables.push(this.applicationUnauthenticatedEventTranslator);
 
         // TODO: register unauthentication after the authentication even has been
         // triggered to automatically scope context variables?
         // TODO: move to user context/scope?
-        await this.userAuthenticationEventTranslator.start();
-        await this.userUnauthenticationEventTranslator.start();
+        this.startables.push(this.userAuthenticationEventTranslator);
+        this.startables.push(this.userUnauthenticationEventTranslator);
 
         // // TODO: register unauthenticated after the authenticated even has been
         // // triggered to automatically scope context variables?
         // // TODO: move to user context/scope?
-        // await this.userAuthenticatedEventTranslator.start();
-        // await this.userUnauthenticatedEventTranslator.start();
+        // this.startables.push(await this.userAuthenticatedEventTranslator);
+        // this.startables.push(await this.userUnauthenticatedEventTranslator);
 
-        await this.applicationAuthenticationHandler.start();
+        this.startables.push(this.applicationAuthenticationHandler);
 
-        await this.userAuthenticationHandler.start();
-
-        this.logger.info("Started.");
+        this.startables.push(this.userAuthenticationHandler);
     }
 
     @asrt(0)
-    public async  stop(): Promise<void> {
-        this.logger.info("Stopping.");
+    public async selfStart(): Promise<void> {
+        // NOTE: empty.
+    }
 
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        await this.userAuthenticationHandler.stop();
-
-        await this.applicationAuthenticationHandler.stop();
-
-        await this.userUnauthenticationEventTranslator.stop();
-        await this.userAuthenticationEventTranslator.stop();
-
-        await this.applicationUnauthenticatedEventTranslator.stop();
-        await this.applicationAuthenticatedEventTranslator.stop();
-
-        await this.applicationUnauthenticationEventTranslator.stop();
-        await this.applicationAuthenticationEventTranslator.stop();
-
-        await Bluebird.map(
-            this.connectables,
-            async (connectable) => {
-                try {
-                    await connectable.disconnect();
-                } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
-                }
-            },
-        );
+    @asrt(0)
+    public async  selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }
