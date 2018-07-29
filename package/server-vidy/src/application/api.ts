@@ -72,14 +72,14 @@ export default class BackendVidyApi extends StartablesManager {
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         this.logger.info({
             vidyKeyId: this.backendConfig.vidyKeyId,
         }, "Started listening to events");
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
+    public async managedStop(): Promise<void> {
         // NOTE: empty.
     }
 }

@@ -47,38 +47,50 @@ export default class AggregateConnectablesManager implements IConnectable {
     public async connect(): Promise<void> {
         this.logger.debug(`Connecting ${this.connectables.length} connectables.`);
 
-        await Bluebird.map(this.connectables, async (connectable) => await connectable.connect());
+        await Bluebird.map(
+            this.connectables,
+            async (connectable, index, arrayLength) => {
+                try {
+                    // TODO: ensureConnected?
+                    const isConnected = await connectable.isConnected();
+
+                    if (!isConnected) {
+                        await connectable.connect();
+                    }
+                } catch (error) {
+                    this.logger.error(
+                        error,
+                        // connectable,
+                        // TODO: improved IConnectable naming?
+                        `Swallowed error while connecting connectable #${index} of ${arrayLength}`,
+                    );
+                }
+            },
+        );
 
         this.logger.debug(`Connected ${this.connectables.length} connectables.`);
-
-        this.logger.debug("Connecting self-connectable.");
-
-        await this.selfConnect();
-
-        this.logger.debug("Connected self-connectable.");
     }
 
     @asrt(0)
     public async disconnect(): Promise<void> {
-        this.logger.debug("Connecting self-connectable.");
-
-        await this.selfDisconnect();
-
-        this.logger.debug("Connected self-connectable.");
-
         this.logger.debug(`Disconnecting ${this.connectables.length} connectables.`);
 
         await Bluebird.map(
             this.connectables,
             async (connectable, index, arrayLength) => {
                 try {
-                    await connectable.disconnect();
+                    // TODO: ensureDisconnected?
+                    const isConnected = await connectable.isConnected();
+
+                    if (isConnected) {
+                        await connectable.disconnect();
+                    }
                 } catch (error) {
                     this.logger.error(
                         error,
-                        connectable,
+                        // connectable,
                         // TODO: improved IConnectable naming?
-                        `Swallowed error while stopping connectable #${index} of ${arrayLength}: ${connectable}`,
+                        `Swallowed error while disconnecting connectable #${index} of ${arrayLength}`,
                     );
                 }
             },
@@ -104,8 +116,4 @@ export default class AggregateConnectablesManager implements IConnectable {
 
         return isConnected;
     }
-
-    public abstract async loadConnectables(): Promise<void>;
-    public abstract async selfConnect(): Promise<void>;
-    public abstract async selfDisconnect(): Promise<void>;
 }

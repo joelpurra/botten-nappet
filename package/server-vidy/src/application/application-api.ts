@@ -72,12 +72,12 @@ export default class BackendVidyApplicationApi extends StartablesManager {
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         await this.gracefulShutdownManager.waitForShutdownSignal();
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
+    public async managedStop(): Promise<void> {
         // NOTE: empty.
     }
 }

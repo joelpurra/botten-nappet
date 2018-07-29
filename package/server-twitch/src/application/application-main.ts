@@ -192,12 +192,12 @@ export default class TwitchAuthenticatedApplicationMain extends StartablesManage
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         // NOTE: empty.
     }
 
     @asrt(0)
-    public async  selfStop(): Promise<void> {
+    public async  managedStop(): Promise<void> {
         // NOTE: empty.
     }
 }

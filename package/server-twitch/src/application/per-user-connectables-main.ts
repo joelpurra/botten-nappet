@@ -46,13 +46,18 @@ import IncomingSubscriptionEventSingleItemJsonTopicsSubscriber from "@botten-nap
 import IncomingWhisperEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-incoming-whisper-event-single-item-json-topics-subscriber";
 import IncomingSearchResultEventSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/vidy-incoming-search-result-event-single-item-json-topics-subscriber";
 
+import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
+
 /* tslint:enable max-line-length */
 
-@asrt(12)
-export default class PerUserHandlersMain extends StartablesManager {
+@asrt(13)
+export default class PerUserConnectablesMain extends StartablesManager {
     protected readonly logger: PinoLogger;
 
     constructor(
+        // @context(PerUserHandlersMain, "PerUserHandlersMain")
+        // @asrt() perUserHandlersMain: () => PerUserHandlersMain,
+        @asrt() private readonly perUserHandlersMain: PerUserHandlersMain,
         @asrt() logger: PinoLogger,
         @asrt() @scoped(IncomingPubSubEventSingleItemJsonTopicsSubscriber)
         private readonly messageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent:
@@ -114,10 +119,11 @@ export default class PerUserHandlersMain extends StartablesManager {
         );
 
         this.startables.push(connectablesManager);
+        this.startables.push(this.perUserHandlersMain);
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
@@ -125,7 +131,7 @@ export default class PerUserHandlersMain extends StartablesManager {
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
+    public async managedStop(): Promise<void> {
         // NOTE: empty.
     }
 }

@@ -68,7 +68,7 @@ export default class TwitchPerUserPollingApi extends StartablesManager {
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
@@ -76,7 +76,7 @@ export default class TwitchPerUserPollingApi extends StartablesManager {
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
+    public async managedStop(): Promise<void> {
         // NOTE: empty.
     }
 }

@@ -27,9 +27,7 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
 
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
@@ -281,37 +279,21 @@ export default class PerUserHandlersMain extends StartablesManager {
         this.startables.push(twitchIrcTextResponseCommandHandler);
         this.startables.push(twitchIrcVidyCommandHandler);
         this.startables.push(twitchIrcVidyResultEventHandler);
+        this.startables.push(this.backendTwitchPubSubAuthenticatedApplicationApi());
+        this.startables.push(this.backendTwitchIrcAuthenticatedApplicationApi());
+        this.startables.push(this.backendTwitchPollingAuthenticatedApplicationApi());
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async managedStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
         }, "Started listening to events");
-
-        await Promise.all([
-            this.backendTwitchPubSubAuthenticatedApplicationApi().start(),
-            this.backendTwitchIrcAuthenticatedApplicationApi().start(),
-            this.backendTwitchPollingAuthenticatedApplicationApi().start(),
-        ]);
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        if (this.backendTwitchPubSubAuthenticatedApplicationApi) {
-            await this.backendTwitchPubSubAuthenticatedApplicationApi().stop();
-        }
-
-        if (this.backendTwitchIrcAuthenticatedApplicationApi) {
-            await this.backendTwitchIrcAuthenticatedApplicationApi().stop();
-        }
-
-        if (this.backendTwitchPollingAuthenticatedApplicationApi) {
-            await this.backendTwitchPollingAuthenticatedApplicationApi().stop();
-        }
+    public async managedStop(): Promise<void> {
+        // NOTE: empty.
     }
 }

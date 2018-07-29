@@ -27,16 +27,17 @@ import {
 } from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import LoggingStartable from "@botten-nappet/shared/src/startable-stoppable/logging-startable";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 @asrt(0)
-export default abstract class StartablesManager implements IStartableStoppable {
+export default abstract class StartablesManager extends LoggingStartable {
     protected startables: IStartableStoppable[] = [];
     protected abstract logger: PinoLogger;
 
     @asrt(0)
-    public async start(): Promise<void> {
+    public async loggedStart(): Promise<void> {
         assert.hasLength(this.startables, 0);
 
         await this.loadStartables();
@@ -47,28 +48,42 @@ export default abstract class StartablesManager implements IStartableStoppable {
             this.logger.warn("No startables found.");
         }
 
-        this.logger.debug(`Starting ${this.startables.length} startables.`);
+        this.logger.trace(`Starting ${this.startables.length} startables.`);
 
-        await Bluebird.map(this.startables, async (startable) => await startable.start());
+        await Bluebird.map(
+            this.startables,
+            async (startable, index, arrayLength) => {
+                try {
+                    await startable.start();
+                } catch (error) {
+                    this.logger.error(
+                        error,
+                        // startable,
+                        // TODO: improved IStartableStoppable naming?
+                        `Swallowed error while starting startable #${index} of ${arrayLength}`,
+                    );
+                }
+            },
+        );
 
-        this.logger.debug(`Started ${this.startables.length} startables.`);
+        this.logger.trace(`Started ${this.startables.length} startables.`);
 
-        this.logger.debug("Handing over starting to self-startable.");
+        this.logger.trace("Handing over starting to self-startable.");
 
-        await this.selfStart();
+        await this.managedStart();
 
-        this.logger.debug("Back from starting self-startable.");
+        this.logger.trace("Back from starting self-startable.");
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        this.logger.debug("Handing over stopping to self-startable.");
+    public async loggedStop(): Promise<void> {
+        this.logger.trace("Handing over stopping to self-startable.");
 
-        await this.selfStop();
+        await this.managedStop();
 
-        this.logger.debug("Back from stopping self-startable.");
+        this.logger.trace("Back from stopping self-startable.");
 
-        this.logger.debug(`Stopping ${this.startables.length} startables.`);
+        this.logger.trace(`Stopping ${this.startables.length} startables.`);
 
         await Bluebird.map(
             this.startables,
@@ -78,18 +93,18 @@ export default abstract class StartablesManager implements IStartableStoppable {
                 } catch (error) {
                     this.logger.error(
                         error,
-                        startable,
+                        // startable,
                         // TODO: improved IStartableStoppable naming?
-                        `Swallowed error while stopping startable #${index} of ${arrayLength}: ${startable}`,
+                        `Swallowed error while stopping startable #${index} of ${arrayLength}`,
                     );
                 }
             },
         );
 
-        this.logger.debug(`Stopped ${this.startables.length} startables.`);
+        this.logger.trace(`Stopped ${this.startables.length} startables.`);
     }
 
     public abstract async loadStartables(): Promise<void>;
-    public abstract async selfStart(): Promise<void>;
-    public abstract async selfStop(): Promise<void>;
+    public abstract async managedStart(): Promise<void>;
+    public abstract async managedStop(): Promise<void>;
 }

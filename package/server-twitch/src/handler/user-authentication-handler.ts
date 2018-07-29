@@ -39,11 +39,10 @@ import TwitchOutgoingUserAuthenticationCommandSingleItemJsonTopicsSubscriber fro
 import TwitchOutgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-user-unauthentication-command-single-item-json-topics-subscriber";
 
 import PerUserConnectablesMain from "@botten-nappet/server-twitch/src/application/per-user-connectables-main";
-import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
 
 /* tslint:enable max-line-length */
 
-@asrt(9)
+@asrt(8)
 @autoinject
 export default abstract class UserAuthenticationHandler extends UserAuthenticationHandlerBase {
     constructor(
@@ -55,9 +54,6 @@ export default abstract class UserAuthenticationHandler extends UserAuthenticati
         @asrt() incomingUserAuthenticationEvent: UserAuthenticatedEventTopicPublisher,
         @asrt() incomingUserUnauthenticationEvent: UserUnauthenticatedEventTopicPublisher,
         @asrt() userIdProvider: UserIdProvider,
-        // @context(PerUserHandlersMain, "PerUserHandlersMain")
-        // @asrt() perUserHandlersMain: () => PerUserHandlersMain,
-        @asrt() perUserHandlersMain: PerUserHandlersMain,
         @asrt() perUserConnectablesMain: PerUserConnectablesMain,
         @asrt() applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
@@ -71,7 +67,6 @@ export default abstract class UserAuthenticationHandler extends UserAuthenticati
             incomingUserUnauthenticationEvent,
             applicationTokenManagerConfig,
             userIdProvider,
-            perUserHandlersMain,
             perUserConnectablesMain,
         );
 

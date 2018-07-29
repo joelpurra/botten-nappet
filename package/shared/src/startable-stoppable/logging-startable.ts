@@ -34,20 +34,20 @@ export default abstract class LoggingStartable implements IStartableStoppable {
     public async start(): Promise<void> {
         this.logger.debug("Starting self-startable.");
 
-        await this.selfStart();
+        await this.loggedStart();
 
         this.logger.debug("Started self-startable.");
     }
 
     @asrt(0)
     public async stop(): Promise<void> {
-        this.logger.debug("Starting self-startable.");
+        this.logger.debug("Stopping self-startable.");
 
-        await this.selfStop();
+        await this.loggedStop();
 
-        this.logger.debug("Started self-startable.");
+        this.logger.debug("Stopped self-startable.");
     }
 
-    public abstract async selfStart(): Promise<void>;
-    public abstract async selfStop(): Promise<void>;
+    public abstract async loggedStart(): Promise<void>;
+    public abstract async loggedStop(): Promise<void>;
 }

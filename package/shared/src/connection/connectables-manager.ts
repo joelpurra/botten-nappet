@@ -41,12 +41,12 @@ export default class ConnectablesManager extends LoggingStartable {
     }
 
     @asrt(0)
-    public async selfStart(): Promise<void> {
+    public async loggedStart(): Promise<void> {
         await this.aggregateConnectablesManager.connect();
     }
 
     @asrt(0)
-    public async selfStop(): Promise<void> {
+    public async loggedStop(): Promise<void> {
         await this.aggregateConnectablesManager.disconnect();
     }
 }
