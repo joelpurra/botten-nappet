@@ -50,7 +50,7 @@ export default class FollowingResponsePollingClientIdConnection
         super(
             logger,
             backendConfig.twitchAppClientId,
-            backendConfig.bottenNappetDefaultPollingInterval,
+            backendConfig.bottenNappetFollowingPollingInterval,
             false,
             "get",
         );

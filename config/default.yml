@@ -1,8 +1,9 @@
 backend:
     pollingInterval:
-        default: 30000
-        streaming: 30000
         cheermotes: 600000
+        default: 300000
+        following: 30000
+        streaming: 30000
     shared:
         databaseUri: null
     followingPollingLimit: 5

@@ -56,12 +56,12 @@ export default class BackendConfig {
         assert.nonEmptyString(this.topicTwitchIncomingIrcCommand);
         assert.nonEmptyString(this.topicTwitchOutgoingIrcCommand);
         assert.nonEmptyString(this.topicTwitchIncomingPubSubEvent);
+
         assert.integer(this.bottenNappetDefaultPollingInterval);
-        assert.positive(this.bottenNappetDefaultPollingInterval);
+        assert.integer(this.bottenNappetFollowingPollingInterval);
         assert.integer(this.bottenNappetStreamingPollingInterval);
-        assert.positive(this.bottenNappetStreamingPollingInterval);
         assert.integer(this.bottenNappetCheermotesPollingInterval);
-        assert.positive(this.bottenNappetCheermotesPollingInterval);
+
         assert.nonEmptyString(this.twitchAppClientId);
         assert.nonEmptyString(this.twitchAppOAuthRedirectUrl);
         assert.nonEmptyString(this.twitchUserName);
@@ -189,7 +189,17 @@ export default class BackendConfig {
     public get bottenNappetDefaultPollingInterval(): number {
         const value = this.config.get<number>(`${this.prefix}.pollingInterval.default`);
 
-        assert.greater(value, 0);
+        assert.integer(value);
+        assert.positive(value);
+
+        return value;
+    }
+
+    public get bottenNappetFollowingPollingInterval(): number {
+        const value = this.config.get<number>(`${this.prefix}.pollingInterval.following`);
+
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }
@@ -197,7 +207,8 @@ export default class BackendConfig {
     public get bottenNappetStreamingPollingInterval(): number {
         const value = this.config.get<number>(`${this.prefix}.pollingInterval.streaming`);
 
-        assert.greater(value, 0);
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }
@@ -205,7 +216,8 @@ export default class BackendConfig {
     public get bottenNappetCheermotesPollingInterval(): number {
         const value = this.config.get<number>(`${this.prefix}.pollingInterval.cheermotes`);
 
-        assert.greater(value, 0);
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }
@@ -276,7 +288,8 @@ export default class BackendConfig {
     public get followingPollingLimit(): number {
         const value = this.config.get<number>(`${this.prefix}.followingPollingLimit`);
 
-        assert.greater(value, 0);
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }
@@ -284,7 +297,8 @@ export default class BackendConfig {
     public get twitchAppTokenRefreshInterval(): number {
         const value = this.config.get<number>(`${this.prefix}.twitch.appTokenRefreshInterval`);
 
-        assert.greater(value, 0);
+        assert.integer(value);
+        assert.positive(value);
 
         return value;
     }

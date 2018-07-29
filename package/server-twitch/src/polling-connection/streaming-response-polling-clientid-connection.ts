@@ -50,7 +50,7 @@ export default class StreamingResponsePollingClientIdConnection
         super(
             logger,
             backendConfig.twitchAppClientId,
-            backendConfig.bottenNappetDefaultPollingInterval,
+            backendConfig.bottenNappetStreamingPollingInterval,
             false,
             "get",
         );
