@@ -21,38 +21,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
 
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 @asrt(0)
-export default abstract class StartablesManager implements IStartableStoppable {
-    protected startables: IStartableStoppable[] = [];
+export default abstract class LoggingStartable implements IStartableStoppable {
     protected abstract logger: PinoLogger;
 
     @asrt(0)
     public async start(): Promise<void> {
-        assert.hasLength(this.startables, 0);
-
-        await this.loadStartables();
-
-        // assert.positive(this.startables.length);
-
-        if (this.startables.length === 0) {
-            this.logger.warn("No startables found.");
-        }
-
-        this.logger.debug(`Starting ${this.startables.length} startables.`);
-
-        await Bluebird.map(this.startables, async (startable) => await startable.start());
-
-        this.logger.debug(`Started ${this.startables.length} startables.`);
-
         this.logger.debug("Starting self-startable.");
 
         await this.selfStart();
@@ -67,29 +46,8 @@ export default abstract class StartablesManager implements IStartableStoppable {
         await this.selfStop();
 
         this.logger.debug("Started self-startable.");
-
-        this.logger.debug(`Stopping ${this.startables.length} startables.`);
-
-        await Bluebird.map(
-            this.startables,
-            async (startable, index, arrayLength) => {
-                try {
-                    await startable.stop();
-                } catch (error) {
-                    this.logger.error(
-                        error,
-                        startable,
-                        // TODO: improved IStartableStoppable naming?
-                        `Swallowed error while stopping startable #${index} of ${arrayLength}: ${startable}`,
-                    );
-                }
-            },
-        );
-
-        this.logger.debug(`Stopped ${this.startables.length} startables.`);
     }
 
-    public abstract async loadStartables(): Promise<void>;
     public abstract async selfStart(): Promise<void>;
     public abstract async selfStop(): Promise<void>;
 }

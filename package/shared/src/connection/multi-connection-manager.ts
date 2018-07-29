@@ -36,8 +36,8 @@ import {
     mergeAll,
 } from "rxjs/operators";
 
-import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
 import IReceivingConnection from "@botten-nappet/shared/src/connection/ireceiving-connection";
 
