@@ -24,12 +24,8 @@ import {
 import {
     autoinject,
 } from "aurelia-framework";
-import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
 
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 import BackendConfig from "@botten-nappet/backend-shared/src/config/backend-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
@@ -45,9 +41,8 @@ import OutgoingSearchCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/
 
 @asrt(5)
 @autoinject
-export default class BackendVidyApi implements IStartableStoppable {
-    private startables: IStartableStoppable[] = [];
-    private logger: PinoLogger;
+export default class BackendVidyApi extends StartablesManager {
+    protected logger: PinoLogger;
 
     constructor(
         @asrt() private readonly backendConfig: BackendConfig,
@@ -58,13 +53,13 @@ export default class BackendVidyApi implements IStartableStoppable {
             IncomingSearchResultEventTopicPublisher,
         @asrt() private readonly vidyAuthenticatedRequest: VidyAuthenticatedRequest,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-        assert.hasLength(this.startables, 0);
-
+    public async loadStartables(): Promise<void> {
         const vidyOutgoingSearchCommandHandler = new VidyOutgoingSearchCommandHandler(
             this.logger,
             this.messageQueueSingleItemJsonTopicsSubscriberForIOutgoingSearchCommand,
@@ -74,28 +69,17 @@ export default class BackendVidyApi implements IStartableStoppable {
         );
 
         this.startables.push(vidyOutgoingSearchCommandHandler);
+    }
 
-        await Bluebird.map(this.startables, async (startable) => startable.start());
-
+    @asrt(0)
+    public async selfStart(): Promise<void> {
         this.logger.info({
             vidyKeyId: this.backendConfig.vidyKeyId,
         }, "Started listening to events");
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        await Bluebird.map(
-            this.startables,
-            async (startable) => {
-                try {
-                    await startable.stop();
-                } catch (error) {
-                    this.logger.error(error, startable, "Swallowed error while stopping.");
-                }
-            },
-        );
+    public async selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }

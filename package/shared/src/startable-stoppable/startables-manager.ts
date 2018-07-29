@@ -37,6 +37,8 @@ export default abstract class StartablesManager implements IStartableStoppable {
 
     @asrt(0)
     public async start(): Promise<void> {
+        assert.hasLength(this.startables, 0);
+
         await this.loadStartables();
 
         assert.positive(this.startables.length);

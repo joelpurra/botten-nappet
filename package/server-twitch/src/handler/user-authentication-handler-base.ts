@@ -38,11 +38,13 @@ import MultiEventSubscriptionManager from "@botten-nappet/shared/src/event/multi
 import UserIdProvider from "@botten-nappet/backend-twitch/src/authentication/user-id-provider";
 
 import ApplicationTokenManagerConfig from "@botten-nappet/backend-twitch/src/config/application-token-manager-config";
+
+import PerUserConnectablesMain from "@botten-nappet/server-twitch/src/application/per-user-connectables-main";
 import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
 
 /* tslint:enable max-line-length */
 
-@asrt(7)
+@asrt(8)
 export default abstract class UserAuthenticationHandlerBase
     extends MultiEventSubscriptionManager<
     IOutgoingUserAuthenticationCommand
@@ -64,6 +66,7 @@ export default abstract class UserAuthenticationHandlerBase
         @asrt() private readonly applicationTokenManagerConfig: ApplicationTokenManagerConfig,
         @asrt() private readonly userIdProvider: UserIdProvider,
         @asrt() private readonly perUserHandlersMain: PerUserHandlersMain,
+        @asrt() private readonly perUserConnectablesMain: PerUserConnectablesMain,
     ) {
         super(logger, connections);
 
@@ -95,6 +98,7 @@ export default abstract class UserAuthenticationHandlerBase
             }
 
             await this.perUserHandlersMain.stop();
+            await this.perUserConnectablesMain.stop();
 
             this.isUserAuthenticated = false;
 
@@ -133,6 +137,7 @@ export default abstract class UserAuthenticationHandlerBase
             }
 
             // TODO: factory to create new "twitch user-based applications".
+            await this.perUserConnectablesMain.start();
             await this.perUserHandlersMain.start();
 
             this.isUserAuthenticated = true;

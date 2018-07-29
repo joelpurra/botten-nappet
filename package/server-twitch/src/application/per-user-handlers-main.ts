@@ -84,7 +84,6 @@ import BackendTwitchPubSubAuthenticatedApplicationApi from "@botten-nappet/serve
 
 @asrt(23)
 export default class PerUserHandlersMain implements IStartableStoppable {
-    private connectables: IConnectable[] = [];
     private startables: IStartableStoppable[] = [];
     private logger: PinoLogger;
 
@@ -161,23 +160,6 @@ export default class PerUserHandlersMain implements IStartableStoppable {
     public async start(): Promise<void> {
 
         this.logger.info("Starting.");
-
-        // TODO: don't mix connecting connectables and "injecting" in startables in the same class.
-        // TODO: dependency injection with automatic stateful initialization, such as connecting/starting?
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingPubSubEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForITwitchIncomingIrcCommand);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingFollowingEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingStreamingEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheermotesEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingCheeringEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingWhisperEvent);
-        this.connectables.push(this.messageQueueSingleItemJsonTopicsSubscriberForIIncomingSubscriptionEvent);
-
-        this.connectables.push(this.vidyMessageQueueSingleItemJsonTopicsSubscriberForIIncomingSearchResultEvent);
-
-        await Bluebird.map(this.connectables, async (connectable) => connectable.connect());
-
-        this.logger.info("Connected.");
 
         const twitchIrcVidyCommandHandler = new TwitchIrcVidyCommandHandler(
             this.logger,
@@ -340,18 +322,6 @@ export default class PerUserHandlersMain implements IStartableStoppable {
                     await startable.stop();
                 } catch (error) {
                     this.logger.error(error, startable, "Swallowed error while stopping.");
-                }
-            },
-        );
-
-        await Bluebird.map(
-            this.connectables,
-            async (connectable) => {
-                try {
-                    await connectable.disconnect();
-                } catch (error) {
-                    this.logger
-                        .error(error, connectable, "Swallowed error while disconnecting.");
                 }
             },
         );

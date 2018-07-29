@@ -38,11 +38,12 @@ import UserUnauthenticatedEventTopicPublisher from "@botten-nappet/server-backen
 import TwitchOutgoingUserAuthenticationCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-user-authentication-command-single-item-json-topics-subscriber";
 import TwitchOutgoingUserUnauthenticationCommandSingleItemJsonTopicsSubscriber from "@botten-nappet/server-backend/src/topics-subscriber/twitch-outgoing-user-unauthentication-command-single-item-json-topics-subscriber";
 
+import PerUserConnectablesMain from "@botten-nappet/server-twitch/src/application/per-user-connectables-main";
 import PerUserHandlersMain from "@botten-nappet/server-twitch/src/application/per-user-handlers-main";
 
 /* tslint:enable max-line-length */
 
-@asrt(8)
+@asrt(9)
 @autoinject
 export default abstract class UserAuthenticationHandler extends UserAuthenticationHandlerBase {
     constructor(
@@ -57,6 +58,7 @@ export default abstract class UserAuthenticationHandler extends UserAuthenticati
         // @context(PerUserHandlersMain, "PerUserHandlersMain")
         // @asrt() perUserHandlersMain: () => PerUserHandlersMain,
         @asrt() perUserHandlersMain: PerUserHandlersMain,
+        @asrt() perUserConnectablesMain: PerUserConnectablesMain,
         @asrt() applicationTokenManagerConfig: ApplicationTokenManagerConfig,
     ) {
         super(
@@ -70,6 +72,7 @@ export default abstract class UserAuthenticationHandler extends UserAuthenticati
             applicationTokenManagerConfig,
             userIdProvider,
             perUserHandlersMain,
+            perUserConnectablesMain,
         );
 
         this.logger = logger.child(this.constructor.name);

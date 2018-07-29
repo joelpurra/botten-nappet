@@ -24,14 +24,10 @@ import {
 import {
     asrt,
 } from "@botten-nappet/shared/src/util/asrt";
-import Bluebird from "bluebird";
-import {
-    assert,
-} from "check-types";
-
-import IStartableStoppable from "@botten-nappet/shared/src/startable-stoppable/istartable-stoppable";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
+
+import StartablesManager from "@botten-nappet/shared/src/startable-stoppable/startables-manager";
 
 /* tslint:disable max-line-length */
 
@@ -45,9 +41,8 @@ import TwitchUserNameProvider from "@botten-nappet/backend-twitch/src/authentica
 /* tslint:enable max-line-length */
 
 @asrt(6)
-export default class TwitchPerUserPollingApi {
-    private startables: IStartableStoppable[] = [];
-    private logger: PinoLogger;
+export default class TwitchPerUserPollingApi extends StartablesManager {
+    protected logger: PinoLogger;
 
     constructor(
         @asrt() logger: PinoLogger,
@@ -60,19 +55,20 @@ export default class TwitchPerUserPollingApi {
         @asrt() private readonly twitchUserNameProvider: TwitchUserNameProvider,
         @asrt() private readonly twitchUserIdProvider: TwitchUserIdProvider,
     ) {
+        super();
+
         this.logger = logger.child(this.constructor.name);
     }
 
     @asrt(0)
-    public async start(): Promise<void> {
-        assert.hasLength(this.startables, 0);
-
+    public async loadStartables(): Promise<void> {
         this.startables.push(this.twitchIncomingFollowingCommandEventTranslator);
         this.startables.push(this.twitchIncomingStreamingCommandEventTranslator);
         this.startables.push(this.twitchIncomingCheermotesCommandEventTranslator);
+    }
 
-        await Bluebird.map(this.startables, async (startable) => startable.start());
-
+    @asrt(0)
+    public async selfStart(): Promise<void> {
         this.logger.info({
             twitchUserId: await this.twitchUserIdProvider.get(),
             twitchUserName: await this.twitchUserNameProvider.get(),
@@ -80,19 +76,7 @@ export default class TwitchPerUserPollingApi {
     }
 
     @asrt(0)
-    public async stop(): Promise<void> {
-        // TODO: better cleanup handling.
-        // TODO: check if each of these have been started successfully.
-        // TODO: better null handling.
-        await Bluebird.map(
-            this.startables,
-            async (startable) => {
-                try {
-                    await startable.stop();
-                } catch (error) {
-                    this.logger.error(error, startable, "Swallowed error while stopping.");
-                }
-            },
-        );
+    public async selfStop(): Promise<void> {
+        // NOTE: empty.
     }
 }
