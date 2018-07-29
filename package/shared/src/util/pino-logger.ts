@@ -33,21 +33,27 @@ import {
     assert,
 } from "check-types";
 
-@asrt(1)
+import {
+    fmtError,
+} from "error-shortener";
+
+@asrt(3)
 @autoinject
 export default class PinoLogger {
     constructor(
+        @asrt() private readonly names: string[],
+        @asrt() private readonly name: string,
         @asrt() private readonly parentPinoLogger: Logger,
     ) {
-        assert.hasLength(arguments, 1);
+        assert.hasLength(arguments, 3);
+        assert.array(this.names);
+        assert.nonEmptyString(this.name);
         assert.equal(typeof parentPinoLogger, "object");
     }
 
     public fatal(...args: any[]): void {
         this.parentPinoLogger.fatal({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -56,9 +62,7 @@ export default class PinoLogger {
 
     public error(...args: any[]): void {
         this.parentPinoLogger.error({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -67,9 +71,7 @@ export default class PinoLogger {
 
     public warn(...args: any[]): void {
         this.parentPinoLogger.warn({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -78,9 +80,7 @@ export default class PinoLogger {
 
     public info(...args: any[]): void {
         this.parentPinoLogger.info({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -89,9 +89,7 @@ export default class PinoLogger {
 
     public debug(...args: any[]): void {
         this.parentPinoLogger.debug({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -100,9 +98,7 @@ export default class PinoLogger {
 
     public trace(...args: any[]): void {
         this.parentPinoLogger.trace({
-            // TODO: serialize error objects etcetera.
-            // args: this._serialize(args),
-            args,
+            args: this.serialize(...args),
         });
 
         // TODO: configure to flush only during development/debugging.
@@ -114,27 +110,36 @@ export default class PinoLogger {
         assert.equal(typeof childName, "string");
         assert(childName.length > 0);
 
+        const ancestors = [
+            ...this.names,
+            this.name,
+        ];
+        const fullChildName = `${[
+            ...ancestors,
+            childName,
+        ].join("/")}`;
+
         const childBindings = {
             childName,
+            fullChildName,
         };
 
         const pinoLogger = this.parentPinoLogger.child(childBindings);
 
-        const childLogger = new PinoLogger(pinoLogger);
+        const childLogger = new PinoLogger(ancestors, childName, pinoLogger);
 
         return childLogger;
     }
 
-    // _valueReplacer(key, value) {
-    //     if (value !== null && typeof value === "object" && value.stack) {
-    //         return value.toString();
-    //     }
-    //
-    //     return value;
-    // }
-    //
-    // _serialize(value) {
-    //     // TODO: serialize error objects etcetera.
-    //     return JSON.stringify(value, this._valueReplacer.bind(this), 2);
-    // }
+    private valueReplacer(value: any): string {
+        if (value !== null && typeof value === "object" && !!value.stack) {
+            return fmtError(value);
+        }
+
+        return value;
+    }
+
+    private serialize(...args: any[]) {
+        return args.map((arg) => this.valueReplacer(arg));
+    }
 }

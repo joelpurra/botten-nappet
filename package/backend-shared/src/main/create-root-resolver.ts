@@ -30,7 +30,7 @@ import configLibrary,
     IConfig,
 } from "config";
 
-import loadPackageJson from "@botten-nappet/shared/src/util/load-package-json";
+import readPkgUp from "read-pkg-up";
 
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 import RootLoggerResolver from "@botten-nappet/shared/src/util/root-logger-resolver";
@@ -69,12 +69,12 @@ export default async function createRootResolver<T extends IRealRoot>(realRootFa
 
     rootContainer.registerInstance("IConfig", configLibrary);
 
-    const packageJson = await loadPackageJson();
+    const packageJson = await readPkgUp();
     rootContainer.registerInstance("IPackageJson", packageJson);
 
     // TODO: is this a proper custom resolver?
     const rootLoggerResolver: RootLoggerResolver = rootContainer.get(RootLoggerResolver);
-    const rootLogger = rootLoggerResolver.get();
+    const rootLogger = await rootLoggerResolver.get();
     rootContainer.registerInstance(PinoLogger, rootLogger);
     // rootContainer.autoRegister(PinoLogger, RootLoggerResolver);
     // const rootLogger = rootContainer.get(PinoLogger);

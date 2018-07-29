@@ -31,6 +31,9 @@ import {
 
 import pino from "pino";
 
+import * as path from "path";
+import readPkgUp from "read-pkg-up";
+
 import LoggingConfig from "@botten-nappet/shared/src/config/logging-config";
 import PinoLogger from "@botten-nappet/shared/src/util/pino-logger";
 
@@ -45,17 +48,31 @@ export default class RootLoggerResolver implements Resolver {
     }
 
     @asrt(0)
-    public get(/*container: Container, key: any*/) {
+    public async get(/*container: Container, key: any*/) {
         // TODO: properly implement resolver? Not using container/key seems wrong.
         // const logPath = `${this.loggingConfig.file}.${process.pid}`;
         // const logFileStream = fs.createWriteStream(logPath);
         // TODO: fix pino's stdout problems or switch logging library.
         const logFileStream = process.stdout;
 
+        // NOTE: makes assumptions regarding the process startup.
+        const startingDirectory = path.dirname(process.argv[1]);
+        const currentPackageJson = await readPkgUp({
+            cwd: startingDirectory,
+        });
+
+        const {
+            name: currentPackageName,
+        } = currentPackageJson.pkg;
+
+        const ancestors = [
+            this.loggingConfig.applicationName,
+        ];
+
         const rootPinoLogger = pino({
             extreme: true,
             level: this.loggingConfig.level,
-            name: this.loggingConfig.applicationName,
+            name: currentPackageName,
             onTerminated: (
                 /* tslint:disable:no-unused-variable */
                 // eventName,
@@ -66,7 +83,7 @@ export default class RootLoggerResolver implements Resolver {
             },
         }, logFileStream);
 
-        const logger = new PinoLogger(rootPinoLogger);
+        const logger = new PinoLogger(ancestors, currentPackageName, rootPinoLogger);
 
         return logger;
     }
