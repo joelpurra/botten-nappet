@@ -60,8 +60,8 @@ export default class AggregateConnectablesManager implements IConnectable {
                 } catch (error) {
                     this.logger.error(
                         error,
-                        // connectable,
                         // TODO: improved IConnectable naming?
+                        connectable.constructor.name,
                         `Swallowed error while connecting connectable #${index} of ${arrayLength}`,
                     );
                 }
@@ -88,8 +88,8 @@ export default class AggregateConnectablesManager implements IConnectable {
                 } catch (error) {
                     this.logger.error(
                         error,
-                        // connectable,
                         // TODO: improved IConnectable naming?
+                        connectable.constructor.name,
                         `Swallowed error while disconnecting connectable #${index} of ${arrayLength}`,
                     );
                 }

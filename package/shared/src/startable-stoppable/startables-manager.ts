@@ -58,8 +58,8 @@ export default abstract class StartablesManager extends LoggingStartable {
                 } catch (error) {
                     this.logger.error(
                         error,
-                        // startable,
                         // TODO: improved IStartableStoppable naming?
+                        startable.constructor.name,
                         `Swallowed error while starting startable #${index} of ${arrayLength}`,
                     );
                 }
@@ -93,8 +93,8 @@ export default abstract class StartablesManager extends LoggingStartable {
                 } catch (error) {
                     this.logger.error(
                         error,
-                        // startable,
                         // TODO: improved IStartableStoppable naming?
+                        startable.constructor.name,
                         `Swallowed error while stopping startable #${index} of ${arrayLength}`,
                     );
                 }
