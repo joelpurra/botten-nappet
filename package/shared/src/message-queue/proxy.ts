@@ -24,6 +24,7 @@ import {
 import {
     autoinject,
 } from "aurelia-framework";
+import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -96,10 +97,20 @@ export default abstract class Proxy implements IConnectable {
         assert.not.equal(this.xsubscriberSocket, null);
         assert.not.equal(this.xpublisherSocket, null);
 
-        await this.xsubscriberSocket!.disconnect(this.zmqConfig.zmqXSubscriberAddress);
-        await this.xpublisherSocket!.disconnect(this.zmqConfig.zmqXPublisherAddress);
-        await this.xsubscriberSocket!.close();
-        await this.xpublisherSocket!.close();
+        // TODO HACK REMOVE: trying to reduce crashes during shutdown in other parts of
+        // the application by letting the internal pubsub messaging live a slight bit longer.
+        await Bluebird.delay(1000);
+
+        await Promise.all([
+            this.xsubscriberSocket!.disconnect(this.zmqConfig.zmqXSubscriberAddress),
+            this.xpublisherSocket!.disconnect(this.zmqConfig.zmqXPublisherAddress),
+        ]);
+
+        await Promise.all([
+            this.xsubscriberSocket!.close(),
+            this.xpublisherSocket!.close(),
+        ]);
+
         this.xsubscriberSocket = null;
         this.xpublisherSocket = null;
 

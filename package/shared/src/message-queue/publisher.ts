@@ -24,6 +24,7 @@ import {
 import {
     autoinject,
 } from "aurelia-framework";
+import Bluebird from "bluebird";
 import {
     assert,
 } from "check-types";
@@ -78,6 +79,10 @@ export default class Publisher implements IConnectable {
     public async disconnect(): Promise<void> {
         assert.not.null(this.socket);
 
+        // TODO HACK REMOVE: trying to reduce crashes during shutdown in other parts of
+        // the application by letting the internal pubsub messaging live a slight bit longer.
+        await Bluebird.delay(1000);
+
         await this.socket.disconnect(this.zmqConfig.zmqXSubscriberAddress);
         await this.socket.close();
 
@@ -104,7 +109,21 @@ export default class Publisher implements IConnectable {
         @asrt() topic: string,
         @asrt() msg: ZeroMqMessage,
     ): Promise<void> {
-        assert(await this.isConnected());
+        if (!await this.isConnected()) {
+            this.logger.warn(topic, msg, "Could not send message; not connected.");
+
+            // TODO: make sure all messages get sent?
+            // // TODO HACK REMOVE: trying to reduce crashes during shutdown in other parts of
+            // // the application by letting the internal pubsub messaging live a slight bit longer.
+            // await Bluebird.delay(100);
+            //
+            // assert(false, `Could not send message; not connected: ${
+            //     topic
+            //     } (cirka ${
+            //     JSON.stringify(msg).length
+            //     } characters in message object)`,
+            // );
+        }
 
         await this.socket!.send([
             topic,
